@@ -370,13 +370,10 @@ function openFilePicker(modelLoader: ModelLoader): void {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.glb,.gltf,.obj,.fbx,.stl';
-  input.multiple = true;
 
   input.onchange = async () => {
-    if (!input.files) return;
-    for (const file of Array.from(input.files)) {
-      await modelLoader.loadFromFile(file);
-    }
+    if (!input.files || input.files.length === 0) return;
+    await modelLoader.loadFromFile(input.files[0]);
   };
 
   input.click();

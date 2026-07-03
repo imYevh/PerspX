@@ -11,7 +11,6 @@ Allow users to move, rotate, and scale objects in the 3D scene using interactive
 
 | Mode        | Gizmo              | Action                  | Keyboard Shortcut |
 | :---------- | :------------------ | :---------------------- | :---------------- |
-| **Translate** | XYZ arrows         | Move object position    | `G` or `W`        |
 | **Rotate**    | XYZ rings          | Rotate object           | `R`               |
 | **Scale**     | XYZ cubes on axes  | Scale object            | `S`               |
 
@@ -38,7 +37,7 @@ import { Camera, Object3D } from 'three';
 import type { SceneManager } from '@/core/scene';
 import type { CameraController } from '@/camera/camera-controller';
 
-export type TransformMode = 'translate' | 'rotate' | 'scale';
+export type TransformMode = 'rotate' | 'scale';
 export type TransformSpace = 'world' | 'local';
 
 export class TransformSystem {
@@ -111,7 +110,7 @@ export class TransformSystem {
   }
 
   cycleMode(): TransformMode {
-    const modes: TransformMode[] = ['translate', 'rotate', 'scale'];
+    const modes: TransformMode[] = ['rotate', 'scale'];
     const currentIndex = modes.indexOf(this.getMode());
     const next = modes[(currentIndex + 1) % modes.length];
     this.setMode(next);
@@ -174,10 +173,6 @@ export class TransformSystem {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
     switch (e.key.toLowerCase()) {
-      case 'g':
-      case 'w':
-        this.setMode('translate');
-        break;
       case 'r':
         this.setMode('rotate');
         break;
@@ -250,7 +245,7 @@ export function snapAngle(degrees: number, snap: number): number {
 - Select an object by clicking on it in the viewport
 - Gizmo appears on the selected object
 - Drag the gizmo axes to transform
-- Press `G`/`W` for translate, `R` for rotate, `S` for scale
+- Press `R` for rotate, `S` for scale
 - Hold `Shift` during drag for snapping (optional — can be wired in)
 - Press `Delete` to remove the selected object
 - Press `Escape` to deselect
@@ -265,7 +260,7 @@ export function snapAngle(degrees: number, snap: number): number {
 ## Verification
 
 - Selecting an object shows the transform gizmo
-- Switching modes (G/R/S) changes the gizmo type
+- Switching modes (R/S) changes the gizmo type
 - Dragging a gizmo axis transforms the object correctly
 - Orbit camera is disabled while dragging a gizmo
 - Grid snapping snaps to correct increments
@@ -277,10 +272,10 @@ export function snapAngle(degrees: number, snap: number): number {
 ## Output
 
 After this phase, you have:
-- [x] Interactive translate/rotate/scale gizmos
+- [x] Interactive rotate/scale gizmos
 - [x] World and local coordinate space toggle
 - [x] Grid/angle/scale snapping with presets
-- [x] Keyboard shortcuts (G, R, S, X, Delete, Escape)
+- [x] Keyboard shortcuts (R, S, X, Delete, Escape)
 - [x] Integration with SceneManager selection
 - [x] Orbit camera disabled during gizmo drag
 - [x] Locked object protection

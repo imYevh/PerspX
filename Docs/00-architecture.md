@@ -13,25 +13,27 @@ A cross-platform 3D perspective visualization and study tool for artists — ins
 | **Language**       | TypeScript                        | Type safety, productivity, huge ecosystem                                 |
 | **3D Engine**      | Three.js (WebGPURenderer)         | Production-ready WebGPU with automatic WebGL2 fallback; massive ecosystem |
 | **Shader System**  | TSL (Three Shader Language)       | Write shaders in JS/TS that compile to both WGSL and GLSL automatically  |
-| **Build Tool**     | Vite                              | Lightning-fast HMR, native TS support, tiny bundles                       |
-| **UI Framework**   | Vanilla TS + lil-gui / custom UI  | Minimal overhead; no heavy UI framework needed for tool panels            |
+| **Build Tool**     | Vite (via SvelteKit)              | Lightning-fast HMR, native TS support, tiny bundles                       |
+| **UI Framework**   | SvelteKit (SPA mode)              | Compiled reactivity, scoped styles, tiny runtime, component-based UI      |
 | **Desktop App**    | Tauri 2                           | Tiny binary (~5 MB), native performance, Rust backend, iOS/Android ready  |
 | **Mobile App**     | Tauri 2 (iOS/Android) + PWA       | Single codebase; PWA as fallback for instant mobile access                |
-| **State Mgmt**     | Zustand (or custom EventEmitter)  | Lightweight reactive state for scene/UI sync                              |
+| **State Mgmt**     | Svelte stores + EventEmitter      | Svelte stores for UI state; EventEmitter for engine ↔ UI bridge           |
 | **Model Format**   | glTF 2.0 (.glb)                   | Industry standard, compact, supports PBR materials                        |
 
 ### Why This Stack?
 
 - **Not OpenGL**: WebGPU is the modern successor. Three.js `WebGPURenderer` abstracts it cleanly with automatic WebGL2 fallback for older devices.
 - **Cross-Platform**: Web app runs everywhere. Tauri 2 wraps it into native desktop + mobile apps with ~5 MB overhead (vs. Electron's ~150 MB).
-- **Lightweight**: No game engine bloat. Three.js + Vite produces bundles under 1 MB (gzipped) for the core renderer.
-- **Productive**: TypeScript + Vite + Three.js has the fastest iteration loop of any 3D stack.
+- **Lightweight**: No game engine bloat. Three.js + SvelteKit produces bundles under 1 MB (gzipped) for the core renderer.
+- **Productive**: TypeScript + SvelteKit + Three.js has the fastest iteration loop of any 3D stack.
+- **Compiled Reactivity**: Svelte compiles components into minimal vanilla JS at build time — no virtual DOM diffing overhead, critical for maintaining 60 FPS alongside a 3D render loop.
 - **Extensible**: Three.js's scene graph, material system, and plugin architecture make it trivial to add shaders, lights, post-processing, and custom models.
 
 ### Alternatives Considered
 
 | Option         | Rejected Because                                                      |
 | :------------- | :-------------------------------------------------------------------- |
+| React / Vue    | Virtual DOM overhead in a 60fps 3D app; heavier runtime               |
 | Babylon.js     | Heavier, more opinionated; better for full game engines               |
 | Bevy (Rust)    | Excellent but steep learning curve; slower iteration for UI-heavy app |
 | Godot          | Full game engine — overkill for a focused tool app                    |
@@ -51,69 +53,77 @@ PerspX/
 │   └── 15-packaging.md
 │
 ├── src/
-│   ├── main.ts                  # Entry point
-│   ├── app.ts                   # App orchestrator
+│   ├── app.html                 # SvelteKit HTML shell
+│   ├── app.css                  # Global styles (reset, fonts, variables)
 │   │
-│   ├── core/                    # Engine core (renderer, loop, input)
-│   │   ├── renderer.ts          # WebGPU renderer setup
-│   │   ├── scene.ts             # Scene management
-│   │   ├── loop.ts              # Render loop / animation frame
-│   │   └── input.ts             # Unified input (mouse, touch, keyboard)
+│   ├── routes/                  # SvelteKit pages (SPA — single route)
+│   │   ├── +layout.svelte       # Root layout (app shell, toolbar, panel containers)
+│   │   └── +page.svelte         # Main page (3D viewport + panels)
 │   │
-│   ├── camera/                  # Camera system
-│   │   ├── camera-controller.ts # Orbit, pan, zoom controls
-│   │   ├── camera-presets.ts    # Perspective, ortho, dolly-zoom
-│   │   └── dolly-zoom.ts        # Dolly zoom (Vertigo) effect
-│   │
-│   ├── objects/                 # Scene objects
-│   │   ├── primitives.ts        # Cube, sphere, cylinder, cone, torus, plane
-│   │   ├── object-manager.ts    # Add, remove, select, duplicate objects
-│   │   └── model-loader.ts      # glTF/OBJ/FBX import
-│   │
-│   ├── transforms/              # Object manipulation
-│   │   ├── transform-controls.ts # Move, rotate, scale gizmos
-│   │   └── snapping.ts          # Grid snapping, angle snapping
-│   │
-│   ├── lighting/                # Lighting system
-│   │   ├── light-manager.ts     # Add/remove/configure lights
-│   │   └── light-presets.ts     # Studio, outdoor, dramatic presets
-│   │
-│   ├── materials/               # Shaders & materials
-│   │   ├── material-system.ts   # Material management
-│   │   ├── shader-library.ts    # Built-in TSL shaders
-│   │   └── wireframe.ts         # Wireframe / edge overlay
-│   │
-│   ├── helpers/                 # Drawing aids
-│   │   ├── grid.ts              # Infinite grid
-│   │   ├── axes.ts              # XYZ axes indicator
-│   │   ├── ground-plane.ts      # Ground plane with shadow
-│   │   └── vanishing-points.ts  # Vanishing point visualization
-│   │
-│   ├── ui/                      # User interface
-│   │   ├── panels/              # Side panels
-│   │   │   ├── scene-panel.ts   # Scene hierarchy / outliner
-│   │   │   ├── properties-panel.ts  # Selected object properties
-│   │   │   ├── camera-panel.ts  # Camera settings
-│   │   │   └── library-panel.ts # Primitives / models library
-│   │   ├── toolbar.ts           # Top toolbar
-│   │   ├── viewport-overlay.ts  # HUD info on the 3D viewport
-│   │   └── responsive.ts       # Mobile / desktop layout switching
-│   │
-│   ├── state/                   # Application state
-│   │   ├── store.ts             # Central state store
-│   │   └── history.ts           # Undo / redo stack
-│   │
-│   └── utils/                   # Utilities
-│       ├── math.ts              # Math helpers
-│       ├── export.ts            # Screenshot / scene export
-│       └── constants.ts         # App-wide constants
+│   └── lib/                     # Importable modules ($lib alias)
+│       ├── components/          # Svelte UI components
+│       │   ├── Toolbar.svelte
+│       │   ├── ViewportOverlay.svelte
+│       │   ├── BottomSheet.svelte
+│       │   └── panels/
+│       │       ├── Panel.svelte          # Reusable collapsible panel (slot-based)
+│       │       ├── ScenePanel.svelte     # Scene hierarchy / outliner
+│       │       ├── PropertiesPanel.svelte # Selected object properties
+│       │       ├── CameraPanel.svelte    # Camera settings
+│       │       └── LibraryPanel.svelte   # Primitives / models library
+│       │
+│       ├── stores/              # Svelte stores (reactive state)
+│       │   ├── scene.ts         # Scene objects & selection state
+│       │   ├── camera.ts        # Camera mode, FOV, presets
+│       │   ├── ui.ts            # Panel visibility, responsive breakpoint
+│       │   └── history.ts       # Undo / redo stack
+│       │
+│       ├── core/                # Engine core (pure TS — no Svelte)
+│       │   ├── renderer.ts      # WebGPU renderer setup
+│       │   ├── scene.ts         # Scene management
+│       │   ├── loop.ts          # Render loop / animation frame
+│       │   └── input.ts         # Unified input (mouse, touch, keyboard)
+│       │
+│       ├── camera/              # Camera system (pure TS)
+│       │   ├── camera-controller.ts # Orbit, pan, zoom controls
+│       │   ├── camera-presets.ts    # Perspective, ortho, dolly-zoom
+│       │   └── dolly-zoom.ts       # Dolly zoom (Vertigo) effect
+│       │
+│       ├── objects/             # Scene objects (pure TS)
+│       │   ├── primitives.ts    # Cube, sphere, cylinder, cone, torus, plane
+│       │   ├── object-manager.ts # Add, remove, select objects
+│       │   └── model-loader.ts  # glTF/OBJ/FBX import
+│       │
+│       ├── transforms/          # Object manipulation (pure TS)
+│       │   ├── transform-controls.ts # Move, rotate, scale gizmos
+│       │   └── snapping.ts      # Grid snapping, angle snapping
+│       │
+│       ├── lighting/            # Lighting system (pure TS)
+│       │   ├── light-manager.ts # Add/remove/configure lights
+│       │   └── light-presets.ts # Studio, outdoor, dramatic presets
+│       │
+│       ├── materials/           # Shaders & materials (pure TS)
+│       │   ├── material-system.ts # Material management
+│       │   ├── shader-library.ts  # Built-in TSL shaders
+│       │   └── wireframe.ts     # Wireframe / edge overlay
+│       │
+│       ├── helpers/             # Drawing aids (pure TS)
+│       │   ├── grid.ts          # Infinite grid
+│       │   ├── axes.ts          # XYZ axes indicator
+│       │   ├── ground-plane.ts  # Ground plane with shadow
+│       │   └── vanishing-points.ts # Vanishing point visualization
+│       │
+│       └── utils/               # Utilities (pure TS)
+│           ├── math.ts          # Math helpers
+│           ├── export.ts        # Screenshot / scene export
+│           └── constants.ts     # App-wide constants
 │
-├── public/
+├── static/                      # Static assets (SvelteKit convention)
 │   ├── models/                  # Built-in 3D models (.glb)
 │   └── textures/                # Built-in textures
 │
-├── index.html                   # HTML entry
-├── vite.config.ts               # Vite configuration
+├── svelte.config.js             # SvelteKit configuration (adapter-static)
+├── vite.config.ts               # Vite configuration (sveltekit plugin)
 ├── tsconfig.json                # TypeScript configuration
 ├── package.json
 └── src-tauri/                   # Tauri backend (Rust) — for desktop/mobile builds

@@ -313,7 +313,6 @@ When an object is selected, the properties panel shows:
 ├─────────────────────────┤
 │  Preset: [Standard ▾]   │
 │                         │
-│  Color:     [■ #4a9eff] │
 │  Roughness: [====●===]  │
 │  Metalness: [●========]  │
 │  Opacity:   [========●]  │

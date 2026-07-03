@@ -1,7 +1,7 @@
 # 01 — Project Setup
 
 ## Goal
-Scaffold the PerspX project with Vite, TypeScript, and Three.js. Get a blank canvas rendering with WebGPU.
+Scaffold the PerspX project with SvelteKit (SPA mode), TypeScript, and Three.js. Get a blank canvas rendering with WebGPU.
 
 ---
 
@@ -15,65 +15,56 @@ Scaffold the PerspX project with Vite, TypeScript, and Three.js. Get a blank can
 
 ## Steps
 
-### 1. Initialize Vite Project
+### 1. Initialize SvelteKit Project
 
 ```bash
-npx -y create-vite@latest ./ --template vanilla-ts
+npx -y sv create ./ --template minimal --types ts --no-add-ons
 ```
 
 ### 2. Install Dependencies
 
 ```bash
 npm install three
-npm install -D @types/three
+npm install -D @types/three @sveltejs/adapter-static
 ```
 
-### 3. Configure TypeScript
+### 3. Configure SvelteKit for SPA Mode
 
-Update `tsconfig.json`:
+`svelte.config.js`:
 
-```jsonc
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "preserve",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+```js
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter({
+      fallback: 'index.html', // SPA mode — all routes serve the same HTML
+    }),
+    alias: {
+      '$lib': './src/lib',
+      '$lib/*': './src/lib/*',
+    },
   },
-  "include": ["src/**/*.ts"]
-}
+};
+
+export default config;
 ```
 
 ### 4. Configure Vite
 
-Update `vite.config.ts`:
+`vite.config.ts`:
 
 ```ts
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),
-    },
-  },
+  plugins: [sveltekit()],
   build: {
     target: 'es2022',
-    minify: 'terser',
-    sourcemap: true,
   },
   server: {
     port: 3000,
@@ -82,23 +73,47 @@ export default defineConfig({
 });
 ```
 
-### 5. Clean Default Files
+### 5. Disable SSR (SPA-Only)
 
-- Delete `src/counter.ts`, `src/style.css` (will replace), `src/typescript.svg`
-- Clear `src/main.ts` — will be rewritten in the next phase
+Create `src/routes/+layout.ts`:
 
-### 6. Create Directory Structure
-
-```bash
-mkdir -p src/core src/camera src/objects src/transforms
-mkdir -p src/lighting src/materials src/helpers
-mkdir -p src/ui/panels src/state src/utils
-mkdir -p public/models public/textures
+```ts
+export const prerender = true;
+export const ssr = false;
 ```
 
-### 7. Create Entry HTML
+### 6. Configure TypeScript
 
-`index.html`:
+The SvelteKit scaffolder generates `tsconfig.json` automatically. Ensure it extends the SvelteKit config:
+
+```jsonc
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "moduleResolution": "bundler"
+  }
+}
+```
+
+### 7. Create Directory Structure
+
+```bash
+mkdir -p src/lib/core src/lib/camera src/lib/objects src/lib/transforms
+mkdir -p src/lib/lighting src/lib/materials src/lib/helpers
+mkdir -p src/lib/components/panels src/lib/stores src/lib/utils
+mkdir -p static/models static/textures
+```
+
+### 8. Create App HTML Shell
+
+`src/app.html`:
 
 ```html
 <!DOCTYPE html>
@@ -108,20 +123,18 @@ mkdir -p public/models public/textures
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="description" content="PerspX — 3D Perspective Visualization Tool for Artists" />
   <title>PerspX</title>
-  <link rel="stylesheet" href="/src/styles/main.css" />
+  <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+  %sveltekit.head%
 </head>
-<body>
-  <div id="app">
-    <canvas id="viewport"></canvas>
-  </div>
-  <script type="module" src="/src/main.ts"></script>
+<body data-sveltekit-preload-data="hover">
+  <div id="app">%sveltekit.body%</div>
 </body>
 </html>
 ```
 
-### 8. Create Base Styles
+### 9. Create Global Styles
 
-`src/styles/main.css`:
+`src/app.css`:
 
 ```css
 /* Reset */
@@ -145,13 +158,48 @@ html, body {
   height: 100%;
   position: relative;
 }
+```
 
-#viewport {
-  display: block;
-  width: 100%;
-  height: 100%;
-  touch-action: none; /* Critical for mobile — prevents browser gestures */
-}
+### 10. Create Root Layout
+
+`src/routes/+layout.svelte`:
+
+```svelte
+<script>
+  import '../app.css';
+
+  let { children } = $props();
+</script>
+
+{@render children()}
+```
+
+### 11. Create Main Page with Viewport Canvas
+
+`src/routes/+page.svelte`:
+
+```svelte
+<script lang="ts">
+  import { onMount } from 'svelte';
+
+  let canvas: HTMLCanvasElement;
+
+  onMount(() => {
+    // Three.js will be initialized here in the next phase
+    console.log('Canvas ready:', canvas);
+  });
+</script>
+
+<canvas bind:this={canvas} id="viewport"></canvas>
+
+<style>
+  #viewport {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none; /* Critical for mobile — prevents browser gestures */
+  }
+</style>
 ```
 
 ---
@@ -172,11 +220,13 @@ npm run dev
 ## Output
 
 After this phase, you have:
-- [x] Vite + TypeScript project with path aliases
+- [x] SvelteKit project in SPA mode with TypeScript
 - [x] Three.js installed
 - [x] Full-screen canvas ready for rendering
-- [x] Directory structure matching the architecture
+- [x] Directory structure matching the architecture (`src/lib/` convention)
 - [x] Mobile-ready viewport meta tag
+- [x] SSR disabled (client-side only rendering)
+- [x] `adapter-static` configured for Tauri compatibility
 
 ---
 
