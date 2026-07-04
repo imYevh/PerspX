@@ -423,9 +423,9 @@ You will type some terminal commands and paste some config code.
 
 ### 4.4 — Create the camera Svelte store
 
-- [ ] Create new file: `src/lib/stores/camera.ts`
-- [ ] Copy the store code from `04-camera-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/stores/camera.ts`
+- [x] Copy the store code from `04-camera-system.md`
+- [x] Save the file
 
 ---
 
