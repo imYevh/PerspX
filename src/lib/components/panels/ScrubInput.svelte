@@ -9,9 +9,25 @@
   let { value, step = 1, class: className = '', oninput, onchange }: Props = $props();
 
   let isDragging = false;
+  let isFocused = $state(false);
   let startX = 0;
   let startValue = 0;
   let inputElement: HTMLInputElement;
+
+  function formatValue(v: number): string {
+    return (v % 1 !== 0 ? v.toFixed(2) : v).toString();
+  }
+
+  // Update input value when prop changes, unless user is interacting with it
+  $effect(() => {
+    if (!isFocused && !isDragging && inputElement) {
+      // Force read of value
+      const v = value;
+      if (parseFloat(inputElement.value) !== v) {
+        inputElement.value = formatValue(v);
+      }
+    }
+  });
 
   function handlePointerDown(e: PointerEvent) {
     // Only left click
@@ -80,7 +96,8 @@
   type="number"
   class={className}
   {step}
-  value={value % 1 !== 0 ? value.toFixed(2) : value}
+  onfocus={() => isFocused = true}
+  onblur={() => { isFocused = false; inputElement.value = formatValue(value); }}
   onpointerdown={handlePointerDown}
   oninput={handleInput}
   onchange={handleChange}

@@ -21,6 +21,8 @@
     return () => cancelAnimationFrame(frame);
   });
 
+  let uniformScale = $state(false);
+
   let selectedId = $derived($sceneStore.selectedIds[0] ?? null);
   let selectedCount = $derived($sceneStore.selectedIds.length);
   
@@ -61,7 +63,14 @@
 
   function setScale(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.scale[axis] = parseFloat(value) || 1;
+    if (obj) {
+      const val = parseFloat(value) || 1;
+      if (uniformScale) {
+        obj.scale.set(val, val, val);
+      } else {
+        obj.scale[axis] = val;
+      }
+    }
   }
 
   function setIntensity(value: string) {
@@ -120,11 +129,11 @@
       <div class="prop-row">
         <label>Position</label>
         <div class="xyz">
-          <ScrubInput class="pi x" step={0.1} value={obj.position.x}
+          <ScrubInput class="pi x" step={0.1} value={tick ? obj.position.x : obj.position.x}
             oninput={(v) => setPosition('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi y" step={0.1} value={obj.position.y}
+          <ScrubInput class="pi y" step={0.1} value={tick ? obj.position.y : obj.position.y}
             oninput={(v) => setPosition('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi z" step={0.1} value={obj.position.z}
+          <ScrubInput class="pi z" step={0.1} value={tick ? obj.position.z : obj.position.z}
             oninput={(v) => setPosition('z', v.toString())} onchange={commit} />
         </div>
       </div>
@@ -132,23 +141,28 @@
       <div class="prop-row">
         <label>Rotation °</label>
         <div class="xyz">
-          <ScrubInput class="pi x" step={1} value={MathUtils.radToDeg(obj.rotation.x)}
+          <ScrubInput class="pi x" step={1} value={tick ? MathUtils.radToDeg(obj.rotation.x) : MathUtils.radToDeg(obj.rotation.x)}
             oninput={(v) => setRotation('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi y" step={1} value={MathUtils.radToDeg(obj.rotation.y)}
+          <ScrubInput class="pi y" step={1} value={tick ? MathUtils.radToDeg(obj.rotation.y) : MathUtils.radToDeg(obj.rotation.y)}
             oninput={(v) => setRotation('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi z" step={1} value={MathUtils.radToDeg(obj.rotation.z)}
+          <ScrubInput class="pi z" step={1} value={tick ? MathUtils.radToDeg(obj.rotation.z) : MathUtils.radToDeg(obj.rotation.z)}
             oninput={(v) => setRotation('z', v.toString())} onchange={commit} />
         </div>
       </div>
 
       <div class="prop-row">
-        <label>Scale</label>
+        <label>
+          Scale
+          <button class="link-btn {uniformScale ? 'active' : ''}" onclick={() => uniformScale = !uniformScale} title="Uniform Scale">
+            {uniformScale ? '🔗' : '🔓'}
+          </button>
+        </label>
         <div class="xyz">
-          <ScrubInput class="pi" step={0.1} value={obj.scale.x}
+          <ScrubInput class="pi" step={0.1} value={tick ? obj.scale.x : obj.scale.x}
             oninput={(v) => setScale('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi" step={0.1} value={obj.scale.y}
+          <ScrubInput class="pi" step={0.1} value={tick ? obj.scale.y : obj.scale.y}
             oninput={(v) => setScale('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi" step={0.1} value={obj.scale.z}
+          <ScrubInput class="pi" step={0.1} value={tick ? obj.scale.z : obj.scale.z}
             oninput={(v) => setScale('z', v.toString())} onchange={commit} />
         </div>
       </div>
@@ -214,7 +228,22 @@
     color: #888;
     min-width: 60px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
+  
+  .link-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 0;
+    transition: color 0.2s;
+  }
+  .link-btn:hover { color: #fff; }
+  .link-btn.active { color: #4a9eff; }
 
   .xyz {
     display: flex;
