@@ -192,6 +192,15 @@ export class TransformSystem {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
     switch (e.key.toLowerCase()) {
+      case 'a':
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const allIds = this.sceneManager.objects
+            .filter(o => !o.meta.locked)
+            .map(o => o.id);
+          this.sceneManager.selectMultiple(allIds, false);
+        }
+        break;
       case 't':
       case 'g': // Grab (Blender style)
         this.setMode('translate');

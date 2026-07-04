@@ -12,9 +12,10 @@
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
   import { LightManager } from '$lib/lighting/light-manager';
   import { LIGHTING_PRESETS } from '$lib/lighting/light-presets';
-  import { Vector3, Vector2, Raycaster, Plane } from 'three';
+  import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { uiStore } from '$lib/stores/ui';
+  import { createPrimitive } from '$lib/objects/primitives';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -32,9 +33,60 @@
   let cameraController: CameraController | undefined = $state();
   let transformSystem: TransformSystem | undefined = $state();
   let lightManager: LightManager | undefined = $state();
+  let ghostObject: Object3D | null = null;
 
   function onDragOver(e: DragEvent) {
     e.preventDefault();
+    if (!sceneManager || !cameraController || !canvas) return;
+
+    const drag = $uiStore.drag;
+    if (!drag.active || !drag.item) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouse = new Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new Raycaster();
+    raycaster.setFromCamera(mouse, cameraController.camera);
+    const plane = new Plane(new Vector3(0, 1, 0), 0);
+    const intersectPoint = new Vector3();
+    const hit = raycaster.ray.intersectPlane(plane, intersectPoint);
+
+    if (hit) {
+      if (!ghostObject || ghostObject.userData.itemType !== drag.item) {
+        if (ghostObject) sceneManager.scene.remove(ghostObject);
+        
+        if (drag.type === 'primitive') {
+          ghostObject = createPrimitive(drag.item as any);
+          ghostObject.traverse((child) => {
+            if (child instanceof Mesh) {
+              const mat = child.material as MeshStandardMaterial;
+              mat.transparent = true;
+              mat.opacity = 0.5;
+              mat.depthWrite = false;
+            }
+          });
+        } else if (drag.type === 'light') {
+          ghostObject = new Mesh(new SphereGeometry(0.5, 8, 8), new MeshStandardMaterial({
+            color: 0xffff00,
+            transparent: true,
+            opacity: 0.3,
+            wireframe: true
+          }));
+        }
+        
+        if (ghostObject) {
+          ghostObject.userData.itemType = drag.item;
+          sceneManager.scene.add(ghostObject);
+        }
+      }
+
+      if (ghostObject) {
+        ghostObject.position.copy(intersectPoint);
+      }
+    }
   }
 
   function onDrop(e: DragEvent) {
@@ -78,6 +130,14 @@
       }
     }
   }
+
+  $effect(() => {
+    // Clean up ghost object if dragging stopped
+    if (!$uiStore.drag.active && ghostObject) {
+      sceneManager?.scene.remove(ghostObject);
+      ghostObject = null;
+    }
+  });
 
   $effect(() => {
     let renderer: Renderer;

@@ -9,6 +9,12 @@ export interface MarqueeState {
   currentY: number;
 }
 
+export interface DragState {
+  active: boolean;
+  type: 'primitive' | 'light' | null;
+  item: string | null;
+}
+
 export interface UIState {
   transformMode: TransformMode;
   leftPanelOpen: boolean;
@@ -18,6 +24,7 @@ export interface UIState {
   propertiesCollapsed: boolean;
   cameraCollapsed: boolean;
   marquee: MarqueeState;
+  drag: DragState;
 }
 
 export const uiStore = writable<UIState>({
@@ -34,5 +41,10 @@ export const uiStore = writable<UIState>({
     startY: 0,
     currentX: 0,
     currentY: 0,
+  },
+  drag: {
+    active: false,
+    type: null,
+    item: null,
   }
 });

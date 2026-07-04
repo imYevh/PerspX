@@ -3,6 +3,7 @@
   import { getPrimitiveList, type PrimitiveType } from '$lib/objects/primitives';
   import type { ObjectManager } from '$lib/objects/object-manager';
   import type { LightManager } from '$lib/lighting/light-manager';
+  import { uiStore } from '$lib/stores/ui';
 
   interface Props {
     objectManager: ObjectManager | undefined;
@@ -32,7 +33,12 @@
         ondragstart={(e) => {
           e.dataTransfer?.setData('application/perspx-type', 'primitive');
           e.dataTransfer?.setData('application/perspx-item', p.type);
+          const img = new Image();
+          img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+          e.dataTransfer?.setDragImage(img, 0, 0);
+          uiStore.update(s => ({ ...s, drag: { active: true, type: 'primitive', item: p.type } }));
         }}
+        ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
         onclick={() => addPrimitive(p.type)}
         title="Add {p.label}"
       >
@@ -45,19 +51,37 @@
   <div class="library-section-title">Lights</div>
   <div class="library-grid">
     <button class="lib-item" draggable="true"
-      ondragstart={(e) => { e.dataTransfer?.setData('application/perspx-type', 'light'); e.dataTransfer?.setData('application/perspx-item', 'point'); }}
+      ondragstart={(e) => { 
+        e.dataTransfer?.setData('application/perspx-type', 'light'); 
+        e.dataTransfer?.setData('application/perspx-item', 'point'); 
+        const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
+        uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'point' } }));
+      }}
+      ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
       onclick={() => addLight('point')} title="Add Point Light">
       <span class="lib-icon">💡</span>
       <span class="lib-label">Point</span>
     </button>
     <button class="lib-item" draggable="true"
-      ondragstart={(e) => { e.dataTransfer?.setData('application/perspx-type', 'light'); e.dataTransfer?.setData('application/perspx-item', 'directional'); }}
+      ondragstart={(e) => { 
+        e.dataTransfer?.setData('application/perspx-type', 'light'); 
+        e.dataTransfer?.setData('application/perspx-item', 'directional'); 
+        const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
+        uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'directional' } }));
+      }}
+      ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
       onclick={() => addLight('directional')} title="Add Directional Light">
       <span class="lib-icon">☀️</span>
       <span class="lib-label">Directional</span>
     </button>
     <button class="lib-item" draggable="true"
-      ondragstart={(e) => { e.dataTransfer?.setData('application/perspx-type', 'light'); e.dataTransfer?.setData('application/perspx-item', 'spot'); }}
+      ondragstart={(e) => { 
+        e.dataTransfer?.setData('application/perspx-type', 'light'); 
+        e.dataTransfer?.setData('application/perspx-item', 'spot');
+        const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
+        uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'spot' } }));
+      }}
+      ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
       onclick={() => addLight('spot')} title="Add Spot Light">
       <span class="lib-icon">🔦</span>
       <span class="lib-label">Spot</span>
