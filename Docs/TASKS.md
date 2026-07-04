@@ -588,9 +588,9 @@ You will type some terminal commands and paste some config code.
 
 ### 7.2 — Create the axes indicator
 
-- [ ] Create new file: `src/lib/helpers/axes.ts`
-- [ ] Copy the axes code from `07-grid-and-helpers.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/helpers/axes.ts`
+- [x] Copy the axes code from `07-grid-and-helpers.md`
+- [x] Save the file
 
 ---
 
