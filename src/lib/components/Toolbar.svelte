@@ -121,6 +121,20 @@
 
   <!-- Central actions -->
   <div class="toolbar-group">
+    <button class="tool-btn" title="Reset Camera Position" onclick={() => {
+      if (sceneManager) {
+        // Find the camera controller from the main page and reset it.
+        // It's cleaner to emit an event or call a global function.
+        // For now, we dispatch a custom event on window since cameraController is in +page.svelte.
+        window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
+      }
+    }}>
+      <span class="tool-icon">🎥</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">Reset Camera</span>
+      {/if}
+    </button>
+    <div class="toolbar-sep"></div>
     <Dropdown 
       icon="💡" 
       label="Lighting" 

@@ -215,7 +215,21 @@
         }
       };
       window.addEventListener('keydown', onKeyDown);
-      cleanupKeys = () => window.removeEventListener('keydown', onKeyDown);
+      
+      const onResetCamera = () => {
+        if (_cameraController) {
+          _cameraController.perspCamera.position.set(5, 4, 5);
+          _cameraController.target.set(0, 0, 0);
+          _cameraController.controls.target.set(0, 0, 0);
+          _cameraController.controls.update();
+        }
+      };
+      window.addEventListener('perspx-reset-camera', onResetCamera);
+
+      cleanupKeys = () => {
+        window.removeEventListener('keydown', onKeyDown);
+        window.removeEventListener('perspx-reset-camera', onResetCamera);
+      };
 
       // History tracking
       initHistory(_sceneManager);

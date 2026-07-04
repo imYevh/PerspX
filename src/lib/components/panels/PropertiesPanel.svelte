@@ -80,6 +80,21 @@
     }
   }
 
+  function resetPosition() {
+    const obj = sceneManager?.getObject(selectedId!);
+    if (obj) obj.position.set(0, 0, 0);
+  }
+
+  function resetRotation() {
+    const obj = sceneManager?.getObject(selectedId!);
+    if (obj) obj.rotation.set(0, 0, 0);
+  }
+
+  function resetScale() {
+    const obj = sceneManager?.getObject(selectedId!);
+    if (obj) obj.scale.set(1, 1, 1);
+  }
+
   function setIntensity(value: string) {
     const obj = sceneManager?.getObject(selectedId!);
     if (obj && 'intensity' in obj) {
@@ -134,7 +149,10 @@
       <div class="prop-title">📐 Transform</div>
 
       <div class="prop-row">
-        <label>Position</label>
+        <label>
+          Position
+          <button class="reset-btn" onclick={resetPosition} title="Reset Position">⟲</button>
+        </label>
         <div class="xyz">
           <ScrubInput class="pi x" step={0.1} {tick} getValue={() => obj.position.x}
             oninput={(v) => setPosition('x', v.toString())} onchange={commit} />
@@ -146,7 +164,10 @@
       </div>
 
       <div class="prop-row">
-        <label>Rotation °</label>
+        <label>
+          Rotation °
+          <button class="reset-btn" onclick={resetRotation} title="Reset Rotation">⟲</button>
+        </label>
         <div class="xyz">
           <ScrubInput class="pi x" step={1} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.x)}
             oninput={(v) => setRotation('x', v.toString())} onchange={commit} />
@@ -160,9 +181,11 @@
       <div class="prop-row">
         <label>
           Scale
+          <button class="reset-btn" onclick={resetScale} title="Reset Scale">⟲</button>
           <button class="link-btn {uniformScale ? 'active' : ''}" onclick={() => uniformScale = !uniformScale} title="Uniform Scale">
             {uniformScale ? '🔗' : '🔓'}
           </button>
+
         </label>
         <div class="xyz">
           <ScrubInput class="pi" step={0.1} {tick} getValue={() => obj.scale.x}
@@ -245,12 +268,26 @@
     border: none;
     color: #666;
     cursor: pointer;
-    font-size: 10px;
-    padding: 0;
-    transition: color 0.2s;
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-left: auto;
   }
-  .link-btn:hover { color: #fff; }
-  .link-btn.active { color: #4a9eff; }
+  .link-btn:hover { color: #aaa; background: rgba(255, 255, 255, 0.1); }
+  .link-btn.active { color: #fff; }
+
+  .reset-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0px 4px;
+    border-radius: 4px;
+    margin-left: 4px;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { color: #aaa; background: rgba(255, 255, 255, 0.1); }
 
   .xyz {
     display: flex;

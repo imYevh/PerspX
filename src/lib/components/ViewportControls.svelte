@@ -15,6 +15,14 @@
   function toggleZolly() {
     updateCameraStore($cameraStore.mode, $cameraStore.fov, $cameraStore.roll, !$cameraStore.zolly);
   }
+
+  function resetFov() {
+    updateCameraStore($cameraStore.mode, 50, $cameraStore.roll, $cameraStore.zolly);
+  }
+
+  function resetRoll() {
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, 0, $cameraStore.zolly);
+  }
 </script>
 
 <div class="viewport-controls">
@@ -23,6 +31,7 @@
       <span class="control-label">FIELD OF VIEW</span>
       <div class="value-row">
         <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
+        <button class="icon-btn" onclick={resetFov} title="Reset FOV">⟲</button>
         <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
           {#if $cameraStore.zolly}
             <span>🔒</span>
@@ -39,7 +48,10 @@
   <div class="control-group">
     <div class="control-header">
       <span class="control-label">HORIZON ROLL</span>
-      <span class="control-value">{$cameraStore.roll.toFixed(0)}°</span>
+      <div class="value-row">
+        <span class="control-value">{$cameraStore.roll.toFixed(0)}°</span>
+        <button class="icon-btn" onclick={resetRoll} title="Reset Roll">⟲</button>
+      </div>
     </div>
     <input type="range" min="-45" max="45" step="1" 
            value={$cameraStore.roll} oninput={onRollInput} class="slider" />
