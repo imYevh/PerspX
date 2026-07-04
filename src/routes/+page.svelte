@@ -7,7 +7,11 @@
   import { ObjectManager } from '$lib/objects/object-manager';
   import { TransformSystem } from '$lib/transforms/transform-controls';
   import { InputSystem } from '$lib/core/input';
-  import { AmbientLight, DirectionalLight, Vector3 } from 'three';
+  import { createInfiniteGrid } from '$lib/helpers/grid';
+  import { createAxesHelper } from '$lib/helpers/axes';
+  import { createGroundPlane } from '$lib/helpers/ground-plane';
+  import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
+  import { AmbientLight, DirectionalLight, Vector3, Mesh, type PerspectiveCamera } from 'three';
 
   let canvas: HTMLCanvasElement;
   let objectManager: ObjectManager | undefined = $state();
@@ -19,7 +23,9 @@
     let cameraController: CameraController;
     let transformSystem: TransformSystem;
     let inputSystem: InputSystem;
+    let vanishingHelper: VanishingPointHelper;
     let cleanupResize = () => {};
+    let cleanupKeys = () => {};
 
     async function init() {
       if (!canvas) return;
@@ -57,6 +63,45 @@
       renderer.scene.add(ambientLight);
       renderer.scene.add(dirLight);
 
+      // Add helpers
+      const grid = createInfiniteGrid();
+      const axes = createAxesHelper(3);
+      const ground = createGroundPlane();
+      vanishingHelper = new VanishingPointHelper();
+      renderer.scene.add(grid);
+      renderer.scene.add(axes);
+      renderer.scene.add(ground);
+      renderer.scene.add(vanishingHelper.group);
+
+      // Update vanishing lines when selection changes
+      sceneManager.on('selection-changed', (data) => {
+        if (data.selectedIds.length === 1) {
+          const obj = sceneManager.getObject(data.selectedIds[0]);
+          if (obj) {
+            vanishingHelper.updateForBox(
+              obj.position,
+              new Vector3(1, 1, 1),
+              cameraController.perspCamera
+            );
+          }
+        } else {
+          vanishingHelper.clear();
+        }
+      });
+
+      // Keyboard toggles: 1=grid, 2=axes, 3=ground, 4=vanishing
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+        switch (e.key) {
+          case '1': grid.visible = !grid.visible; break;
+          case '2': axes.visible = !axes.visible; break;
+          case '3': ground.visible = !ground.visible; break;
+          case '4': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
+        }
+      };
+      window.addEventListener('keydown', onKeyDown);
+      cleanupKeys = () => window.removeEventListener('keydown', onKeyDown);
+
       loop = new RenderLoop(renderer.instance, renderer.scene, cameraController.camera);
       loop.onUpdate((dt) => {
         cameraController.update();
@@ -79,12 +124,14 @@
 
     return () => {
       cleanupResize();
+      cleanupKeys();
       if (loop) loop.stop();
       if (renderer) renderer.dispose();
       if (sceneManager) sceneManager.clearAll();
       if (cameraController) cameraController.dispose();
       if (transformSystem) transformSystem.dispose();
       if (inputSystem) inputSystem.dispose();
+      if (vanishingHelper) vanishingHelper.dispose();
     };
   });
 </script>

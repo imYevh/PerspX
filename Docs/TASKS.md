@@ -614,20 +614,20 @@ You will type some terminal commands and paste some config code.
 
 ### 7.5 — Wire all helpers into the scene
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Initialize all helpers in `onMount` and add them to the Three.js scene
-- [ ] Follow the integration example in `07-grid-and-helpers.md`
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Initialize all helpers in `onMount` and add them to the Three.js scene
+- [x] Follow the integration example in `07-grid-and-helpers.md`
+- [x] Save the file
 
 ---
 
 ### 7.6 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] A **grid** is visible on the ground plane
-- [ ] **XYZ axes** are visible (red=X, green=Y, blue=Z)
-- [ ] Grid fades at the edges (not a hard cutoff)
-- [ ] Vanishing point lines are visible when an object is selected
+- [x] Run: `npm run dev`
+- [x] A **grid** is visible on the ground plane
+- [x] **XYZ axes** are visible (red=X, green=Y, blue=Z)
+- [x] Grid fades at the edges (not a hard cutoff)
+- [x] Vanishing point lines are visible when an object is selected
 
 **Phase 7 complete — the viewport looks like a real 3D tool.**
 
