@@ -1,14 +1,19 @@
 <script lang="ts">
   import type { TransformSystem } from '$lib/transforms/transform-controls';
   import type { ObjectManager } from '$lib/objects/object-manager';
+  import type { SceneManager } from '$lib/core/scene';
+  import type { LightManager } from '$lib/lighting/light-manager';
   import { uiStore } from '$lib/stores/ui';
+  import { undo, redo } from '$lib/stores/history';
   import type { TransformMode } from '$lib/transforms/transform-controls';
 
   interface Props {
     transformSystem: TransformSystem | undefined;
     objectManager: ObjectManager | undefined;
+    sceneManager: SceneManager | undefined;
+    lightManager: LightManager | undefined;
   }
-  let { transformSystem, objectManager }: Props = $props();
+  let { transformSystem, objectManager, sceneManager, lightManager }: Props = $props();
 
   const modes: { key: TransformMode; label: string; icon: string; shortcut: string }[] = [
     { key: 'translate', label: 'Move', icon: '↔', shortcut: 'G' },
@@ -47,8 +52,12 @@
   <div class="toolbar-sep"></div>
 
   <div class="toolbar-group">
-    <button class="tool-btn" title="Undo (Ctrl+Z)" onclick={() => {}}>⟲</button>
-    <button class="tool-btn" title="Redo (Ctrl+Y)" onclick={() => {}}>⟳</button>
+    <button class="tool-btn" title="Undo (Ctrl+Z)" onclick={() => {
+      if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
+    }}>⟲</button>
+    <button class="tool-btn" title="Redo (Ctrl+Y)" onclick={() => {
+      if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
+    }}>⟳</button>
   </div>
 </header>
 

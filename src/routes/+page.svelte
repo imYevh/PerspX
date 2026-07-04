@@ -316,7 +316,7 @@
 </script>
 
 <div class="app">
-  <Toolbar {transformSystem} {objectManager} />
+  <Toolbar {transformSystem} {objectManager} {sceneManager} {lightManager} />
 
   <div class="workspace">
     <!-- Left Panel -->
