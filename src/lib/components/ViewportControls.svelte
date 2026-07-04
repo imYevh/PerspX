@@ -76,7 +76,7 @@
           <div class="value-row">
             <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(2)}</span>
             <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0.5 })} title="Reset Fisheye">⟲</button>
-            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false })} title="Remove Fisheye">✕</button>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false, fisheyeIntensity: 0.5 })} title="Remove Fisheye">✕</button>
           </div>
         </div>
         <input type="range" min="0" max="1" step="0.01" 

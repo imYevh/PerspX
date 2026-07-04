@@ -323,6 +323,8 @@
           _cameraController.lockOrbit = $cameraStore.lockOrbit;
         }
 
+        // Apply fisheye settings
+        loop.setFisheye($cameraStore.fisheye, $cameraStore.fisheyeIntensity);
 
         if (vanishingHelper.group.visible) {
           const selectedIds = _sceneManager.getSelectedIds();
