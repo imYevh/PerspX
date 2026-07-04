@@ -515,9 +515,9 @@ You will type some terminal commands and paste some config code.
 
 ### 6.1 — Create the TransformSystem
 
-- [ ] Create new file: `src/lib/transforms/transform-controls.ts`
-- [ ] Copy the full `TransformSystem` class from `06-transform-controls.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/transforms/transform-controls.ts`
+- [x] Copy the full `TransformSystem` class from `06-transform-controls.md`
+- [x] Save the file
 
 > **Key concept:** `TransformSystem` listens for selection events from `SceneManager` and automatically attaches the gizmo to the selected object.
 

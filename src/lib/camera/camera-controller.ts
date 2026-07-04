@@ -35,6 +35,8 @@ export class CameraController {
   public mode: CameraMode = 'perspective';
   public target = new Vector3(0, 0, 0);
 
+  public enabled = true;
+
   private spherical = new Spherical();
   private sphericalTarget = new Spherical();
   private panOffset = new Vector3();
@@ -182,6 +184,7 @@ export class CameraController {
   }
 
   private onPointerDown = (e: PointerEvent): void => {
+    if (!this.enabled) return;
     if (e.button === 0) { // Left click — orbit
       this.isDragging = true;
     } else if (e.button === 2) { // Right click — pan
@@ -216,6 +219,7 @@ export class CameraController {
   };
 
   private onWheel = (e: WheelEvent): void => {
+    if (!this.enabled) return;
     e.preventDefault();
     const delta = e.deltaY > 0 ? 1 : -1;
     this.sphericalTarget.radius *= 1 + delta * this.zoomSpeed;
@@ -227,6 +231,7 @@ export class CameraController {
   // --- Touch Support ---
 
   private onTouchStart = (e: TouchEvent): void => {
+    if (!this.enabled) return;
     e.preventDefault();
     if (e.touches.length === 1) {
       this.isDragging = true;
