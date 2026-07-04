@@ -413,9 +413,9 @@ You will type some terminal commands and paste some config code.
 
 ### 4.3 — Create the dolly-zoom effect
 
-- [ ] Create new file: `src/lib/camera/dolly-zoom.ts`
-- [ ] Copy the dolly-zoom code from `04-camera-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/camera/dolly-zoom.ts`
+- [x] Copy the dolly-zoom code from `04-camera-system.md`
+- [x] Save the file
 
 > **What this is:** The "Vertigo" effect — zoom and field-of-view change simultaneously to create a cinematic distortion. This is PerspX's signature feature.
 
