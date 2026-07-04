@@ -4,7 +4,7 @@ import type { SceneManager } from '$lib/core/scene';
 import type { CameraController } from '$lib/camera/camera-controller';
 import { commitHistory } from '$lib/stores/history';
 
-export type TransformMode = 'translate' | 'rotate' | 'scale';
+export type TransformMode = 'select' | 'translate' | 'rotate' | 'scale';
 export type TransformSpace = 'world' | 'local';
 
 export class TransformSystem {
@@ -125,16 +125,26 @@ export class TransformSystem {
 
   // --- Mode ---
 
+  private _currentMode: TransformMode = 'translate';
+
   setMode(mode: TransformMode): void {
-    this.controls.setMode(mode);
+    this._currentMode = mode;
+    if (mode === 'select') {
+      this.controls.enabled = false;
+      this.controls.visible = false;
+    } else {
+      this.controls.enabled = true;
+      this.controls.visible = true;
+      this.controls.setMode(mode);
+    }
   }
 
   getMode(): TransformMode {
-    return this.controls.mode as TransformMode;
+    return this._currentMode;
   }
 
   cycleMode(): TransformMode {
-    const modes: TransformMode[] = ['translate', 'rotate', 'scale'];
+    const modes: TransformMode[] = ['select', 'translate', 'rotate', 'scale'];
     const currentIndex = modes.indexOf(this.getMode());
     const next = modes[(currentIndex + 1) % modes.length];
     this.setMode(next);

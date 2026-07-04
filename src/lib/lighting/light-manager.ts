@@ -48,6 +48,22 @@ export class LightManager {
     });
   }
 
+  applyPreset(presetName: string): void {
+    // Need to dynamically import to avoid circular dependency issues if any,
+    // but better yet, we can just import it at the top. Let's assume we import LIGHTING_PRESETS.
+    import('./light-presets').then(({ LIGHTING_PRESETS }) => {
+      const existingLights = this.sceneManager.getObjectsByType('light');
+      for (const { id } of existingLights) {
+         this.removeLight(id);
+      }
+      const preset = LIGHTING_PRESETS[presetName];
+      if (!preset) return;
+      for (const config of preset.lights) {
+        this.addLight(config);
+      }
+    });
+  }
+
   addLight(config: LightConfig): string {
     let light: Light;
 

@@ -17,6 +17,7 @@ export interface DragState {
 
 export interface UIState {
   transformMode: TransformMode;
+  snapEnabled: boolean;
   leftPanelOpen: boolean;
   rightPanelOpen: boolean;
   sceneCollapsed: boolean;
@@ -30,6 +31,7 @@ export interface UIState {
 
 export const uiStore = writable<UIState>({
   transformMode: 'translate',
+  snapEnabled: false,
   leftPanelOpen: true,
   rightPanelOpen: true,
   sceneCollapsed: false,

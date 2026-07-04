@@ -11,7 +11,6 @@
   import { createGroundPlane } from '$lib/helpers/ground-plane';
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
   import { LightManager } from '$lib/lighting/light-manager';
-  import { LIGHTING_PRESETS } from '$lib/lighting/light-presets';
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { uiStore } from '$lib/stores/ui';
@@ -26,16 +25,18 @@
   import LibraryPanel from '$lib/components/panels/LibraryPanel.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
   import BottomSheet from '$lib/components/BottomSheet.svelte';
+  import SubToolbar from '$lib/components/SubToolbar.svelte';
   import { getBreakpoint } from '$lib/stores/ui';
 
   let canvas: HTMLCanvasElement;
+  let renderer = $state<Renderer | undefined>();
+  let sceneManager = $state<SceneManager | undefined>();
+  let cameraController = $state<CameraController | undefined>();
+  let transformSystem = $state<TransformSystem | undefined>();
+  let objectManager = $state<ObjectManager | undefined>();
+  let lightManager = $state<LightManager | undefined>();
+  let inputSystem = $state<InputSystem | undefined>();
 
-  // Expose to components
-  let objectManager: ObjectManager | undefined = $state();
-  let sceneManager: SceneManager | undefined = $state();
-  let cameraController: CameraController | undefined = $state();
-  let transformSystem: TransformSystem | undefined = $state();
-  let lightManager: LightManager | undefined = $state();
   let ghostObject: Object3D | null = null;
 
   function onDragOver(e: DragEvent) {
@@ -197,18 +198,7 @@
       // Add lights
       const _lightManager = new LightManager(_sceneManager);
       lightManager = _lightManager;
-      function applyLightingPreset(presetName: string): void {
-        const existingLights = _sceneManager.getObjectsByType('light');
-        for (const { id } of existingLights) {
-          _lightManager.removeLight(id);
-        }
-        const preset = LIGHTING_PRESETS[presetName];
-        if (!preset) return;
-        for (const config of preset.lights) {
-          _lightManager.addLight(config);
-        }
-      }
-      applyLightingPreset('studio');
+      _lightManager.applyPreset('studio');
 
       // Add helpers
       const grid = createInfiniteGrid();
@@ -326,8 +316,9 @@
   });
 </script>
 
-<div class="app">
-  <Toolbar {transformSystem} {objectManager} {sceneManager} {lightManager} />
+<div class="app" data-theme="dark">
+  <Toolbar {objectManager} {sceneManager} {lightManager} {renderer} />
+  <SubToolbar {transformSystem} />
 
   <div class="workspace">
     <!-- Left Panel -->
