@@ -596,9 +596,9 @@ You will type some terminal commands and paste some config code.
 
 ### 7.3 — Create the ground plane
 
-- [ ] Create new file: `src/lib/helpers/ground-plane.ts`
-- [ ] Copy the ground plane code from `07-grid-and-helpers.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/helpers/ground-plane.ts`
+- [x] Copy the ground plane code from `07-grid-and-helpers.md`
+- [x] Save the file
 
 ---
 
