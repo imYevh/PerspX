@@ -10,9 +10,32 @@
   let { sceneManager }: Props = $props();
 
   let selectedId = $derived($sceneStore.selectedIds[0] ?? null);
+  let selectedCount = $derived($sceneStore.selectedIds.length);
+  
   let selectedEntry = $derived(
     selectedId ? $sceneStore.objects.find(o => o.id === selectedId) : null
   );
+
+  const typeCounts = $derived.by(() => {
+    const counts: Record<string, number> = {};
+    for (const id of $sceneStore.selectedIds) {
+      const obj = $sceneStore.objects.find(o => o.id === id);
+      if (obj) {
+        counts[obj.meta.type] = (counts[obj.meta.type] || 0) + 1;
+      }
+    }
+    return counts;
+  });
+
+  function deselectByType(type: string) {
+    if (!sceneManager) return;
+    const currentIds = sceneManager.getSelectedIds();
+    const newIds = currentIds.filter(id => {
+      const meta = sceneManager.getMeta(id);
+      return meta?.type !== type;
+    });
+    sceneManager.selectMultiple(newIds, false);
+  }
 
   function setPosition(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
@@ -54,7 +77,23 @@
 </script>
 
 <Panel title="⚙️ Properties">
-  {#if selectedEntry}
+  {#if selectedCount > 1}
+    <div class="prop-section">
+      <div class="prop-title">📦 Multiple Selection</div>
+      <div class="prop-row" style="margin-bottom: 12px; color: #aaa;">
+        <span>{selectedCount} items selected</span>
+      </div>
+      
+      <div class="prop-title">Filters</div>
+      <div class="filter-actions">
+        {#each Object.entries(typeCounts) as [type, count]}
+          <button class="pi filter-btn" onclick={() => deselectByType(type)}>
+            Deselect {type}s ({count})
+          </button>
+        {/each}
+      </div>
+    </div>
+  {:else if selectedEntry}
     {@const obj = selectedEntry.object}
     {@const meta = selectedEntry.meta}
 
@@ -204,5 +243,23 @@
     text-align: center;
     padding: 16px 0;
     margin: 0;
+  }
+
+  .filter-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filter-btn {
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  
+  .filter-btn:hover {
+    background: rgba(255, 85, 85, 0.15);
+    border-color: rgba(255, 85, 85, 0.4);
+    color: #ffaaaa;
   }
 </style>
