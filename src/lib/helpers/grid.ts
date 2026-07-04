@@ -1,71 +1,49 @@
-import { Group, BufferGeometry, Float32BufferAttribute, LineBasicMaterial, LineSegments } from 'three';
+import { Group, SphereGeometry, WireframeGeometry, LineSegments, LineBasicMaterial, MathUtils } from 'three';
 
 /**
- * A dense 3D wireframe lattice.
- * Compatible with both WebGL and WebGPU renderers.
+ * A spherical perspective grid (like a dome) to resemble the competitor app.
  */
 export function createInfiniteGrid(options?: {
-  size?: number;
-  divisions?: number;
-  color1?: number;
-  color2?: number;
+  radius?: number;
+  widthSegments?: number;
+  heightSegments?: number;
+  color?: number;
 }): Group {
-  // Use a smaller volume for a 3D grid to avoid visual clutter
-  const size = options?.size ?? 40; 
-  const divisions = options?.divisions ?? 40;
-  const color1 = options?.color1 ?? 0x444455; // Minor lines
-  const color2 = options?.color2 ?? 0x666677; // Major lines
+  const radius = options?.radius ?? 50;
+  const widthSegments = options?.widthSegments ?? 24; // Longitude lines
+  const heightSegments = options?.heightSegments ?? 12; // Latitude lines
+  const color = options?.color ?? 0x444455;
 
   const group = new Group();
   group.name = '_PerspX_grid';
 
-  const halfSize = size / 2;
-  const step = size / divisions;
+  // Create a sphere geometry
+  const sphereGeo = new SphereGeometry(radius, widthSegments, heightSegments);
+  
+  // Convert to wireframe lines
+  const wireframeGeo = new WireframeGeometry(sphereGeo);
 
-  const vertices: number[] = [];
-  const coarseVertices: number[] = [];
-  const coarseStep = 10;
+  const material = new LineBasicMaterial({
+    color: color,
+    transparent: true,
+    opacity: 0.15,
+  });
 
-  for (let i = 0; i <= divisions; i++) {
-    const val = -halfSize + i * step;
-    const isCoarse = Math.abs(val % coarseStep) < 0.001;
-    const target = isCoarse ? coarseVertices : vertices;
+  const lines = new LineSegments(wireframeGeo, material);
+  
+  // Rotate so the "poles" are at top and bottom (Y axis)
+  // SphereGeometry by default has poles on the Y axis, which is perfect.
+  group.add(lines);
 
-    for (let j = 0; j <= divisions; j++) {
-      const val2 = -halfSize + j * step;
-      
-      // X-axis lines (varying Y and Z)
-      target.push(-halfSize, val, val2, halfSize, val, val2);
-      // Y-axis lines (varying X and Z)
-      target.push(val, -halfSize, val2, val, halfSize, val2);
-      // Z-axis lines (varying X and Y)
-      target.push(val, val2, -halfSize, val, val2, halfSize);
-    }
-  }
-
-  // Main grid
-  if (vertices.length > 0) {
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
-    const material = new LineBasicMaterial({
-      color: color1,
-      transparent: true,
-      opacity: 0.15
-    });
-    group.add(new LineSegments(geometry, material));
-  }
-
-  // Coarse grid
-  if (coarseVertices.length > 0) {
-    const coarseGeometry = new BufferGeometry();
-    coarseGeometry.setAttribute('position', new Float32BufferAttribute(coarseVertices, 3));
-    const coarseMaterial = new LineBasicMaterial({
-      color: color2,
-      transparent: true,
-      opacity: 0.4
-    });
-    group.add(new LineSegments(coarseGeometry, coarseMaterial));
-  }
+  // Add a slightly more visible "horizon" (equator) ring
+  const equatorGeo = new SphereGeometry(radius, widthSegments, 2, 0, Math.PI * 2, Math.PI / 2 - 0.01, 0.02);
+  const equatorWireframe = new WireframeGeometry(equatorGeo);
+  const equatorMat = new LineBasicMaterial({
+    color: 0x666677,
+    transparent: true,
+    opacity: 0.4
+  });
+  group.add(new LineSegments(equatorWireframe, equatorMat));
 
   return group;
 }
