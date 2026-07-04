@@ -382,7 +382,7 @@
   <div class="workspace">
     <!-- Left Panel -->
     {#if $uiStore.panelsVisible && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
-      <aside class="sidebar left-sidebar" class:tablet-overlay={$uiStore.breakpoint === 'tablet'}>
+      <aside class="sidebar left-sidebar">
         <ScenePanel {sceneManager} />
         <div class="panel-gap"></div>
         <LibraryPanel {objectManager} {lightManager} />
@@ -400,7 +400,7 @@
 
     <!-- Right Panel -->
     {#if $uiStore.panelsVisible && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
-      <aside class="sidebar right-sidebar" class:tablet-overlay={$uiStore.breakpoint === 'tablet'}>
+      <aside class="sidebar right-sidebar">
         <PropertiesPanel {sceneManager} />
         <div class="panel-gap"></div>
         <CameraPanel {cameraController} />
@@ -441,9 +441,15 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
   }
 
   .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 50;
+    height: 100%;
     width: 220px;
     flex-shrink: 0;
     display: flex;
@@ -451,37 +457,24 @@
     padding: 8px;
     gap: 0;
     overflow-y: auto;
-    background: rgba(12, 12, 22, 0.8);
+    background: rgba(12, 12, 22, 0.85);
     border-color: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
   }
 
   .left-sidebar {
+    left: 0;
     border-right: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .right-sidebar {
+    right: 0;
     border-left: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .panel-gap {
     height: 6px;
     flex-shrink: 0;
-  }
-
-  .tablet-overlay {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 50;
-    height: 100%;
-  }
-  
-  .left-sidebar.tablet-overlay {
-    left: 0;
-  }
-  
-  .right-sidebar.tablet-overlay {
-    right: 0;
   }
 
   .viewport-wrapper {
