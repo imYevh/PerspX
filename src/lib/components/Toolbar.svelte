@@ -112,8 +112,7 @@
     />
     {#if $uiStore.breakpoint !== 'mobile'}
       <div class="brand-logo-container">
-        <span class="brand-logo">P</span>
-        <span class="brand-name">PerspX</span>
+        <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
       </div>
     {/if}
   </div>
@@ -239,13 +238,12 @@
     font-weight: 900;
     font-size: 14px;
     color: white;
+    text-decoration: none;
+    transition: transform 0.15s ease;
   }
 
-  .brand-name {
-    font-size: 15px;
-    font-weight: 700;
-    color: #e0e0e0;
-    letter-spacing: -0.3px;
+  .brand-logo:hover {
+    transform: scale(1.05);
   }
 
   .toolbar-sep {
