@@ -604,9 +604,9 @@ You will type some terminal commands and paste some config code.
 
 ### 7.4 — Create the vanishing points helper
 
-- [ ] Create new file: `src/lib/helpers/vanishing-points.ts`
-- [ ] Copy the vanishing points code from `07-grid-and-helpers.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/helpers/vanishing-points.ts`
+- [x] Copy the vanishing points code from `07-grid-and-helpers.md`
+- [x] Save the file
 
 > **What this is:** Lines that converge on the horizon — a key drawing aid for perspective studies.
 
