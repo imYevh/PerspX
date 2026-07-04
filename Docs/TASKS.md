@@ -543,11 +543,11 @@ You will type some terminal commands and paste some config code.
 
 ### 6.4 — Wire object clicking (raycasting)
 
-- [ ] Open `src/lib/core/input.ts` (create it if it doesn't exist yet)
-- [ ] Implement a click handler that uses Three.js `Raycaster` to detect which object was clicked
-- [ ] When clicked, call `sceneManager.select(objectId)`
-- [ ] Follow the raycasting section in `06-transform-controls.md`
-- [ ] Save the file
+- [x] Open `src/lib/core/input.ts` (create it if it doesn't exist yet)
+- [x] Implement a click handler that uses Three.js `Raycaster` to detect which object was clicked
+- [x] When clicked, call `sceneManager.select(objectId)`
+- [x] Follow the raycasting section in `06-transform-controls.md`
+- [x] Save the file
 
 ---
 
