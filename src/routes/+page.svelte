@@ -22,7 +22,6 @@
   import PropertiesPanel from '$lib/components/panels/PropertiesPanel.svelte';
   import CameraPanel from '$lib/components/panels/CameraPanel.svelte';
   import LibraryPanel from '$lib/components/panels/LibraryPanel.svelte';
-  import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
   import ViewportControls from '$lib/components/ViewportControls.svelte';
   import BottomSheet from '$lib/components/BottomSheet.svelte';
   import SubToolbar from '$lib/components/SubToolbar.svelte';
@@ -393,7 +392,6 @@
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
       {#if $uiStore.panelsVisible}
-        <ViewportOverlay />
         <ViewportControls />
       {/if}
     </div>

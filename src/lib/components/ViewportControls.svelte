@@ -79,8 +79,8 @@
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 24px;
-    padding: 12px 24px;
+    gap: 32px;
+    padding: 12px 28px;
     background: rgba(15, 15, 26, 0.85);
     backdrop-filter: blur(12px);
     border-radius: 12px;
@@ -94,7 +94,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: 140px;
+    width: 170px;
   }
 
   .control-header {
