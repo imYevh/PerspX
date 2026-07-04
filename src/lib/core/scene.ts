@@ -156,11 +156,15 @@ export class SceneManager {
   ): { id: string; object: Object3D } | null {
     this.raycaster.setFromCamera(screenPos, camera);
 
-    const meshes = this.getAllObjects()
-      .filter((e) => e.meta.type === "primitive" || e.meta.type === "model")
-      .map((e) => e.object);
+    const targetObjects: Object3D[] = [];
+    this.scene.traverse((child) => {
+      if (child.name === '_PerspX_grid' || child.name === '_PerspX_ground') return;
+      if (child.userData.PerspXId) {
+        targetObjects.push(child);
+      }
+    });
 
-    const intersects = this.raycaster.intersectObjects(meshes, true);
+    const intersects = this.raycaster.intersectObjects(targetObjects, true);
     if (intersects.length === 0) return null;
 
     // Walk up to find the registered parent
@@ -170,7 +174,9 @@ export class SceneManager {
     }
 
     if (!hit?.userData.PerspXId) return null;
-    return { id: hit.userData.PerspXId, object: hit };
+    
+    // Return the actual object from the registry (so selecting a helper returns the light)
+    return { id: hit.userData.PerspXId, object: this.objects.get(hit.userData.PerspXId)! };
   }
 
   // --- Naming ---

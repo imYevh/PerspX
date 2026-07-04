@@ -148,6 +148,7 @@ export class LightManager {
     if (helper) {
       helper.visible = this.showHelpers;
       helper.name = `_PerspX_light_helper_${id}`;
+      helper.userData.PerspXId = id; // Attach ID so raycaster knows this is the light
       this.sceneManager.scene.add(helper);
       this.helpers.set(id, helper);
     }

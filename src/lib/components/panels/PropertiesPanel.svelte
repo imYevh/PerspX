@@ -29,6 +29,20 @@
     if (obj) obj.scale[axis] = parseFloat(value) || 1;
   }
 
+  function setIntensity(value: string) {
+    const obj = sceneManager?.getObject(selectedId!);
+    if (obj && 'intensity' in obj) {
+      (obj as any).intensity = parseFloat(value) || 1;
+    }
+  }
+
+  function setColor(value: string) {
+    const obj = sceneManager?.getObject(selectedId!);
+    if (obj && 'color' in obj) {
+      (obj as any).color.set(value);
+    }
+  }
+
   function setName(value: string) {
     const meta = sceneManager?.getMeta(selectedId!);
     if (meta) meta.name = value;
@@ -95,6 +109,24 @@
         <label>Type</label>
         <span class="prop-badge">{meta.type}</span>
       </div>
+
+      {#if 'intensity' in obj}
+        <div class="prop-row">
+          <label>Intensity</label>
+          <input class="pi full" type="number" step="0.1" value={fmt((obj as any).intensity)}
+            onchange={(e) => setIntensity((e.target as HTMLInputElement).value)} />
+        </div>
+      {/if}
+
+      {#if 'color' in obj}
+        <div class="prop-row">
+          <label>Color</label>
+          <!-- Using standard HTML5 color picker. getHexString() gives RRGGBB -->
+          <input class="pi full" type="color" value={"#" + (obj as any).color.getHexString()}
+            onchange={(e) => setColor((e.target as HTMLInputElement).value)}
+            style="padding: 0 4px; height: 22px; cursor: pointer;" />
+        </div>
+      {/if}
     </div>
   {:else}
     <p class="empty-hint">Select an object to see its properties.</p>

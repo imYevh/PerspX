@@ -31,6 +31,7 @@
   let sceneManager: SceneManager | undefined = $state();
   let cameraController: CameraController | undefined = $state();
   let transformSystem: TransformSystem | undefined = $state();
+  let lightManager: LightManager | undefined = $state();
 
   $effect(() => {
     let renderer: Renderer;
@@ -81,16 +82,17 @@
       });
 
       // Add lights
-      const lightManager = new LightManager(_sceneManager);
+      const _lightManager = new LightManager(_sceneManager);
+      lightManager = _lightManager;
       function applyLightingPreset(presetName: string): void {
         const existingLights = _sceneManager.getObjectsByType('light');
         for (const { id } of existingLights) {
-          lightManager.removeLight(id);
+          _lightManager.removeLight(id);
         }
         const preset = LIGHTING_PRESETS[presetName];
         if (!preset) return;
         for (const config of preset.lights) {
-          lightManager.addLight(config);
+          _lightManager.addLight(config);
         }
       }
       applyLightingPreset('studio');
@@ -121,7 +123,7 @@
         loop.setCamera(_cameraController.camera);
         _transformSystem.updateCamera(_cameraController.camera);
         inputSystem.updateCamera(_cameraController.camera);
-        lightManager.updateHelpers();
+        if (lightManager) lightManager.updateHelpers();
 
         // Sync FOV to store every frame (handles slider changes)
         const fov = _cameraController.getFOV();
@@ -176,7 +178,7 @@
     <aside class="sidebar left-sidebar">
       <ScenePanel {sceneManager} />
       <div class="panel-gap"></div>
-      <LibraryPanel {objectManager} />
+      <LibraryPanel {objectManager} {lightManager} />
     </aside>
 
     <!-- Viewport -->

@@ -2,20 +2,28 @@
   import Panel from './Panel.svelte';
   import { getPrimitiveList, type PrimitiveType } from '$lib/objects/primitives';
   import type { ObjectManager } from '$lib/objects/object-manager';
+  import type { LightManager } from '$lib/lighting/light-manager';
 
   interface Props {
     objectManager: ObjectManager | undefined;
+    lightManager: LightManager | undefined;
   }
-  let { objectManager }: Props = $props();
+  let { objectManager, lightManager }: Props = $props();
 
   const primitives = getPrimitiveList();
 
   function addPrimitive(type: PrimitiveType) {
     objectManager?.addPrimitive(type);
   }
+
+  function addLight(type: 'point' | 'directional' | 'spot') {
+    if (!lightManager) return;
+    lightManager.addLight({ type, intensity: 1, color: 0xffffff });
+  }
 </script>
 
 <Panel title="📦 Library">
+  <div class="library-section-title">Primitives</div>
   <div class="library-grid">
     {#each primitives as p}
       <button
@@ -28,9 +36,37 @@
       </button>
     {/each}
   </div>
+
+  <div class="library-section-title">Lights</div>
+  <div class="library-grid">
+    <button class="lib-item" onclick={() => addLight('point')} title="Add Point Light">
+      <span class="lib-icon">💡</span>
+      <span class="lib-label">Point</span>
+    </button>
+    <button class="lib-item" onclick={() => addLight('directional')} title="Add Directional Light">
+      <span class="lib-icon">☀️</span>
+      <span class="lib-label">Directional</span>
+    </button>
+    <button class="lib-item" onclick={() => addLight('spot')} title="Add Spot Light">
+      <span class="lib-icon">🔦</span>
+      <span class="lib-label">Spot</span>
+    </button>
+  </div>
 </Panel>
 
 <style>
+  .library-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin: 12px 0 6px 0;
+  }
+  .library-section-title:first-child {
+    margin-top: 4px;
+  }
+
   .library-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
