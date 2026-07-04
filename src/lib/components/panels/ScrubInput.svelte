@@ -52,6 +52,7 @@
         // For rotation (step 1), 1px = 1 unit. For position (step 0.1), 10px = 1 unit
         const sensitivity = step; 
         const newValue = startValue + dx * sensitivity * multiplier;
+        inputElement.value = formatValue(newValue);
         oninput(newValue);
       }
     };
@@ -97,7 +98,7 @@
   class={className}
   {step}
   onfocus={() => isFocused = true}
-  onblur={() => { isFocused = false; inputElement.value = formatValue(value); }}
+  onblur={() => isFocused = false}
   onpointerdown={handlePointerDown}
   oninput={handleInput}
   onchange={handleChange}

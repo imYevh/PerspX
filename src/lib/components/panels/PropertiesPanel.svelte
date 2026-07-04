@@ -53,22 +53,29 @@
 
   function setPosition(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.position[axis] = parseFloat(value) || 0;
+    if (obj) {
+      const val = parseFloat(value);
+      obj.position[axis] = isNaN(val) ? 0 : val;
+    }
   }
 
   function setRotation(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.rotation[axis] = MathUtils.degToRad(parseFloat(value) || 0);
+    if (obj) {
+      const val = parseFloat(value);
+      obj.rotation[axis] = MathUtils.degToRad(isNaN(val) ? 0 : val);
+    }
   }
 
   function setScale(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
     if (obj) {
-      const val = parseFloat(value) || 1;
+      const val = parseFloat(value);
+      const safeVal = isNaN(val) ? 1 : val;
       if (uniformScale) {
-        obj.scale.set(val, val, val);
+        obj.scale.set(safeVal, safeVal, safeVal);
       } else {
-        obj.scale[axis] = val;
+        obj.scale[axis] = safeVal;
       }
     }
   }
