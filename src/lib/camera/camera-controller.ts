@@ -35,7 +35,20 @@ export class CameraController {
   public mode: CameraMode = 'perspective';
   public target = new Vector3(0, 0, 0);
 
-  public enabled = true;
+  private _enabled = true;
+
+  get enabled(): boolean {
+    return this._enabled;
+  }
+
+  set enabled(value: boolean) {
+    this._enabled = value;
+    if (!value) {
+      // Cancel any in-progress drag so camera doesn't keep moving
+      this.isDragging = false;
+      this.isRightDragging = false;
+    }
+  }
 
   private spherical = new Spherical();
   private sphericalTarget = new Spherical();
