@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { TransformSystem } from '$lib/transforms/transform-controls';
   import { uiStore } from '$lib/stores/ui';
+  import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import type { TransformMode } from '$lib/transforms/transform-controls';
 
   interface Props {
@@ -63,6 +64,22 @@
       <span class="tool-icon">🧲</span>
       {#if $uiStore.breakpoint !== 'mobile'}
         <span class="tool-label">Snap</span>
+      {/if}
+    </button>
+  </div>
+
+  <div class="toolbar-sep"></div>
+
+  <div class="toolbar-group">
+    <button
+      class="tool-btn camera-snap-btn"
+      class:active={$cameraStore.orbitMode === 'snap'}
+      onclick={() => updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'free' ? 'snap' : 'free' })}
+      title="Camera: Free / Snap to Object"
+    >
+      <span class="tool-icon">🎥</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
       {/if}
     </button>
   </div>

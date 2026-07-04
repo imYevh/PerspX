@@ -323,6 +323,22 @@
           _cameraController.lockOrbit = $cameraStore.lockOrbit;
         }
 
+        // Apply Snap to Object
+        if ($cameraStore.orbitMode === 'snap') {
+          _cameraController.lockPan = true;
+          const selectedIds = _sceneManager.getSelectedIds();
+          if (selectedIds.length > 0) {
+            const obj = _sceneManager.getObject(selectedIds[0]);
+            if (obj) {
+              const worldPos = new THREE.Vector3();
+              obj.getWorldPosition(worldPos);
+              _cameraController.target.copy(worldPos);
+            }
+          }
+        } else {
+          _cameraController.lockPan = $cameraStore.lockPan;
+        }
+
         // Apply fisheye settings
         loop.setFisheye($cameraStore.fisheye, $cameraStore.fisheyeIntensity);
 

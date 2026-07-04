@@ -10,6 +10,7 @@ export interface CameraState {
   fisheyeIntensity: number;
   lockPan: boolean;
   lockOrbit: boolean;
+  orbitMode: 'free' | 'snap';
 }
 
 export const cameraStore = writable<CameraState>({
@@ -20,7 +21,8 @@ export const cameraStore = writable<CameraState>({
   fisheye: false,
   fisheyeIntensity: 0,
   lockPan: false,
-  lockOrbit: false
+  lockOrbit: false,
+  orbitMode: 'free'
 });
 
 export function updateCameraStore(updates: Partial<CameraState>) {
