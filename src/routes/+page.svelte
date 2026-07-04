@@ -4,9 +4,12 @@
   import { RenderLoop } from '$lib/core/loop';
   import { bindSceneManager } from '$lib/stores/scene';
   import { CameraController } from '$lib/camera/camera-controller';
-  import { PerspectiveCamera, BoxGeometry, MeshBasicMaterial, Mesh, AmbientLight, DirectionalLight, Vector3 } from 'three';
+  import { CameraController } from '$lib/camera/camera-controller';
+  import { ObjectManager } from '$lib/objects/object-manager';
+  import { AmbientLight, DirectionalLight, Vector3 } from 'three';
 
   let canvas: HTMLCanvasElement;
+  let objectManager: ObjectManager | undefined = $state();
 
   $effect(() => {
     let renderer: Renderer;
@@ -24,12 +27,16 @@
       sceneManager = new SceneManager(renderer.scene);
       bindSceneManager(sceneManager);
       
+      objectManager = new ObjectManager(sceneManager);
+      
       sceneManager.on('object-added', (data) => {
         console.log(`Added: ${data.meta.name} (${data.id})`);
       });
 
       // @ts-ignore
       window.sceneManager = sceneManager;
+      // @ts-ignore
+      window.objectManager = objectManager;
 
       cameraController = new CameraController({
         canvas,
@@ -44,20 +51,10 @@
       renderer.scene.add(ambientLight);
       renderer.scene.add(dirLight);
 
-      // Create a blue cube
-      const geometry = new BoxGeometry(1, 1, 1);
-      const material = new MeshBasicMaterial({ color: 0x4a9eff });
-      const cube = new Mesh(geometry, material);
-      
-      sceneManager.addObject(cube, 'primitive', 'Cube');
-
       loop = new RenderLoop(renderer.instance, renderer.scene, cameraController.camera);
       loop.onUpdate((dt) => {
         cameraController.update();
         loop.setCamera(cameraController.camera);
-
-        cube.rotation.y += dt * 0.5;
-        cube.rotation.x += dt * 0.2;
       });
       loop.start();
 
@@ -82,9 +79,40 @@
   });
 </script>
 
+<div class="ui-layer">
+  <button 
+    onclick={() => objectManager?.addPrimitive('cube')}
+    disabled={!objectManager}
+  >
+    Add Test Cube
+  </button>
+</div>
+
 <canvas bind:this={canvas} id="viewport"></canvas>
 
 <style>
+  .ui-layer {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+  }
+  
+  .ui-layer button {
+    padding: 0.5rem 1rem;
+    background: #4a9eff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .ui-layer button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   #viewport {
     display: block;
     width: 100%;

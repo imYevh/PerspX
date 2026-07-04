@@ -479,25 +479,27 @@ You will type some terminal commands and paste some config code.
 
 ### 5.3 — Wire ObjectManager into the page
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Initialize `ObjectManager` in `onMount` with the `SceneManager`
-- [ ] Follow the integration example in `05-primitives-library.md`
+- [x] Open `src/routes/+page.svelte`
+- [x] Initialize `ObjectManager` in `onMount` with the `SceneManager`
+- [x] Follow the integration example in `05-primitives-library.md`
 
 ---
 
 ### 5.4 — Add a temporary test button to the UI
 
-- [ ] In `+page.svelte`, add a `<button>` that calls `objectManager.add('box')`
-- [ ] You can remove this button later once the real UI panel is built in Phase 11
+- [x] In `+page.svelte`, add a `<button>` that calls `objectManager.add('cube')`
+- [x] You can remove this button later once the real UI panel is built in Phase 11
 
 ---
 
 ### 5.5 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] Click the test button — a cube appears in the scene
-- [ ] Click multiple times — multiple cubes appear
-- [ ] Each object has a unique ID (check console logs)
+- [x] Run: `npm run dev`
+- [x] Click the test button — a cube appears in the scene
+- [x] Click multiple times — multiple cubes appear
+- [x] Each object has a unique ID (check console logs)
+
+**Phase 5 complete — you can add primitives to the scene.**
 
 **Phase 5 complete — you can populate the scene.**
 
