@@ -39,6 +39,11 @@ export class LightManager {
 
   constructor(sceneManager: SceneManager) {
     this.sceneManager = sceneManager;
+    
+    // Automatically clean up helpers when a light is removed (e.g. via delete key)
+    this.sceneManager.on('object-removed', (data) => {
+      this.removeHelper(data.id);
+    });
   }
 
   addLight(config: LightConfig): string {

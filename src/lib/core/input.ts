@@ -32,24 +32,35 @@ export class InputSystem {
     const dy = e.clientY - this.pointerDownPos.y;
     if (Math.sqrt(dx * dx + dy * dy) > 4) {
       this.isDragging = true;
+      
+      // Paint selection (multiply by dragging)
+      if (e.buttons === 1) { // Left mouse button is held down
+        this.performSelection(e, true);
+      }
     }
   };
 
   private onPointerUp = (e: PointerEvent): void => {
-    // Only fire selection on clean left-click (no drag)
-    if (e.button !== 0 || this.isDragging) return;
+    if (e.button !== 0) return;
 
+    // If it was just a click, do normal selection
+    if (!this.isDragging) {
+      this.performSelection(e, e.shiftKey);
+    }
+  };
+
+  private performSelection(e: PointerEvent, additive: boolean) {
     const rect = this.canvas.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
     const hit = this.sceneManager.raycastFromScreen(this.mouse, this.camera);
     if (hit) {
-      this.sceneManager.select(hit.id);
-    } else {
+      this.sceneManager.select(hit.id, additive);
+    } else if (!additive) {
       this.sceneManager.deselectAll();
     }
-  };
+  }
   
   updateCamera(camera: Camera) {
     this.camera = camera;

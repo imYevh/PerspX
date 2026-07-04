@@ -198,7 +198,7 @@ export class CameraController {
 
   private onPointerDown = (e: PointerEvent): void => {
     if (!this.enabled) return;
-    if (e.button === 0) { // Left click — orbit
+    if (e.button === 1) { // Middle click (wheel) — orbit
       this.isDragging = true;
     } else if (e.button === 2) { // Right click — pan
       this.isRightDragging = true;
