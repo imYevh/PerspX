@@ -274,16 +274,17 @@ export class CameraController {
 
   private pan(dx: number, dy: number): void {
     const camera = this.camera;
+    camera.updateMatrixWorld(); // Ensure matrix is current
+
     const right = new Vector3();
     const up = new Vector3();
 
-    camera.getWorldDirection(new Vector3());
     right.setFromMatrixColumn(camera.matrixWorld, 0); // Camera right
     up.setFromMatrixColumn(camera.matrixWorld, 1);    // Camera up
 
     const scale = this.spherical.radius * this.panSpeed;
-    this.panOffset.add(right.multiplyScalar(-dx * scale * 0.002));
-    this.panOffset.add(up.multiplyScalar(dy * scale * 0.002));
+    this.panOffset.add(right.multiplyScalar(-dx * scale));
+    this.panOffset.add(up.multiplyScalar(dy * scale));
   }
 
   private syncCameras(): void {

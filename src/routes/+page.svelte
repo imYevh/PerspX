@@ -4,7 +4,6 @@
   import { RenderLoop } from '$lib/core/loop';
   import { bindSceneManager } from '$lib/stores/scene';
   import { CameraController } from '$lib/camera/camera-controller';
-  import { CameraController } from '$lib/camera/camera-controller';
   import { ObjectManager } from '$lib/objects/object-manager';
   import { AmbientLight, DirectionalLight, Vector3 } from 'three';
 
