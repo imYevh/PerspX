@@ -117,6 +117,8 @@
         if (obj) {
           obj.position.x = intersectPoint.x;
           obj.position.z = intersectPoint.z;
+          obj.updateMatrixWorld();
+          commitHistory(sceneManager, true);
         }
       }
     } else if (perspxType === 'light' && lightManager) {
@@ -127,6 +129,7 @@
           obj.position.x = intersectPoint.x;
           obj.position.z = intersectPoint.z;
           lightManager.updateHelpers();
+          commitHistory(sceneManager, true);
         }
       }
     }

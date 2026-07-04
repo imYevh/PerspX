@@ -3,6 +3,7 @@
   import { sceneStore } from '$lib/stores/scene';
   import type { SceneManager } from '$lib/core/scene';
   import { MathUtils } from 'three';
+  import { commitHistory } from '$lib/stores/history';
 
   interface Props {
     sceneManager: SceneManager | undefined;
@@ -39,23 +40,33 @@
 
   function setPosition(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.position[axis] = parseFloat(value) || 0;
+    if (obj) {
+      obj.position[axis] = parseFloat(value) || 0;
+      if (sceneManager) commitHistory(sceneManager);
+    }
   }
 
   function setRotation(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.rotation[axis] = MathUtils.degToRad(parseFloat(value) || 0);
+    if (obj) {
+      obj.rotation[axis] = MathUtils.degToRad(parseFloat(value) || 0);
+      if (sceneManager) commitHistory(sceneManager);
+    }
   }
 
   function setScale(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.scale[axis] = parseFloat(value) || 1;
+    if (obj) {
+      obj.scale[axis] = parseFloat(value) || 1;
+      if (sceneManager) commitHistory(sceneManager);
+    }
   }
 
   function setIntensity(value: string) {
     const obj = sceneManager?.getObject(selectedId!);
     if (obj && 'intensity' in obj) {
       (obj as any).intensity = parseFloat(value) || 1;
+      if (sceneManager) commitHistory(sceneManager);
     }
   }
 
@@ -63,12 +74,16 @@
     const obj = sceneManager?.getObject(selectedId!);
     if (obj && 'color' in obj) {
       (obj as any).color.set(value);
+      if (sceneManager) commitHistory(sceneManager);
     }
   }
 
   function setName(value: string) {
     const meta = sceneManager?.getMeta(selectedId!);
-    if (meta) meta.name = value;
+    if (meta) {
+      meta.name = value;
+      if (sceneManager) commitHistory(sceneManager);
+    }
   }
 
   function fmt(n: number) {

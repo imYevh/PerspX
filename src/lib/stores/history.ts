@@ -26,14 +26,22 @@ export function initHistory(sceneManager: SceneManager) {
   });
 }
 
-export function commitHistory(sceneManager: SceneManager) {
+export function commitHistory(sceneManager: SceneManager, replaceLast = false) {
   if (isRestoring) return;
   const snapshot = serializeScene(sceneManager);
   
-  historyStore.update(s => ({
-    past: [...s.past, snapshot],
-    future: [] // Any new action clears the redo stack
-  }));
+  historyStore.update(s => {
+    if (replaceLast && s.past.length > 1) {
+      return {
+        past: [...s.past.slice(0, -1), snapshot],
+        future: []
+      };
+    }
+    return {
+      past: [...s.past, snapshot],
+      future: []
+    };
+  });
 }
 
 export function undo(sceneManager: SceneManager, objectManager: ObjectManager, lightManager: LightManager) {
