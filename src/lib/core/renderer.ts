@@ -19,6 +19,7 @@ export class Renderer {
 
     this.instance.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap at 2x for perf
     this.instance.setClearColor(new Color(options.backgroundColor ?? 0x1a1a2e));
+    this.instance.shadowMap.enabled = true;
 
     this.scene = new Scene();
 

@@ -59,6 +59,7 @@
       const ambientLight = new AmbientLight(0xffffff, 0.5);
       const dirLight = new DirectionalLight(0xffffff, 1);
       dirLight.position.set(5, 5, 5);
+      dirLight.castShadow = true;
       renderer.scene.add(ambientLight);
       renderer.scene.add(dirLight);
 
