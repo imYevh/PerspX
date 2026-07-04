@@ -10,6 +10,16 @@
   }
   let { sceneManager }: Props = $props();
 
+  // Force re-renders every frame to show live updates from gizmos
+  let tick = $state(0);
+  $effect(() => {
+    let frame = requestAnimationFrame(function loop() {
+      tick++;
+      frame = requestAnimationFrame(loop);
+    });
+    return () => cancelAnimationFrame(frame);
+  });
+
   let selectedId = $derived($sceneStore.selectedIds[0] ?? null);
   let selectedCount = $derived($sceneStore.selectedIds.length);
   
@@ -40,33 +50,23 @@
 
   function setPosition(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) {
-      obj.position[axis] = parseFloat(value) || 0;
-      if (sceneManager) commitHistory(sceneManager);
-    }
+    if (obj) obj.position[axis] = parseFloat(value) || 0;
   }
 
   function setRotation(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) {
-      obj.rotation[axis] = MathUtils.degToRad(parseFloat(value) || 0);
-      if (sceneManager) commitHistory(sceneManager);
-    }
+    if (obj) obj.rotation[axis] = MathUtils.degToRad(parseFloat(value) || 0);
   }
 
   function setScale(axis: 'x' | 'y' | 'z', value: string) {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) {
-      obj.scale[axis] = parseFloat(value) || 1;
-      if (sceneManager) commitHistory(sceneManager);
-    }
+    if (obj) obj.scale[axis] = parseFloat(value) || 1;
   }
 
   function setIntensity(value: string) {
     const obj = sceneManager?.getObject(selectedId!);
     if (obj && 'intensity' in obj) {
       (obj as any).intensity = parseFloat(value) || 1;
-      if (sceneManager) commitHistory(sceneManager);
     }
   }
 
@@ -74,16 +74,16 @@
     const obj = sceneManager?.getObject(selectedId!);
     if (obj && 'color' in obj) {
       (obj as any).color.set(value);
-      if (sceneManager) commitHistory(sceneManager);
     }
   }
 
   function setName(value: string) {
     const meta = sceneManager?.getMeta(selectedId!);
-    if (meta) {
-      meta.name = value;
-      if (sceneManager) commitHistory(sceneManager);
-    }
+    if (meta) meta.name = value;
+  }
+
+  function commit() {
+    if (sceneManager) commitHistory(sceneManager);
   }
 
   function fmt(n: number) {
@@ -109,6 +109,7 @@
       </div>
     </div>
   {:else if selectedEntry}
+    {@const _t = tick}
     {@const obj = selectedEntry.object}
     {@const meta = selectedEntry.meta}
 
@@ -119,11 +120,11 @@
         <label>Position</label>
         <div class="xyz">
           <input class="pi x" type="number" step="0.1" value={fmt(obj.position.x)}
-            onchange={(e) => setPosition('x', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setPosition('x', (e.target as HTMLInputElement).value)} onchange={commit} />
           <input class="pi y" type="number" step="0.1" value={fmt(obj.position.y)}
-            onchange={(e) => setPosition('y', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setPosition('y', (e.target as HTMLInputElement).value)} onchange={commit} />
           <input class="pi z" type="number" step="0.1" value={fmt(obj.position.z)}
-            onchange={(e) => setPosition('z', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setPosition('z', (e.target as HTMLInputElement).value)} onchange={commit} />
         </div>
       </div>
 
@@ -131,11 +132,11 @@
         <label>Rotation °</label>
         <div class="xyz">
           <input class="pi x" type="number" step="1" value={MathUtils.radToDeg(obj.rotation.x).toFixed(0)}
-            onchange={(e) => setRotation('x', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setRotation('x', (e.target as HTMLInputElement).value)} onchange={commit} />
           <input class="pi y" type="number" step="1" value={MathUtils.radToDeg(obj.rotation.y).toFixed(0)}
-            onchange={(e) => setRotation('y', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setRotation('y', (e.target as HTMLInputElement).value)} onchange={commit} />
           <input class="pi z" type="number" step="1" value={MathUtils.radToDeg(obj.rotation.z).toFixed(0)}
-            onchange={(e) => setRotation('z', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setRotation('z', (e.target as HTMLInputElement).value)} onchange={commit} />
         </div>
       </div>
 
@@ -143,11 +144,11 @@
         <label>Scale</label>
         <div class="xyz">
           <input class="pi" type="number" step="0.1" value={fmt(obj.scale.x)}
-            onchange={(e) => setScale('x', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setScale('x', (e.target as HTMLInputElement).value)} onchange={commit} />
           <input class="pi" type="number" step="0.1" value={fmt(obj.scale.y)}
-            onchange={(e) => setScale('y', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setScale('y', (e.target as HTMLInputElement).value)} onchange={commit} />
           <input class="pi" type="number" step="0.1" value={fmt(obj.scale.z)}
-            onchange={(e) => setScale('z', (e.target as HTMLInputElement).value)} />
+            oninput={(e) => setScale('z', (e.target as HTMLInputElement).value)} onchange={commit} />
         </div>
       </div>
     </div>
@@ -157,7 +158,7 @@
       <div class="prop-row">
         <label>Name</label>
         <input class="pi full" type="text" value={meta.name}
-          onchange={(e) => setName((e.target as HTMLInputElement).value)} />
+          oninput={(e) => setName((e.target as HTMLInputElement).value)} onchange={commit} />
       </div>
       <div class="prop-row">
         <label>Type</label>
@@ -168,16 +169,15 @@
         <div class="prop-row">
           <label>Intensity</label>
           <input class="pi full" type="number" step="0.1" value={fmt((obj as any).intensity)}
-            onchange={(e) => setIntensity((e.target as HTMLInputElement).value)} />
+            oninput={(e) => setIntensity((e.target as HTMLInputElement).value)} onchange={commit} />
         </div>
       {/if}
 
       {#if 'color' in obj}
         <div class="prop-row">
           <label>Color</label>
-          <!-- Using standard HTML5 color picker. getHexString() gives RRGGBB -->
           <input class="pi full" type="color" value={"#" + (obj as any).color.getHexString()}
-            onchange={(e) => setColor((e.target as HTMLInputElement).value)}
+            oninput={(e) => setColor((e.target as HTMLInputElement).value)} onchange={commit}
             style="padding: 0 4px; height: 22px; cursor: pointer;" />
         </div>
       {/if}
