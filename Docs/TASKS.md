@@ -560,10 +560,11 @@ You will type some terminal commands and paste some config code.
 - [x] Press `R` — gizmo switches to **rotate rings**
 
 **Phase 6 complete — you can transform objects.**
-- [ ] Press `S` — gizmo switches to **scale handles**
-- [ ] Press `Escape` — gizmo disappears, object deselects
-- [ ] Press `Delete` — selected object is removed
-- [ ] While dragging a gizmo, the camera does NOT move
+
+- [x] Press `S` — gizmo switches to **scale handles**
+- [x] Press `Escape` — gizmo disappears, object deselects
+- [x] Press `Delete` — selected object is removed
+- [x] While dragging a gizmo, the camera does NOT move
 
 **Phase 6 complete — you can manipulate objects in 3D space.**
 
@@ -579,9 +580,9 @@ You will type some terminal commands and paste some config code.
 
 ### 7.1 — Create the infinite grid
 
-- [ ] Create new file: `src/lib/helpers/grid.ts`
-- [ ] Copy the grid code from `07-grid-and-helpers.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/helpers/grid.ts`
+- [x] Copy the grid code from `07-grid-and-helpers.md`
+- [x] Save the file
 
 ---
 
