@@ -403,9 +403,9 @@ You will type some terminal commands and paste some config code.
 
 ### 4.2 — Create camera presets
 
-- [ ] Create new file: `src/lib/camera/camera-presets.ts`
-- [ ] Copy the presets code from `04-camera-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/camera/camera-presets.ts`
+- [x] Copy the presets code from `04-camera-system.md`
+- [x] Save the file
 
 > **What presets do:** Pre-configured camera positions like "Front", "Top", "Side" views.
 
