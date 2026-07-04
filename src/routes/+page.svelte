@@ -8,7 +8,6 @@
   import { TransformSystem } from '$lib/transforms/transform-controls';
   import { InputSystem } from '$lib/core/input';
   import { createInfiniteGrid } from '$lib/helpers/grid';
-  import { createGroundPlane } from '$lib/helpers/ground-plane';
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
   import { LightManager } from '$lib/lighting/light-manager';
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
@@ -202,10 +201,8 @@
 
       // Add helpers
       const grid = createInfiniteGrid();
-      const ground = createGroundPlane();
       vanishingHelper = new VanishingPointHelper();
       renderer.scene.add(grid);
-      renderer.scene.add(ground);
       renderer.scene.add(vanishingHelper.group);
 
       // Keyboard toggles: 1=grid, 2=vanishing
