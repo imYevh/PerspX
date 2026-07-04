@@ -33,7 +33,11 @@
     cameraStore.update(s => ({ ...s, fov: preset.fov }));
   }
 
-  const presetKeys = Object.keys(CAMERA_PRESETS);
+  let presetKeys = $derived(
+    $cameraStore.mode === 'orthographic'
+      ? Object.keys(CAMERA_PRESETS).slice(0, 6)
+      : Object.keys(CAMERA_PRESETS)
+  );
 </script>
 
 <Panel title="📷 Camera">

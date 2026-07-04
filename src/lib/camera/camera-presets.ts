@@ -70,13 +70,7 @@ export const CAMERA_PRESETS: Record<string, CameraPreset> = {
     position: new Vector3(5, 15, 5),
     target: new Vector3(0, 0, 0),
     fov: 40,
-  },
-  wormEye: {
-    name: "Worm's Eye",
-    position: new Vector3(2, -0.2, 2),
-    target: new Vector3(0, 3, 0),
-    fov: 90,
-  },
+  }
 };
 
 // Focal length presets (35mm equivalent)
