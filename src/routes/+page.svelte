@@ -192,7 +192,7 @@
 
       // Sync camera changes to store
       _transformSystem.controls.addEventListener('change', () => {
-        updateCameraStore(_cameraController.mode, _cameraController.getFOV(), _cameraController.getRoll(), $cameraStore.zolly);
+        updateCameraStore({ mode: _cameraController.mode, fov: _cameraController.getFOV(), roll: _cameraController.getRoll() });
       });
 
       // Add lights
@@ -317,8 +317,12 @@
         if (_cameraController.getRoll() !== $cameraStore.roll) {
           _cameraController.setRoll($cameraStore.roll);
         }
-
-
+        if (_cameraController.lockPan !== $cameraStore.lockPan) {
+          _cameraController.lockPan = $cameraStore.lockPan;
+        }
+        if (_cameraController.lockOrbit !== $cameraStore.lockOrbit) {
+          _cameraController.lockOrbit = $cameraStore.lockOrbit;
+        }
 
 
         if (vanishingHelper.group.visible) {

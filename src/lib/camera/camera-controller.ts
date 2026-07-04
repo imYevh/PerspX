@@ -62,6 +62,10 @@ export class CameraController {
   private lastMouse = { x: 0, y: 0 };
   private lastPinchDist = 0;
 
+  // Locks
+  public lockPan = false;
+  public lockOrbit = false;
+
   // Config
   private minDist: number;
   private maxDist: number;
@@ -266,7 +270,7 @@ export class CameraController {
     const dy = e.clientY - this.lastMouse.y;
     this.lastMouse = { x: e.clientX, y: e.clientY };
 
-    if (this.isDragging) {
+    if (this.isDragging && !this.lockOrbit) {
       // Orbit
       this.sphericalTarget.theta -= dx * this.orbitSpeed;
       this.sphericalTarget.phi -= dy * this.orbitSpeed;
@@ -275,7 +279,7 @@ export class CameraController {
       );
     }
 
-    if (this.isRightDragging) {
+    if (this.isRightDragging && !this.lockPan) {
       // Pan
       this.pan(dx, dy);
     }
@@ -313,7 +317,7 @@ export class CameraController {
 
   private onTouchMove = (e: TouchEvent): void => {
     e.preventDefault();
-    if (e.touches.length === 1 && this.isDragging) {
+    if (e.touches.length === 1 && this.isDragging && !this.lockOrbit) {
       const dx = e.touches[0].clientX - this.lastMouse.x;
       const dy = e.touches[0].clientY - this.lastMouse.y;
       this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };

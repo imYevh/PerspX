@@ -6,15 +6,19 @@ export interface CameraState {
   fov: number;
   roll: number;
   zolly: boolean;
+  lockPan: boolean;
+  lockOrbit: boolean;
 }
 
 export const cameraStore = writable<CameraState>({
   mode: 'perspective',
   fov: 50,
   roll: 0,
-  zolly: false
+  zolly: false,
+  lockPan: false,
+  lockOrbit: false
 });
 
-export function updateCameraStore(mode: CameraMode, fov: number, roll: number, zolly: boolean) {
-  cameraStore.set({ mode, fov, roll, zolly });
+export function updateCameraStore(updates: Partial<CameraState>) {
+  cameraStore.update(state => ({ ...state, ...updates }));
 }

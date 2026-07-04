@@ -4,24 +4,24 @@
   // Handle input events to ensure we coerce to numbers and update store properly
   function onFovInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, v, $cameraStore.roll, $cameraStore.zolly);
+    updateCameraStore({ fov: v });
   }
 
   function onRollInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, v, $cameraStore.zolly);
+    updateCameraStore({ roll: v });
   }
 
   function toggleZolly() {
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, $cameraStore.roll, !$cameraStore.zolly);
+    updateCameraStore({ zolly: !$cameraStore.zolly });
   }
 
   function resetFov() {
-    updateCameraStore($cameraStore.mode, 50, $cameraStore.roll, $cameraStore.zolly);
+    updateCameraStore({ fov: 50 });
   }
 
   function resetRoll() {
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, 0, $cameraStore.zolly);
+    updateCameraStore({ roll: 0 });
   }
 </script>
 
@@ -55,6 +55,20 @@
     </div>
     <input type="range" min="-45" max="45" step="1" 
            value={$cameraStore.roll} oninput={onRollInput} class="slider" />
+  </div>
+
+  <div class="control-group">
+    <div class="control-header">
+      <span class="control-label">CAMERA MOVEMENT</span>
+    </div>
+    <div class="value-row" style="margin-top: 4px; justify-content: space-between;">
+      <button class="icon-btn text-btn" class:locked={$cameraStore.lockOrbit} onclick={() => updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit })} title="Lock Orbit (Rotation)">
+        <span>{$cameraStore.lockOrbit ? '🔒' : '🔓'} Orbit</span>
+      </button>
+      <button class="icon-btn text-btn" class:locked={$cameraStore.lockPan} onclick={() => updateCameraStore({ lockPan: !$cameraStore.lockPan })} title="Lock Pan (Movement)">
+        <span>{$cameraStore.lockPan ? '🔒' : '🔓'} Pan</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -130,6 +144,25 @@
   }
 
   .icon-btn.locked {
+    color: #ff6b6b;
+  }
+  
+  .text-btn {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    gap: 4px;
+  }
+  
+  .text-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  .text-btn.locked {
+    background: rgba(255, 107, 107, 0.15);
     color: #ff6b6b;
   }
 
