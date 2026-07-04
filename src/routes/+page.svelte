@@ -392,8 +392,8 @@
     <!-- Viewport -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
-      <ViewportOverlay />
       {#if $uiStore.panelsVisible}
+        <ViewportOverlay />
         <ViewportControls />
       {/if}
     </div>
