@@ -222,7 +222,7 @@
     flex: 1;
   }
 
-  .pi {
+  :global(.pi) {
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
@@ -230,19 +230,21 @@
     padding: 4px 6px;
     font-size: 11px;
     width: 100%;
+    /* Fix input shrinking flex layout */
+    min-width: 0; 
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
 
-  .pi:focus {
+  :global(.pi:focus) {
     border-color: #4a9eff;
     outline: none;
     background: rgba(74, 158, 255, 0.08);
   }
 
-  .pi.x { border-left: 2px solid #ff5555; }
-  .pi.y { border-left: 2px solid #55cc55; }
-  .pi.z { border-left: 2px solid #5555ff; }
-  .pi.full { flex: 1; }
+  :global(.pi.x) { border-left: 2px solid #ff5555; }
+  :global(.pi.y) { border-left: 2px solid #55cc55; }
+  :global(.pi.z) { border-left: 2px solid #5555ff; }
+  :global(.pi.full) { flex: 1; }
 
   .prop-badge {
     font-size: 11px;
