@@ -185,6 +185,7 @@
       _transformSystem = new TransformSystem(_cameraController.camera, canvas, _sceneManager, _cameraController);
       transformSystem = _transformSystem;
       inputSystem = new InputSystem(canvas, _cameraController.camera, _sceneManager);
+      inputSystem.setTransformSystem(_transformSystem);
 
       // Sync camera changes to store
       _transformSystem.controls.addEventListener('change', () => {

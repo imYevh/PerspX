@@ -1058,10 +1058,10 @@ You will type some terminal commands and paste some config code.
 
 ### 14.5 — Wire Undo/Redo to keyboard shortcuts
 
-- [ ] Open `src/lib/core/input.ts`
-- [ ] Add `Ctrl+Z` — call `history.undo()`
-- [ ] Add `Ctrl+Y` or `Ctrl+Shift+Z` — call `history.redo()`
-- [ ] Save the file
+- [x] Open `src/lib/core/input.ts`
+- [x] Add `Ctrl+Z` — call `history.undo()`
+- [x] Add `Ctrl+Y` or `Ctrl+Shift+Z` — call `history.redo()`
+- [x] Save the file
 
 ---
 

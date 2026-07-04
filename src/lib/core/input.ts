@@ -1,6 +1,7 @@
 import { Vector2, type Camera, Object3D } from 'three';
 import { SelectionBox } from 'three/addons/interactive/SelectionBox.js';
 import type { SceneManager } from './scene';
+import type { TransformSystem } from '../transforms/transform-controls';
 import { uiStore } from '../stores/ui';
 
 export class InputSystem {
@@ -14,6 +15,7 @@ export class InputSystem {
   private pointerDownPos = { x: 0, y: 0 };
   private isDragging = false;
   private isMarquee = false;
+  private transformSystem?: TransformSystem;
 
   constructor(canvas: HTMLCanvasElement, camera: Camera, sceneManager: SceneManager) {
     this.canvas = canvas;
@@ -26,13 +28,24 @@ export class InputSystem {
     this.canvas.addEventListener('pointerup', this.onPointerUp);
   }
 
+  setTransformSystem(ts: TransformSystem) {
+    this.transformSystem = ts;
+  }
+
   private onPointerDown = (e: PointerEvent): void => {
     if (e.button !== 0) return;
+
+    // Ignore if clicking on a transform gizmo handle
+    if (this.transformSystem && this.transformSystem.controls.axis !== null) return;
+
     this.pointerDownPos = { x: e.clientX, y: e.clientY };
     this.isDragging = false;
   };
 
   private onPointerMove = (e: PointerEvent): void => {
+    // Ignore if transform gizmo is being interacted with
+    if (this.transformSystem && this.transformSystem.controls.dragging) return;
+
     const dx = e.clientX - this.pointerDownPos.x;
     const dy = e.clientY - this.pointerDownPos.y;
     if (Math.sqrt(dx * dx + dy * dy) > 4) {
@@ -57,6 +70,9 @@ export class InputSystem {
 
   private onPointerUp = (e: PointerEvent): void => {
     if (e.button !== 0) return;
+
+    // Ignore if releasing a transform gizmo handle
+    if (this.transformSystem && this.transformSystem.controls.axis !== null) return;
 
     if (this.isMarquee) {
       this.isMarquee = false;
