@@ -4,6 +4,7 @@
   import type { LightManager } from '$lib/lighting/light-manager';
   import type { Renderer } from '$lib/core/renderer';
   import { uiStore } from '$lib/stores/ui';
+  import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { undo, redo } from '$lib/stores/history';
   import { serializeScene, applySceneSnapshot } from '$lib/utils/serialization';
   
@@ -125,6 +126,19 @@
       <span class="tool-icon">{$uiStore.panelsVisible ? '👁️' : '🙈'}</span>
       {#if $uiStore.breakpoint !== 'mobile'}
         <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
+      {/if}
+    </button>
+    <div class="toolbar-sep"></div>
+    <button class="tool-btn" class:locked={$cameraStore.lockOrbit} onclick={() => updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit })} title="Lock Orbit (Rotation)">
+      <span class="tool-icon">{$cameraStore.lockOrbit ? '🔒' : '🔓'}</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">Orbit</span>
+      {/if}
+    </button>
+    <button class="tool-btn" class:locked={$cameraStore.lockPan} onclick={() => updateCameraStore({ lockPan: !$cameraStore.lockPan })} title="Lock Pan (Movement)">
+      <span class="tool-icon">{$cameraStore.lockPan ? '🔒' : '🔓'}</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">Pan</span>
       {/if}
     </button>
     <button class="tool-btn" title="Reset Camera Position" onclick={() => {
@@ -270,6 +284,10 @@
   .tool-btn:hover {
     background: rgba(255, 255, 255, 0.07);
     color: #e0e0e0;
+  }
+  
+  .tool-btn.locked {
+    color: #ff6b6b;
   }
 
   .tool-icon {
