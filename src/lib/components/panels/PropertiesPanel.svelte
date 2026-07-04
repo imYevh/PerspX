@@ -136,11 +136,11 @@
       <div class="prop-row">
         <label>Position</label>
         <div class="xyz">
-          <ScrubInput class="pi x" step={0.1} value={tick ? obj.position.x : obj.position.x}
+          <ScrubInput class="pi x" step={0.1} {tick} value={obj.position.x}
             oninput={(v) => setPosition('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi y" step={0.1} value={tick ? obj.position.y : obj.position.y}
+          <ScrubInput class="pi y" step={0.1} {tick} value={obj.position.y}
             oninput={(v) => setPosition('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi z" step={0.1} value={tick ? obj.position.z : obj.position.z}
+          <ScrubInput class="pi z" step={0.1} {tick} value={obj.position.z}
             oninput={(v) => setPosition('z', v.toString())} onchange={commit} />
         </div>
       </div>
@@ -148,11 +148,11 @@
       <div class="prop-row">
         <label>Rotation °</label>
         <div class="xyz">
-          <ScrubInput class="pi x" step={1} value={tick ? MathUtils.radToDeg(obj.rotation.x) : MathUtils.radToDeg(obj.rotation.x)}
+          <ScrubInput class="pi x" step={1} {tick} value={MathUtils.radToDeg(obj.rotation.x)}
             oninput={(v) => setRotation('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi y" step={1} value={tick ? MathUtils.radToDeg(obj.rotation.y) : MathUtils.radToDeg(obj.rotation.y)}
+          <ScrubInput class="pi y" step={1} {tick} value={MathUtils.radToDeg(obj.rotation.y)}
             oninput={(v) => setRotation('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi z" step={1} value={tick ? MathUtils.radToDeg(obj.rotation.z) : MathUtils.radToDeg(obj.rotation.z)}
+          <ScrubInput class="pi z" step={1} {tick} value={MathUtils.radToDeg(obj.rotation.z)}
             oninput={(v) => setRotation('z', v.toString())} onchange={commit} />
         </div>
       </div>
@@ -165,11 +165,11 @@
           </button>
         </label>
         <div class="xyz">
-          <ScrubInput class="pi" step={0.1} value={tick ? obj.scale.x : obj.scale.x}
+          <ScrubInput class="pi" step={0.1} {tick} value={obj.scale.x}
             oninput={(v) => setScale('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi" step={0.1} value={tick ? obj.scale.y : obj.scale.y}
+          <ScrubInput class="pi" step={0.1} {tick} value={obj.scale.y}
             oninput={(v) => setScale('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi" step={0.1} value={tick ? obj.scale.z : obj.scale.z}
+          <ScrubInput class="pi" step={0.1} {tick} value={obj.scale.z}
             oninput={(v) => setScale('z', v.toString())} onchange={commit} />
         </div>
       </div>
