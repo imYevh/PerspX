@@ -395,9 +395,9 @@ You will type some terminal commands and paste some config code.
 
 ### 4.1 — Create the CameraController
 
-- [ ] Create new file: `src/lib/camera/camera-controller.ts`
-- [ ] Copy the `CameraController` class from `04-camera-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/camera/camera-controller.ts`
+- [x] Copy the `CameraController` class from `04-camera-system.md`
+- [x] Save the file
 
 ---
 
