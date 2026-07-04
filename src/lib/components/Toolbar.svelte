@@ -39,7 +39,7 @@
   function handleMenuSelect(id: string) {
     if (id === 'new') {
       if (confirm('Clear current scene? All unsaved progress will be lost.')) {
-        if (sceneManager) sceneManager.clear();
+        if (sceneManager) sceneManager.clearAll();
       }
     } else {
       alert(`Feature "${id}" coming soon!`);
