@@ -328,19 +328,20 @@
           _cameraController.lockPan = $cameraStore.lockPan;
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
-            const obj = _sceneManager.getObject(selectedIds[0]);
+            const currentObjId = selectedIds[0];
+            const obj = _sceneManager.getObject(currentObjId);
             if (obj) {
               const worldPos = new THREE.Vector3();
               obj.getWorldPosition(worldPos);
               
-              if ((window as any).__lastSnapObjId === obj.userData.id) {
+              if ((window as any).__lastSnapObjId === currentObjId) {
                 const delta = new THREE.Vector3().subVectors(worldPos, (window as any).__lastSnapObjPos);
                 _cameraController.target.add(delta);
               } else {
                 _cameraController.target.copy(worldPos);
               }
               
-              (window as any).__lastSnapObjId = obj.userData.id;
+              (window as any).__lastSnapObjId = currentObjId;
               if (!(window as any).__lastSnapObjPos) (window as any).__lastSnapObjPos = new THREE.Vector3();
               (window as any).__lastSnapObjPos.copy(worldPos);
             }
