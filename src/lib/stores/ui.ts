@@ -25,6 +25,7 @@ export interface UIState {
   cameraCollapsed: boolean;
   marquee: MarqueeState;
   drag: DragState;
+  breakpoint: 'desktop' | 'tablet' | 'mobile';
 }
 
 export const uiStore = writable<UIState>({
@@ -46,5 +47,12 @@ export const uiStore = writable<UIState>({
     active: false,
     type: null,
     item: null,
-  }
+  },
+  breakpoint: 'desktop'
 });
+
+export function getBreakpoint(width: number): 'desktop' | 'tablet' | 'mobile' {
+  if (width < 768) return 'mobile';
+  if (width < 1024) return 'tablet';
+  return 'desktop';
+}

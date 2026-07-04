@@ -25,6 +25,8 @@
   import CameraPanel from '$lib/components/panels/CameraPanel.svelte';
   import LibraryPanel from '$lib/components/panels/LibraryPanel.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
+  import BottomSheet from '$lib/components/BottomSheet.svelte';
+  import { getBreakpoint } from '$lib/stores/ui';
 
   let canvas: HTMLCanvasElement;
 
@@ -292,9 +294,18 @@
       loop.start();
 
       const handleResize = () => {
+        const bp = getBreakpoint(window.innerWidth);
+        if ($uiStore.breakpoint !== bp) {
+          uiStore.update(s => ({ ...s, breakpoint: bp }));
+        }
+        
         if (!renderer) return;
         cameraController?.handleResize(renderer.getAspect());
       };
+      
+      // Initialize breakpoint
+      handleResize();
+      
       window.addEventListener('resize', handleResize);
       cleanupResize = () => window.removeEventListener('resize', handleResize);
     }
@@ -320,11 +331,13 @@
 
   <div class="workspace">
     <!-- Left Panel -->
-    <aside class="sidebar left-sidebar">
-      <ScenePanel {sceneManager} />
-      <div class="panel-gap"></div>
-      <LibraryPanel {objectManager} {lightManager} />
-    </aside>
+    {#if $uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet'}
+      <aside class="sidebar left-sidebar" class:tablet-overlay={$uiStore.breakpoint === 'tablet'}>
+        <ScenePanel {sceneManager} />
+        <div class="panel-gap"></div>
+        <LibraryPanel {objectManager} {lightManager} />
+      </aside>
+    {/if}
 
     <!-- Viewport -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
@@ -333,12 +346,18 @@
     </div>
 
     <!-- Right Panel -->
-    <aside class="sidebar right-sidebar">
-      <PropertiesPanel {sceneManager} />
-      <div class="panel-gap"></div>
-      <CameraPanel {cameraController} />
-    </aside>
+    {#if $uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet'}
+      <aside class="sidebar right-sidebar" class:tablet-overlay={$uiStore.breakpoint === 'tablet'}>
+        <PropertiesPanel {sceneManager} />
+        <div class="panel-gap"></div>
+        <CameraPanel {cameraController} />
+      </aside>
+    {/if}
   </div>
+
+  {#if $uiStore.breakpoint === 'mobile'}
+    <BottomSheet {sceneManager} {objectManager} {lightManager} {cameraController} />
+  {/if}
 </div>
 
 <style>
@@ -394,6 +413,22 @@
   .panel-gap {
     height: 6px;
     flex-shrink: 0;
+  }
+
+  .tablet-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 50;
+    height: 100%;
+  }
+  
+  .left-sidebar.tablet-overlay {
+    left: 0;
+  }
+  
+  .right-sidebar.tablet-overlay {
+    right: 0;
   }
 
   .viewport-wrapper {

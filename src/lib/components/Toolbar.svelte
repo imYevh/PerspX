@@ -41,10 +41,12 @@
         class="tool-btn"
         class:active={$uiStore.transformMode === mode.key}
         onclick={() => setMode(mode.key)}
-        title="{mode.label} ({mode.shortcut})"
+        title={$uiStore.breakpoint === 'mobile' ? mode.label : `${mode.label} (${mode.shortcut})`}
       >
         <span class="tool-icon">{mode.icon}</span>
-        <span class="tool-label">{mode.label}</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">{mode.label}</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -52,10 +54,10 @@
   <div class="toolbar-sep"></div>
 
   <div class="toolbar-group">
-    <button class="tool-btn" title="Undo (Ctrl+Z)" onclick={() => {
+    <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
       if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
     }}>⟲</button>
-    <button class="tool-btn" title="Redo (Ctrl+Y)" onclick={() => {
+    <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
       if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
     }}>⟳</button>
   </div>
