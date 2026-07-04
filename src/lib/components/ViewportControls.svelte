@@ -41,7 +41,7 @@
         </button>
       </div>
     </div>
-    <input type="range" min="10" max="120" step="1" 
+    <input type="range" min="1" max="179" step="1" 
            value={$cameraStore.fov} oninput={onFovInput} class="slider" />
   </div>
 
@@ -53,7 +53,7 @@
         <button class="icon-btn" onclick={resetRoll} title="Reset Roll">⟲</button>
       </div>
     </div>
-    <input type="range" min="-45" max="45" step="1" 
+    <input type="range" min="-180" max="180" step="1" 
            value={$cameraStore.roll} oninput={onRollInput} class="slider" />
   </div>
 </div>
