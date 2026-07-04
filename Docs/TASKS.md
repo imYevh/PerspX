@@ -431,20 +431,20 @@ You will type some terminal commands and paste some config code.
 
 ### 4.5 — Wire camera into the page
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Initialize `CameraController` in `onMount`, passing the canvas and renderer
-- [ ] Follow the integration example in `04-camera-system.md`
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Initialize `CameraController` in `onMount`, passing the canvas and renderer
+- [x] Follow the integration example in `04-camera-system.md`
+- [x] Save the file
 
 ---
 
 ### 4.6 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] Left-click + drag — **rotates** the camera around the scene
-- [ ] Right-click + drag — **pans** the camera
-- [ ] Scroll wheel — **zooms** in and out
-- [ ] On mobile (touch screen): pinch to zoom, one finger to orbit
+- [x] Run: `npm run dev`
+- [x] Left-click + drag — **rotates** the camera around the scene
+- [x] Right-click + drag — **pans** the camera
+- [x] Scroll wheel — **zooms** in and out
+- [x] On mobile (touch screen): pinch to zoom, one finger to orbit
 
 **Phase 4 complete — you can navigate the 3D viewport.**
 

@@ -3,7 +3,8 @@
   import { SceneManager } from '$lib/core/scene';
   import { RenderLoop } from '$lib/core/loop';
   import { bindSceneManager } from '$lib/stores/scene';
-  import { PerspectiveCamera, BoxGeometry, MeshBasicMaterial, Mesh, AmbientLight, DirectionalLight } from 'three';
+  import { CameraController } from '$lib/camera/camera-controller';
+  import { PerspectiveCamera, BoxGeometry, MeshBasicMaterial, Mesh, AmbientLight, DirectionalLight, Vector3 } from 'three';
 
   let canvas: HTMLCanvasElement;
 
@@ -11,6 +12,7 @@
     let renderer: Renderer;
     let loop: RenderLoop;
     let sceneManager: SceneManager;
+    let cameraController: CameraController;
     let cleanupResize = () => {};
 
     async function init() {
@@ -22,18 +24,18 @@
       sceneManager = new SceneManager(renderer.scene);
       bindSceneManager(sceneManager);
       
-      // Listen for changes (per docs)
       sceneManager.on('object-added', (data) => {
         console.log(`Added: ${data.meta.name} (${data.id})`);
       });
 
-      // Expose for debugging (Step 3.4)
       // @ts-ignore
       window.sceneManager = sceneManager;
 
-      const camera = new PerspectiveCamera(50, renderer.getAspect(), 0.1, 1000);
-      camera.position.set(3, 3, 3);
-      camera.lookAt(0, 0, 0);
+      cameraController = new CameraController({
+        canvas,
+        aspect: renderer.getAspect(),
+        initialPosition: new Vector3(3, 3, 3)
+      });
 
       // Add lights
       const ambientLight = new AmbientLight(0xffffff, 0.5);
@@ -49,8 +51,11 @@
       
       sceneManager.addObject(cube, 'primitive', 'Cube');
 
-      loop = new RenderLoop(renderer.instance, renderer.scene, camera);
+      loop = new RenderLoop(renderer.instance, renderer.scene, cameraController.camera);
       loop.onUpdate((dt) => {
+        cameraController.update();
+        loop.setCamera(cameraController.camera);
+
         cube.rotation.y += dt * 0.5;
         cube.rotation.x += dt * 0.2;
       });
@@ -58,8 +63,7 @@
 
       const handleResize = () => {
         if (!renderer) return;
-        camera.aspect = renderer.getAspect();
-        camera.updateProjectionMatrix();
+        cameraController.handleResize(renderer.getAspect());
       };
       
       window.addEventListener('resize', handleResize);
@@ -73,6 +77,7 @@
       if (loop) loop.stop();
       if (renderer) renderer.dispose();
       if (sceneManager) sceneManager.clearAll();
+      if (cameraController) cameraController.dispose();
     };
   });
 </script>
