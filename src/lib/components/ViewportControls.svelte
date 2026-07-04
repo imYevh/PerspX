@@ -60,14 +60,31 @@
   </div>
 
   {#if $cameraStore.mode === 'perspective'}
-    <div class="control-group fisheye-group">
-      <div class="control-header">
-        <span class="control-label">EFFECTS</span>
+    {#if !$cameraStore.fisheye}
+      <div class="control-group fisheye-group">
+        <div class="control-header">
+          <span class="control-label">EFFECTS</span>
+        </div>
+        <button class="toggle-btn" onclick={() => updateCameraStore({ fisheye: true })}>
+          <span class="emoji">🐟</span> Fisheye
+        </button>
       </div>
-      <button class="toggle-btn" class:active={$cameraStore.fisheye} onclick={() => updateCameraStore({ fisheye: !$cameraStore.fisheye })}>
-        <span class="emoji">🐟</span> Fisheye
-      </button>
-    </div>
+    {:else}
+      <div class="control-group">
+        <div class="control-header">
+          <span class="control-label">FISHEYE</span>
+          <div class="value-row">
+            <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(2)}</span>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0.5 })} title="Reset Fisheye">⟲</button>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false })} title="Remove Fisheye">✕</button>
+          </div>
+        </div>
+        <input type="range" min="0" max="1" step="0.01" 
+               value={$cameraStore.fisheyeIntensity} 
+               oninput={(e) => updateCameraStore({ fisheyeIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -208,12 +225,6 @@
   .toggle-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: #eee;
-  }
-
-  .toggle-btn.active {
-    background: rgba(74, 158, 255, 0.15);
-    border-color: rgba(74, 158, 255, 0.4);
-    color: #4a9eff;
   }
 
   .emoji {
