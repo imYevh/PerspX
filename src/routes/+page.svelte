@@ -17,6 +17,7 @@
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
   import { get } from 'svelte/store';
+  import { onMount } from 'svelte';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -148,7 +149,7 @@
     }
   });
 
-  $effect(() => {
+  onMount(() => {
     let renderer: Renderer;
     let loop: RenderLoop;
     let _sceneManager: SceneManager;
