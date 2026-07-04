@@ -24,6 +24,7 @@ export interface UIState {
   libraryCollapsed: boolean;
   propertiesCollapsed: boolean;
   cameraCollapsed: boolean;
+  panelsVisible: boolean;
   marquee: MarqueeState;
   drag: DragState;
   breakpoint: 'desktop' | 'tablet' | 'mobile';
@@ -38,6 +39,7 @@ export const uiStore = writable<UIState>({
   libraryCollapsed: false,
   propertiesCollapsed: false,
   cameraCollapsed: false,
+  panelsVisible: true,
   marquee: {
     active: false,
     startX: 0,

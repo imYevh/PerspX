@@ -374,11 +374,14 @@
 
 <div class="app" data-theme="dark">
   <Toolbar {objectManager} {sceneManager} {lightManager} {renderer} />
-  <SubToolbar {transformSystem} />
+  
+  {#if $uiStore.panelsVisible}
+    <SubToolbar {transformSystem} />
+  {/if}
 
   <div class="workspace">
     <!-- Left Panel -->
-    {#if $uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet'}
+    {#if $uiStore.panelsVisible && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
       <aside class="sidebar left-sidebar" class:tablet-overlay={$uiStore.breakpoint === 'tablet'}>
         <ScenePanel {sceneManager} />
         <div class="panel-gap"></div>
@@ -390,11 +393,13 @@
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
-      <ViewportControls />
+      {#if $uiStore.panelsVisible}
+        <ViewportControls />
+      {/if}
     </div>
 
     <!-- Right Panel -->
-    {#if $uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet'}
+    {#if $uiStore.panelsVisible && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
       <aside class="sidebar right-sidebar" class:tablet-overlay={$uiStore.breakpoint === 'tablet'}>
         <PropertiesPanel {sceneManager} />
         <div class="panel-gap"></div>
@@ -403,7 +408,7 @@
     {/if}
   </div>
 
-  {#if $uiStore.breakpoint === 'mobile'}
+  {#if $uiStore.panelsVisible && $uiStore.breakpoint === 'mobile'}
     <BottomSheet {sceneManager} {objectManager} {lightManager} {cameraController} />
   {/if}
 </div>

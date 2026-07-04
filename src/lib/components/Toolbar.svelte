@@ -121,6 +121,12 @@
 
   <!-- Central actions -->
   <div class="toolbar-group">
+    <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
+      <span class="tool-icon">{$uiStore.panelsVisible ? '👁️' : '🙈'}</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
+      {/if}
+    </button>
     <button class="tool-btn" title="Reset Camera Position" onclick={() => {
       if (sceneManager) {
         // Find the camera controller from the main page and reset it.
