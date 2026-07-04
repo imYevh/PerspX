@@ -153,6 +153,19 @@ export class CameraController {
     return this.roll;
   }
 
+  // --- Curve Control (Lens Distortion placeholder) ---
+  public curve = 0;
+
+  setCurve(curve: number): void {
+    this.curve = curve;
+    // NOTE: True curvilinear lens distortion requires setting up a WebGPU 
+    // post-processing pipeline with a custom distortion shader.
+  }
+
+  getCurve(): number {
+    return this.curve;
+  }
+
   // --- Presets ---
 
   applyState(position: Vector3, target: Vector3): void {

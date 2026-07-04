@@ -158,8 +158,6 @@
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
 
-    let lastSunElev = $environmentStore.sunElevation;
-
     async function init() {
       if (!canvas) return;
 
@@ -307,10 +305,8 @@
           _cameraController.setRoll($cameraStore.roll);
         }
         
-        // Let's also check if sun elevation changed (we need to track last value)
-        if (lightManager && lastSunElev !== $environmentStore.sunElevation) {
-          lightManager.setSunElevation($environmentStore.sunElevation);
-          lastSunElev = $environmentStore.sunElevation;
+        if (_cameraController.getCurve?.() !== $cameraStore.curve) {
+          _cameraController.setCurve?.($cameraStore.curve);
         }
 
         // Live-update vanishing lines for selected object

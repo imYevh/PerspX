@@ -5,17 +5,17 @@
   // Handle input events to ensure we coerce to numbers and update store properly
   function onFovInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, v, $cameraStore.roll);
+    updateCameraStore($cameraStore.mode, v, $cameraStore.roll, $cameraStore.curve);
   }
 
   function onRollInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, v);
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, v, $cameraStore.curve);
   }
 
-  function onSunInput(e: Event) {
+  function onCurveInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    environmentStore.set({ sunElevation: v });
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, $cameraStore.roll, v);
   }
 </script>
 
@@ -31,11 +31,11 @@
 
   <div class="control-group">
     <div class="control-header">
-      <span class="control-label">SUN ELEVATION</span>
-      <span class="control-value">{$environmentStore.sunElevation.toFixed(0)}°</span>
+      <span class="control-label">CURVE</span>
+      <span class="control-value">{$cameraStore.curve.toFixed(1)}</span>
     </div>
-    <input type="range" min="5" max="85" step="1" 
-           value={$environmentStore.sunElevation} oninput={onSunInput} class="slider" />
+    <input type="range" min="0" max="1" step="0.1" 
+           value={$cameraStore.curve} oninput={onCurveInput} class="slider" />
   </div>
 
   <div class="control-group">
