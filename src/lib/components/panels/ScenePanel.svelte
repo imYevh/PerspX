@@ -34,7 +34,8 @@
 <Panel title="🎬 Scene">
   <div class="scene-list">
     {#each $sceneStore.objects as { id, meta }}
-      <button
+      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+      <div
         class="scene-item"
         class:selected={$sceneStore.selectedIds.includes(id)}
         onclick={(e) => selectObject(id, e.shiftKey)}
@@ -48,7 +49,7 @@
         >
           {meta.visible ? '👁' : '👁‍🗨'}
         </button>
-      </button>
+      </div>
     {/each}
 
     {#if $sceneStore.objects.length === 0}
@@ -77,7 +78,7 @@
     border: 1px solid transparent;
     color: #ccc;
     font-size: 13px;
-    text-align: left;
+    user-select: none;
   }
 
   .scene-item:hover {
