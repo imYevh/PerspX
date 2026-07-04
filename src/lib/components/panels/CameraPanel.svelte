@@ -70,18 +70,18 @@
       </div>
       <div class="focal-len">≈ {fovToFocalLength($cameraStore.fov).toFixed(0)}mm</div>
     </div>
-
-    <div class="cam-section">
-      <div class="prop-title">Presets</div>
-      <div class="preset-grid">
-        {#each presetKeys as key}
-          <button class="preset-btn" onclick={() => applyPreset(key)}>
-            {CAMERA_PRESETS[key].name}
-          </button>
-        {/each}
-      </div>
-    </div>
   {/if}
+
+  <div class="cam-section">
+    <div class="prop-title">Presets</div>
+    <div class="preset-grid">
+      {#each presetKeys as key}
+        <button class="preset-btn" onclick={() => applyPreset(key)}>
+          {CAMERA_PRESETS[key].name}
+        </button>
+      {/each}
+    </div>
+  </div>
 </Panel>
 
 <style>
