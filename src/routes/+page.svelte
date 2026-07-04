@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { Renderer } from '$lib/core/renderer';
+  import { SceneManager } from '$lib/core/scene';
+  import { RenderLoop } from '$lib/core/loop';
+
 
   let canvas: HTMLCanvasElement;
 
-  onMount(() => {
+  $effect(() => {
     // Three.js will be initialized here in the next phase
     console.log('Canvas ready:', canvas);
   });

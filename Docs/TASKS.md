@@ -23,6 +23,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.1 — Open a terminal in your project folder
+
 - [x] Open VS Code and open the `PerspX` folder
 - [x] Open the integrated terminal (`Ctrl + Backtick`)
 - [x] Confirm you are in the right folder: run `pwd` (should end in `/PerspX`)
@@ -30,6 +31,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.2 — Scaffold SvelteKit
+
 - [x] Run this command exactly:
   ```bash
   npx -y sv create ./ --template minimal --types ts --no-add-ons
@@ -41,6 +43,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.3 — Install Three.js
+
 - [x] Run:
   ```bash
   npm install three
@@ -53,26 +56,29 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.4 — Configure SvelteKit for SPA mode
+
 - [x] Open `svelte.config.js` and **replace its entire contents** with:
+
   ```js
-  import adapter from '@sveltejs/adapter-static';
-  import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+  import adapter from "@sveltejs/adapter-static";
+  import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
   const config = {
     preprocess: vitePreprocess(),
     kit: {
       adapter: adapter({
-        fallback: 'index.html',
+        fallback: "index.html",
       }),
       alias: {
-        '$lib': './src/lib',
-        '$lib/*': './src/lib/*',
+        $lib: "./src/lib",
+        "$lib/*": "./src/lib/*",
       },
     },
   };
 
   export default config;
   ```
+
 - [x] Save the file
 
 > **Why:** SPA mode means the whole app is one HTML page — no server-side rendering. Required for Tauri.
@@ -80,22 +86,26 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.5 — Configure Vite
+
 - [x] Open `vite.config.ts` and **replace its entire contents** with:
+
   ```ts
-  import { sveltekit } from '@sveltejs/kit/vite';
-  import { defineConfig } from 'vite';
+  import { sveltekit } from "@sveltejs/kit/vite";
+  import { defineConfig } from "vite";
 
   export default defineConfig({
     plugins: [sveltekit()],
-    build: { target: 'es2022' },
+    build: { target: "es2022" },
     server: { port: 3000, open: true },
   });
   ```
+
 - [x] Save the file
 
 ---
 
 ### 1.6 — Disable SSR
+
 - [x] Create a new file: `src/routes/+layout.ts`
 - [x] Paste into it:
   ```ts
@@ -109,6 +119,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.7 — Create the directory structure
+
 - [x] Run these commands one by one:
   ```bash
   mkdir -p src/lib/core
@@ -129,22 +140,29 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.8 — Create the HTML shell
+
 - [x] Open `src/app.html`
 - [x] Replace its contents with:
   ```html
   <!DOCTYPE html>
   <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <meta name="description" content="PerspX -- 3D Perspective Visualization Tool for Artists" />
-    <title>PerspX</title>
-    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
-    %sveltekit.head%
-  </head>
-  <body data-sveltekit-preload-data="hover">
-    <div id="app">%sveltekit.body%</div>
-  </body>
+    <head>
+      <meta charset="UTF-8" />
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no"
+      />
+      <meta
+        name="description"
+        content="PerspX -- 3D Perspective Visualization Tool for Artists"
+      />
+      <title>PerspX</title>
+      <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+      %sveltekit.head%
+    </head>
+    <body data-sveltekit-preload-data="hover">
+      <div id="app">%sveltekit.body%</div>
+    </body>
   </html>
   ```
 - [x] Save the file
@@ -152,20 +170,29 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 1.9 — Create global styles
+
 - [x] Create a new file: `src/app.css`
 - [x] Paste into it:
+
   ```css
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
 
-  html, body {
+  html,
+  body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
     background: #0a0a0a;
     color: #e0e0e0;
   }
@@ -176,13 +203,16 @@ You will type some terminal commands and paste some config code.
     position: relative;
   }
   ```
+
 - [x] Save the file
 
 ---
 
 ### 1.10 — Create root layout
+
 - [x] Open (or create) `src/routes/+layout.svelte`
 - [x] Replace its contents with:
+
   ```svelte
   <script>
     import '../app.css';
@@ -191,13 +221,16 @@ You will type some terminal commands and paste some config code.
 
   {@render children()}
   ```
+
 - [x] Save the file
 
 ---
 
 ### 1.11 — Create the main page with a canvas
+
 - [x] Open (or create) `src/routes/+page.svelte`
 - [x] Replace its contents with:
+
   ```svelte
   <script lang="ts">
     import { onMount } from 'svelte';
@@ -220,11 +253,13 @@ You will type some terminal commands and paste some config code.
     }
   </style>
   ```
+
 - [x] Save the file
 
 ---
 
 ### 1.12 — Run and verify
+
 - [x] Run: `npm run dev`
 - [x] Browser opens at `http://localhost:3000`
 - [x] You see a **solid black screen** (that's the canvas — correct!)
@@ -235,6 +270,7 @@ You will type some terminal commands and paste some config code.
 **Phase 1 complete — you have a working project skeleton.**
 
 ---
+
 ---
 
 ## Phase 2 — Core Renderer · [02-core-renderer.md](./02-core-renderer.md)
@@ -244,31 +280,35 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 2.1 — Create the Renderer module
-- [ ] Create new file: `src/lib/core/renderer.ts`
-- [ ] Open `02-core-renderer.md` and copy the full `renderer.ts` code block into this file
-- [ ] Save the file
+
+- [x] Create new file: `src/lib/core/renderer.ts`
+- [x] Open `02-core-renderer.md` and copy the full `renderer.ts` code block into this file
+- [x] Save the file
 
 > **What this does:** Sets up the Three.js WebGPU renderer (with WebGL2 fallback) on the canvas element.
 
 ---
 
 ### 2.2 — Create the Render Loop module
-- [ ] Create new file: `src/lib/core/loop.ts`
-- [ ] Copy the `loop.ts` code block from `02-core-renderer.md` into this file
-- [ ] Save the file
+
+- [x] Create new file: `src/lib/core/loop.ts`
+- [x] Copy the `loop.ts` code block from `02-core-renderer.md` into this file
+- [x] Save the file
 
 > **What this does:** Uses `requestAnimationFrame` to run your render function ~60 times per second.
 
 ---
 
 ### 2.3 — Create the Scene module
-- [ ] Create new file: `src/lib/core/scene.ts`
-- [ ] Copy the `scene.ts` code block from `02-core-renderer.md` into this file
-- [ ] Save the file
+
+- [x] Create new file: `src/lib/core/scene.ts`
+- [x] Copy the `scene.ts` code block from `02-core-renderer.md` into this file
+- [x] Save the file
 
 ---
 
 ### 2.4 — Wire everything into the main page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Replace the `onMount` block to initialize the renderer, scene, and loop
 - [ ] Follow the integration example in `02-core-renderer.md` ("Wiring into SvelteKit" section)
@@ -277,6 +317,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 2.5 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] You see a **3D cube rotating** in the browser
 - [ ] No console errors
@@ -286,6 +327,7 @@ You will type some terminal commands and paste some config code.
 **Phase 2 complete — Three.js is alive.**
 
 ---
+
 ---
 
 ## Phase 3 — Scene Management · [03-scene-management.md](./03-scene-management.md)
@@ -295,6 +337,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 3.1 — Create the SceneManager class
+
 - [ ] Open `src/lib/core/scene.ts` (you may already have a stub — replace it)
 - [ ] Copy the full `SceneManager` class from `03-scene-management.md`
 - [ ] Save the file
@@ -304,6 +347,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 3.2 — Create the scene Svelte store
+
 - [ ] Create new file: `src/lib/stores/scene.ts`
 - [ ] Copy the store code from `03-scene-management.md`
 - [ ] Save the file
@@ -313,6 +357,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 3.3 — Wire SceneManager into the page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Import and initialize `SceneManager` inside `onMount`
 - [ ] Pass the Three.js `scene` object to it
@@ -322,22 +367,24 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 3.4 — Test object add/remove in the console
+
 - [ ] Run `npm run dev`
 - [ ] Open DevTools Console (`F12`)
 - [ ] If the SceneManager is exposed to `window` for debugging, type:
   ```js
-  window.sceneManager.addObject('box')
+  window.sceneManager.addObject("box");
   ```
 - [ ] A box appears in the 3D viewport
 - [ ] Type:
   ```js
-  window.sceneManager.removeObject('box-0')
+  window.sceneManager.removeObject("box-0");
   ```
 - [ ] The box disappears
 
 **Phase 3 complete — you can manage scene objects programmatically.**
 
 ---
+
 ---
 
 ## Phase 4 — Camera System · [04-camera-system.md](./04-camera-system.md)
@@ -347,6 +394,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 4.1 — Create the CameraController
+
 - [ ] Create new file: `src/lib/camera/camera-controller.ts`
 - [ ] Copy the `CameraController` class from `04-camera-system.md`
 - [ ] Save the file
@@ -354,6 +402,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 4.2 — Create camera presets
+
 - [ ] Create new file: `src/lib/camera/camera-presets.ts`
 - [ ] Copy the presets code from `04-camera-system.md`
 - [ ] Save the file
@@ -363,6 +412,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 4.3 — Create the dolly-zoom effect
+
 - [ ] Create new file: `src/lib/camera/dolly-zoom.ts`
 - [ ] Copy the dolly-zoom code from `04-camera-system.md`
 - [ ] Save the file
@@ -372,6 +422,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 4.4 — Create the camera Svelte store
+
 - [ ] Create new file: `src/lib/stores/camera.ts`
 - [ ] Copy the store code from `04-camera-system.md`
 - [ ] Save the file
@@ -379,6 +430,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 4.5 — Wire camera into the page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Initialize `CameraController` in `onMount`, passing the canvas and renderer
 - [ ] Follow the integration example in `04-camera-system.md`
@@ -387,6 +439,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 4.6 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Left-click + drag — **rotates** the camera around the scene
 - [ ] Right-click + drag — **pans** the camera
@@ -396,6 +449,7 @@ You will type some terminal commands and paste some config code.
 **Phase 4 complete — you can navigate the 3D viewport.**
 
 ---
+
 ---
 
 ## Phase 5 — Primitives Library · [05-primitives-library.md](./05-primitives-library.md)
@@ -405,6 +459,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 5.1 — Create the primitives module
+
 - [ ] Create new file: `src/lib/objects/primitives.ts`
 - [ ] Copy the primitives code from `05-primitives-library.md`
 - [ ] This file defines factory functions: `createBox()`, `createSphere()`, `createCylinder()`, etc.
@@ -413,6 +468,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 5.2 — Create the ObjectManager
+
 - [ ] Create new file: `src/lib/objects/object-manager.ts`
 - [ ] Copy the `ObjectManager` class from `05-primitives-library.md`
 - [ ] Save the file
@@ -422,6 +478,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 5.3 — Wire ObjectManager into the page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Initialize `ObjectManager` in `onMount` with the `SceneManager`
 - [ ] Follow the integration example in `05-primitives-library.md`
@@ -429,12 +486,14 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 5.4 — Add a temporary test button to the UI
+
 - [ ] In `+page.svelte`, add a `<button>` that calls `objectManager.add('box')`
 - [ ] You can remove this button later once the real UI panel is built in Phase 11
 
 ---
 
 ### 5.5 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Click the test button — a cube appears in the scene
 - [ ] Click multiple times — multiple cubes appear
@@ -443,6 +502,7 @@ You will type some terminal commands and paste some config code.
 **Phase 5 complete — you can populate the scene.**
 
 ---
+
 ---
 
 ## Phase 6 — Transform Controls · [06-transform-controls.md](./06-transform-controls.md)
@@ -452,6 +512,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 6.1 — Create the TransformSystem
+
 - [ ] Create new file: `src/lib/transforms/transform-controls.ts`
 - [ ] Copy the full `TransformSystem` class from `06-transform-controls.md`
 - [ ] Save the file
@@ -461,6 +522,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 6.2 — Create the snapping module
+
 - [ ] Create new file: `src/lib/transforms/snapping.ts`
 - [ ] Copy the snapping code from `06-transform-controls.md`
 - [ ] Save the file
@@ -468,6 +530,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 6.3 — Wire TransformSystem into the page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Initialize `TransformSystem` in `onMount` with the camera, canvas, SceneManager, and CameraController
 - [ ] Add it to the scene and the render loop
@@ -477,6 +540,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 6.4 — Wire object clicking (raycasting)
+
 - [ ] Open `src/lib/core/input.ts` (create it if it doesn't exist yet)
 - [ ] Implement a click handler that uses Three.js `Raycaster` to detect which object was clicked
 - [ ] When clicked, call `sceneManager.select(objectId)`
@@ -486,6 +550,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 6.5 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Add a box with your test button
 - [ ] Click the box — **gizmo appears** on it
@@ -499,6 +564,7 @@ You will type some terminal commands and paste some config code.
 **Phase 6 complete — you can manipulate objects in 3D space.**
 
 ---
+
 ---
 
 ## Phase 7 — Grid & Helpers · [07-grid-and-helpers.md](./07-grid-and-helpers.md)
@@ -508,6 +574,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 7.1 — Create the infinite grid
+
 - [ ] Create new file: `src/lib/helpers/grid.ts`
 - [ ] Copy the grid code from `07-grid-and-helpers.md`
 - [ ] Save the file
@@ -515,6 +582,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 7.2 — Create the axes indicator
+
 - [ ] Create new file: `src/lib/helpers/axes.ts`
 - [ ] Copy the axes code from `07-grid-and-helpers.md`
 - [ ] Save the file
@@ -522,6 +590,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 7.3 — Create the ground plane
+
 - [ ] Create new file: `src/lib/helpers/ground-plane.ts`
 - [ ] Copy the ground plane code from `07-grid-and-helpers.md`
 - [ ] Save the file
@@ -529,6 +598,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 7.4 — Create the vanishing points helper
+
 - [ ] Create new file: `src/lib/helpers/vanishing-points.ts`
 - [ ] Copy the vanishing points code from `07-grid-and-helpers.md`
 - [ ] Save the file
@@ -538,6 +608,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 7.5 — Wire all helpers into the scene
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Initialize all helpers in `onMount` and add them to the Three.js scene
 - [ ] Follow the integration example in `07-grid-and-helpers.md`
@@ -546,6 +617,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 7.6 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] A **grid** is visible on the ground plane
 - [ ] **XYZ axes** are visible (red=X, green=Y, blue=Z)
@@ -555,6 +627,7 @@ You will type some terminal commands and paste some config code.
 **Phase 7 complete — the viewport looks like a real 3D tool.**
 
 ---
+
 ---
 
 ## Phase 8 — Lighting System · [08-lighting-system.md](./08-lighting-system.md)
@@ -564,6 +637,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 8.1 — Create the LightManager
+
 - [ ] Create new file: `src/lib/lighting/light-manager.ts`
 - [ ] Copy the `LightManager` class from `08-lighting-system.md`
 - [ ] Save the file
@@ -571,6 +645,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 8.2 — Create lighting presets
+
 - [ ] Create new file: `src/lib/lighting/light-presets.ts`
 - [ ] Copy the presets code from `08-lighting-system.md`
 - [ ] Save the file
@@ -578,6 +653,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 8.3 — Wire lighting into the page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Initialize `LightManager` in `onMount`
 - [ ] Apply the default "Studio" preset on startup
@@ -587,6 +663,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 8.4 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Objects are **lit** (not flat gray) — shadows and highlights visible
 - [ ] Changing the preset changes the mood of the lighting
@@ -594,6 +671,7 @@ You will type some terminal commands and paste some config code.
 **Phase 8 complete — the scene has dynamic lighting.**
 
 ---
+
 ---
 
 ## Phase 9 — Shader System · [09-shader-system.md](./09-shader-system.md)
@@ -603,6 +681,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 9.1 — Create the material system
+
 - [ ] Create new file: `src/lib/materials/material-system.ts`
 - [ ] Copy the `MaterialSystem` class from `09-shader-system.md`
 - [ ] Save the file
@@ -610,6 +689,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 9.2 — Create the shader library
+
 - [ ] Create new file: `src/lib/materials/shader-library.ts`
 - [ ] Copy the shader library code from `09-shader-system.md`
 - [ ] Save the file
@@ -617,6 +697,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 9.3 — Create the wireframe overlay
+
 - [ ] Create new file: `src/lib/materials/wireframe.ts`
 - [ ] Copy the wireframe code from `09-shader-system.md`
 - [ ] Save the file
@@ -624,6 +705,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 9.4 — Wire material system into the page
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Initialize `MaterialSystem` and apply the default material to new objects
 - [ ] Follow the integration example in `09-shader-system.md`
@@ -632,6 +714,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 9.5 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Objects render with the default material (clay/matte look)
 - [ ] Toggling wireframe mode adds an edge overlay on top
@@ -640,6 +723,7 @@ You will type some terminal commands and paste some config code.
 **Phase 9 complete — you have a custom shader system.**
 
 ---
+
 ---
 
 ## Phase 10 — Model Import · [10-model-import.md](./10-model-import.md)
@@ -649,6 +733,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 10.1 — Create the model loader
+
 - [ ] Create new file: `src/lib/objects/model-loader.ts`
 - [ ] Copy the `ModelLoader` class from `10-model-import.md`
 - [ ] Save the file
@@ -656,6 +741,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 10.2 — Add drag-and-drop support to the canvas
+
 - [ ] Open `src/routes/+page.svelte`
 - [ ] Add `dragover` and `drop` event listeners on the canvas element
 - [ ] On drop, read the file and pass it to `ModelLoader.load()`
@@ -665,6 +751,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 10.3 — Add file picker button (temporary)
+
 - [ ] Add a `<input type="file" accept=".glb,.gltf">` element
 - [ ] Wire it to call `ModelLoader.load()` on change
 - [ ] This will be replaced by the proper UI in Phase 11
@@ -672,6 +759,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 10.4 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Download any free `.glb` file (e.g., from sketchfab.com — free models)
 - [ ] Drag the `.glb` file onto the viewport — model loads
@@ -682,6 +770,7 @@ You will type some terminal commands and paste some config code.
 **Phase 10 complete — you can import 3D models.**
 
 ---
+
 ---
 
 ## Phase 11 — UI System · [11-ui-system.md](./11-ui-system.md)
@@ -693,6 +782,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.1 — Create the Panel base component
+
 - [ ] Create new file: `src/lib/components/panels/Panel.svelte`
 - [ ] Copy the `Panel.svelte` code from `11-ui-system.md`
 - [ ] Save the file
@@ -702,6 +792,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.2 — Create the Toolbar component
+
 - [ ] Create new file: `src/lib/components/Toolbar.svelte`
 - [ ] Copy the `Toolbar.svelte` code from `11-ui-system.md`
 - [ ] This toolbar holds: Add Object, Transform Mode, Undo/Redo, Settings
@@ -710,6 +801,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.3 — Create the Scene Panel (object hierarchy)
+
 - [ ] Create new file: `src/lib/components/panels/ScenePanel.svelte`
 - [ ] Copy the code from `11-ui-system.md`
 - [ ] This shows a list of all objects in the scene, clickable to select
@@ -718,6 +810,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.4 — Create the Properties Panel
+
 - [ ] Create new file: `src/lib/components/panels/PropertiesPanel.svelte`
 - [ ] Copy the code from `11-ui-system.md`
 - [ ] This shows position/rotation/scale of the selected object with editable inputs
@@ -726,6 +819,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.5 — Create the Camera Panel
+
 - [ ] Create new file: `src/lib/components/panels/CameraPanel.svelte`
 - [ ] Copy the code from `11-ui-system.md`
 - [ ] This shows FOV slider, camera mode toggle, preset buttons
@@ -734,6 +828,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.6 — Create the Library Panel
+
 - [ ] Create new file: `src/lib/components/panels/LibraryPanel.svelte`
 - [ ] Copy the code from `11-ui-system.md`
 - [ ] This shows a grid of primitives to add + a file import button
@@ -742,6 +837,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.7 — Create the ViewportOverlay component
+
 - [ ] Create new file: `src/lib/components/ViewportOverlay.svelte`
 - [ ] Copy the code from `11-ui-system.md`
 - [ ] This shows on-screen labels: FPS counter, selected object name, transform mode
@@ -750,6 +846,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.8 — Create the UI store
+
 - [ ] Create new file: `src/lib/stores/ui.ts`
 - [ ] Copy the store from `11-ui-system.md`
 - [ ] Save the file
@@ -757,6 +854,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.9 — Assemble the full layout
+
 - [ ] Open `src/routes/+layout.svelte`
 - [ ] Import and arrange all components: Toolbar at top, panels on sides, canvas in center
 - [ ] Follow the layout assembly section in `11-ui-system.md`
@@ -766,6 +864,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 11.10 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Toolbar is visible at the top
 - [ ] Scene panel lists objects when you add them
@@ -778,6 +877,7 @@ You will type some terminal commands and paste some config code.
 **Phase 11 complete — the app looks and feels like a real tool.**
 
 ---
+
 ---
 
 ## Phase 12 — Responsive Design · [12-responsive-design.md](./12-responsive-design.md)
@@ -787,6 +887,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 12.1 — Create the BottomSheet component (mobile panels)
+
 - [ ] Create new file: `src/lib/components/BottomSheet.svelte`
 - [ ] Copy the code from `12-responsive-design.md`
 - [ ] On mobile, panels slide up from the bottom instead of being on the side
@@ -795,6 +896,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 12.2 — Create the Input module (unified touch + mouse)
+
 - [ ] Open/create `src/lib/core/input.ts`
 - [ ] Copy the full input handler from `12-responsive-design.md`
 - [ ] This handles: mouse click, touch tap, pinch zoom, two-finger pan
@@ -803,6 +905,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 12.3 — Update the UI store for responsiveness
+
 - [ ] Open `src/lib/stores/ui.ts`
 - [ ] Add a `breakpoint` value that updates when the window resizes
 - [ ] Follow the responsive store section in `12-responsive-design.md`
@@ -811,6 +914,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 12.4 — Add responsive CSS
+
 - [ ] Open `src/app.css`
 - [ ] Add mobile media queries from `12-responsive-design.md`
 - [ ] At `< 768px`: hide side panels, show bottom sheet, enlarge touch targets
@@ -819,6 +923,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 12.5 — Wire mobile toolbar (transform mode buttons)
+
 - [ ] Open `Toolbar.svelte`
 - [ ] On mobile, show transform mode buttons (R, S) as visible toolbar icons (no keyboard shortcuts on mobile)
 - [ ] Follow the mobile toolbar section in `12-responsive-design.md`
@@ -827,6 +932,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 12.6 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] In Chrome DevTools, toggle **device mode** (`Ctrl+Shift+M`) to simulate a phone
 - [ ] Layout switches to mobile: panels are gone, bottom sheet appears
@@ -838,6 +944,7 @@ You will type some terminal commands and paste some config code.
 **Phase 12 complete — the app works on phones.**
 
 ---
+
 ---
 
 ## Phase 13 — Performance · [13-performance.md](./13-performance.md)
@@ -847,6 +954,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 13.1 — Add FPS monitoring
+
 - [ ] Open `src/lib/core/loop.ts`
 - [ ] Add an FPS counter that calculates frames per second every second
 - [ ] Expose it via the `ui` store so the `ViewportOverlay` can display it
@@ -856,6 +964,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 13.2 — Confirm frustum culling is enabled
+
 - [ ] Open `src/lib/objects/object-manager.ts`
 - [ ] Ensure every object has `frustumCulled = true` (Three.js default, but confirm it)
 - [ ] Follow the culling section in `13-performance.md`
@@ -863,6 +972,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 13.3 — Add object instancing for repeated shapes
+
 - [ ] Open `src/lib/objects/primitives.ts`
 - [ ] Add support for `InstancedMesh` when adding many of the same primitive
 - [ ] Follow the instancing section in `13-performance.md`
@@ -871,6 +981,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 13.4 — Add texture and geometry disposal on remove
+
 - [ ] Open `src/lib/objects/object-manager.ts`
 - [ ] In the `removeObject()` method, call `.geometry.dispose()` and `.material.dispose()`
 - [ ] This prevents GPU memory leaks
@@ -880,6 +991,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 13.5 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Add 50+ boxes to the scene
 - [ ] FPS stays at 60 (or close to it)
@@ -889,6 +1001,7 @@ You will type some terminal commands and paste some config code.
 **Phase 13 complete — the app is performant.**
 
 ---
+
 ---
 
 ## Phase 14 — Export System · [14-export-system.md](./14-export-system.md)
@@ -898,6 +1011,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 14.1 — Create the export utilities
+
 - [ ] Create new file: `src/lib/utils/export.ts`
 - [ ] Copy the export code from `14-export-system.md`
 - [ ] Implement: `takeScreenshot()`, `exportScene()`, `importScene()`
@@ -906,6 +1020,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 14.2 — Wire screenshot button to the toolbar
+
 - [ ] Open `Toolbar.svelte`
 - [ ] Add a camera icon button that calls `takeScreenshot()`
 - [ ] `takeScreenshot()` triggers a file download of the canvas as a `.png`
@@ -915,6 +1030,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 14.3 — Wire scene save/load to the toolbar
+
 - [ ] Open `Toolbar.svelte`
 - [ ] Add Save and Load buttons
 - [ ] Save — downloads a `.perspx.json` file
@@ -925,6 +1041,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 14.4 — Create the history store (Undo/Redo)
+
 - [ ] Create new file: `src/lib/stores/history.ts`
 - [ ] Copy the history code from `14-export-system.md`
 - [ ] This keeps a stack of scene snapshots for Ctrl+Z / Ctrl+Y
@@ -933,6 +1050,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 14.5 — Wire Undo/Redo to keyboard shortcuts
+
 - [ ] Open `src/lib/core/input.ts`
 - [ ] Add `Ctrl+Z` — call `history.undo()`
 - [ ] Add `Ctrl+Y` or `Ctrl+Shift+Z` — call `history.redo()`
@@ -941,6 +1059,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 14.6 — Run and verify
+
 - [ ] Run: `npm run dev`
 - [ ] Add some objects, arrange them
 - [ ] Click screenshot button — `.png` file downloads
@@ -952,6 +1071,7 @@ You will type some terminal commands and paste some config code.
 **Phase 14 complete — the app can save and restore work.**
 
 ---
+
 ---
 
 ## Phase 15 — Packaging · [15-packaging.md](./15-packaging.md)
@@ -961,6 +1081,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.1 — Add PWA manifest
+
 - [ ] Create new file: `static/manifest.json`
 - [ ] Copy the manifest JSON from `15-packaging.md`
 - [ ] Save the file
@@ -968,6 +1089,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.2 — Add service worker
+
 - [ ] Create new file: `static/sw.js`
 - [ ] Copy the service worker code from `15-packaging.md`
 - [ ] Save the file
@@ -975,6 +1097,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.3 — Register PWA in app.html
+
 - [ ] Open `src/app.html`
 - [ ] Add the `<link rel="manifest">` and service worker registration script from `15-packaging.md`
 - [ ] Save the file
@@ -982,6 +1105,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.4 — Install Rust (required for Tauri)
+
 - [ ] Go to https://rustup.rs and follow instructions for your OS
 - [ ] Run: `rustc --version` to confirm installation
 - [ ] Restart your terminal
@@ -989,6 +1113,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.5 — Initialize Tauri
+
 - [ ] Run: `npx tauri init`
 - [ ] Answer the prompts:
   - App name: `PerspX`
@@ -1002,6 +1127,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.6 — Configure tauri.conf.json
+
 - [ ] Open `src-tauri/tauri.conf.json`
 - [ ] Replace the key settings with the values from `15-packaging.md`
 - [ ] Set min window size: 800x600
@@ -1010,6 +1136,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.7 — Test in Tauri dev mode
+
 - [ ] Run: `npx tauri dev`
 - [ ] A **native desktop window** opens with PerspX inside
 - [ ] All features work (add objects, move them, etc.)
@@ -1018,6 +1145,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.8 — Build the desktop installer
+
 - [ ] Run: `npx tauri build`
 - [ ] Wait (first build takes 5-10 minutes — Rust is compiling)
 - [ ] Find the installer in `src-tauri/target/release/bundle/`
@@ -1029,6 +1157,7 @@ You will type some terminal commands and paste some config code.
 ---
 
 ### 15.9 — Final verification
+
 - [ ] PWA: Open Chrome DevTools — Application tab — Manifest loads correctly
 - [ ] PWA: Click "Install" in Chrome's address bar — installs as a standalone app
 - [ ] Desktop: Installer works, app opens natively
@@ -1037,6 +1166,7 @@ You will type some terminal commands and paste some config code.
 **Phase 15 complete — PerspX ships on every platform!**
 
 ---
+
 ---
 
 ## You built PerspX!
