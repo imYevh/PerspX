@@ -460,10 +460,10 @@ You will type some terminal commands and paste some config code.
 
 ### 5.1 — Create the primitives module
 
-- [ ] Create new file: `src/lib/objects/primitives.ts`
-- [ ] Copy the primitives code from `05-primitives-library.md`
-- [ ] This file defines factory functions: `createBox()`, `createSphere()`, `createCylinder()`, etc.
-- [ ] Save the file
+- [x] Create new file: `src/lib/objects/primitives.ts`
+- [x] Copy the primitives code from `05-primitives-library.md`
+- [x] This file defines factory functions: `createBox()`, `createSphere()`, `createCylinder()`, etc.
+- [x] Save the file
 
 ---
 
