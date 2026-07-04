@@ -163,9 +163,6 @@
     <button class="tool-btn" title="Take Screenshot" onclick={takeScreenshot}>
       <span class="tool-icon">📷</span>
     </button>
-    <button class="tool-btn" title="Settings" onclick={() => alert('Settings coming soon!')}>
-      <span class="tool-icon">⚙️</span>
-    </button>
   </div>
 </header>
 
