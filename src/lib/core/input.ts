@@ -1,12 +1,15 @@
-import { Raycaster, Vector2, type Camera } from 'three';
+import { Vector2, type Camera } from 'three';
 import type { SceneManager } from './scene';
 
 export class InputSystem {
-  private raycaster = new Raycaster();
   private mouse = new Vector2();
   private canvas: HTMLCanvasElement;
   private camera: Camera;
   private sceneManager: SceneManager;
+  
+  // Track pointer-down to detect a real click (not a drag)
+  private pointerDownPos = { x: 0, y: 0 };
+  private isDragging = false;
 
   constructor(canvas: HTMLCanvasElement, camera: Camera, sceneManager: SceneManager) {
     this.canvas = canvas;
@@ -14,37 +17,35 @@ export class InputSystem {
     this.sceneManager = sceneManager;
 
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    this.canvas.addEventListener('pointermove', this.onPointerMove);
+    this.canvas.addEventListener('pointerup', this.onPointerUp);
   }
 
   private onPointerDown = (e: PointerEvent): void => {
-    // Only select on left click
     if (e.button !== 0) return;
+    this.pointerDownPos = { x: e.clientX, y: e.clientY };
+    this.isDragging = false;
+  };
 
-    // Convert mouse position to normalized device coordinates (-1 to +1)
+  private onPointerMove = (e: PointerEvent): void => {
+    const dx = e.clientX - this.pointerDownPos.x;
+    const dy = e.clientY - this.pointerDownPos.y;
+    if (Math.sqrt(dx * dx + dy * dy) > 4) {
+      this.isDragging = true;
+    }
+  };
+
+  private onPointerUp = (e: PointerEvent): void => {
+    // Only fire selection on clean left-click (no drag)
+    if (e.button !== 0 || this.isDragging) return;
+
     const rect = this.canvas.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    // Intersect against all primitive objects
-    const objects = this.sceneManager.getObjectsByType('primitive');
-    const intersects = this.raycaster.intersectObjects(objects, true);
-
-    if (intersects.length > 0) {
-      // Find the root object that has the userData.id
-      let selectedObj = intersects[0].object;
-      while (selectedObj && !selectedObj.userData?.id) {
-        if (selectedObj.parent) {
-          selectedObj = selectedObj.parent;
-        } else {
-          break;
-        }
-      }
-
-      if (selectedObj && selectedObj.userData?.id) {
-        this.sceneManager.select(selectedObj.userData.id);
-      }
+    const hit = this.sceneManager.raycastFromScreen(this.mouse, this.camera);
+    if (hit) {
+      this.sceneManager.select(hit.id);
     } else {
       this.sceneManager.deselectAll();
     }
@@ -56,5 +57,7 @@ export class InputSystem {
 
   dispose() {
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas.removeEventListener('pointerup', this.onPointerUp);
   }
 }
