@@ -142,6 +142,18 @@ export class CameraController {
     return this.perspCamera.fov;
   }
 
+  // --- Presets ---
+
+  applyState(position: Vector3, target: Vector3): void {
+    this.target.copy(target);
+    this.panOffset.set(0, 0, 0);
+
+    // Compute new spherical coordinates from the new position and target
+    const offset = position.clone().sub(target);
+    this.spherical.setFromVector3(offset);
+    this.sphericalTarget.copy(this.spherical);
+  }
+
   // --- Update (call each frame) ---
 
   update(): void {

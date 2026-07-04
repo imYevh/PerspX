@@ -25,8 +25,10 @@
   function applyPreset(key: string) {
     const preset = CAMERA_PRESETS[key];
     if (!preset || !cameraController) return;
-    cameraController.perspCamera.position.copy(preset.position);
-    cameraController.target.copy(preset.target);
+    
+    // Apply position and target properly through the controller's internal state
+    cameraController.applyState(preset.position, preset.target);
+    
     cameraController.setFOV(preset.fov);
     cameraStore.update(s => ({ ...s, fov: preset.fov }));
   }
