@@ -788,9 +788,9 @@ You will type some terminal commands and paste some config code.
 
 ### 11.1 — Create the Panel base component
 
-- [ ] Create new file: `src/lib/components/panels/Panel.svelte`
-- [ ] Copy the `Panel.svelte` code from `11-ui-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/panels/Panel.svelte`
+- [x] Copy the `Panel.svelte` code from `11-ui-system.md`
+- [x] Save the file
 
 > **What this is:** A reusable collapsible panel with a header and slot for content.
 
@@ -798,86 +798,88 @@ You will type some terminal commands and paste some config code.
 
 ### 11.2 — Create the Toolbar component
 
-- [ ] Create new file: `src/lib/components/Toolbar.svelte`
-- [ ] Copy the `Toolbar.svelte` code from `11-ui-system.md`
-- [ ] This toolbar holds: Add Object, Transform Mode, Undo/Redo, Settings
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/Toolbar.svelte`
+- [x] Copy the `Toolbar.svelte` code from `11-ui-system.md`
+- [x] This toolbar holds: Add Object, Transform Mode, Undo/Redo, Settings
+- [x] Save the file
 
 ---
 
 ### 11.3 — Create the Scene Panel (object hierarchy)
 
-- [ ] Create new file: `src/lib/components/panels/ScenePanel.svelte`
-- [ ] Copy the code from `11-ui-system.md`
-- [ ] This shows a list of all objects in the scene, clickable to select
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/panels/ScenePanel.svelte`
+- [x] Copy the code from `11-ui-system.md`
+- [x] This shows a list of all objects in the scene, clickable to select
+- [x] Save the file
 
 ---
 
 ### 11.4 — Create the Properties Panel
 
-- [ ] Create new file: `src/lib/components/panels/PropertiesPanel.svelte`
-- [ ] Copy the code from `11-ui-system.md`
-- [ ] This shows position/rotation/scale of the selected object with editable inputs
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/panels/PropertiesPanel.svelte`
+- [x] Copy the code from `11-ui-system.md`
+- [x] This shows position/rotation/scale of the selected object with editable inputs
+- [x] Save the file
 
 ---
 
 ### 11.5 — Create the Camera Panel
 
-- [ ] Create new file: `src/lib/components/panels/CameraPanel.svelte`
-- [ ] Copy the code from `11-ui-system.md`
-- [ ] This shows FOV slider, camera mode toggle, preset buttons
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/panels/CameraPanel.svelte`
+- [x] Copy the code from `11-ui-system.md`
+- [x] This shows FOV slider, camera mode toggle, preset buttons
+- [x] Save the file
 
 ---
 
 ### 11.6 — Create the Library Panel
 
-- [ ] Create new file: `src/lib/components/panels/LibraryPanel.svelte`
-- [ ] Copy the code from `11-ui-system.md`
-- [ ] This shows a grid of primitives to add + a file import button
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/panels/LibraryPanel.svelte`
+- [x] Copy the code from `11-ui-system.md`
+- [x] This shows a grid of primitives to add + a file import button
+- [x] Save the file
 
 ---
 
 ### 11.7 — Create the ViewportOverlay component
 
-- [ ] Create new file: `src/lib/components/ViewportOverlay.svelte`
-- [ ] Copy the code from `11-ui-system.md`
-- [ ] This shows on-screen labels: FPS counter, selected object name, transform mode
-- [ ] Save the file
+- [x] Create new file: `src/lib/components/ViewportOverlay.svelte`
+- [x] Copy the code from `11-ui-system.md`
+- [x] This shows on-screen labels: FPS counter, selected object name, transform mode
+- [x] Save the file
 
 ---
 
 ### 11.8 — Create the UI store
 
-- [ ] Create new file: `src/lib/stores/ui.ts`
-- [ ] Copy the store from `11-ui-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/stores/ui.ts`
+- [x] Copy the store from `11-ui-system.md`
+- [x] Save the file
 
 ---
 
 ### 11.9 — Assemble the full layout
 
-- [ ] Open `src/routes/+layout.svelte`
-- [ ] Import and arrange all components: Toolbar at top, panels on sides, canvas in center
-- [ ] Follow the layout assembly section in `11-ui-system.md`
-- [ ] Remove the temporary test buttons you added in earlier phases
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Import and arrange all components: Toolbar at top, panels on sides, canvas in center
+- [x] Follow the layout assembly section in `11-ui-system.md`
+- [x] Remove the temporary test buttons you added in earlier phases
+- [x] Save the file
 
 ---
 
 ### 11.10 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] Toolbar is visible at the top
-- [ ] Scene panel lists objects when you add them
-- [ ] Clicking an object in the Scene panel selects it in the viewport
-- [ ] Properties panel shows the selected object's transform values
-- [ ] Changing FOV in Camera panel updates the 3D view in real time
-- [ ] Library panel lets you add primitives with one click
-- [ ] Panels can be collapsed by clicking their headers
+- [x] Run: `npm run dev`
+- [x] Toolbar is visible at the top
+- [x] Scene panel lists objects when you add them
+- [x] Clicking an object in the Scene panel selects it in the viewport
+- [x] Properties panel shows the selected object's transform values
+- [x] Changing FOV in Camera panel updates the 3D view in real time
+- [x] Library panel lets you add primitives with one click
+- [x] Panels can be collapsed by clicking their headers
+
+**Phase 11 complete — the app looks and feels like a real tool.**
 
 **Phase 11 complete — the app looks and feels like a real tool.**
 
