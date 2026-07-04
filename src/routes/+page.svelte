@@ -159,7 +159,7 @@
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
 
-    let lastSunElev = $environmentStore.sunElevation;
+    let lastSunElev = get(environmentStore).sunElevation;
 
     async function init() {
       if (!canvas) return;
@@ -317,8 +317,6 @@
           lastSunElev = envState.sunElevation;
         }
 
-
-
         if (vanishingHelper.group.visible) {
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length === 1) {
@@ -333,9 +331,15 @@
       });
       loop.start();
 
+      // Register selection listener once (not inside render loop)
+      _sceneManager.on('selection-changed', () => {
+        sceneStore.update((s) => ({ ...s, selectedIds: _sceneManager.getSelectedIds() }));
+      });
+
       const handleResize = () => {
         const bp = getBreakpoint(window.innerWidth);
-        if ($uiStore.breakpoint !== bp) {
+        const currentBp = get(uiStore).breakpoint;
+        if (currentBp !== bp) {
           uiStore.update(s => ({ ...s, breakpoint: bp }));
         }
         
