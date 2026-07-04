@@ -153,7 +153,7 @@ export function createPrimitive(
 
   const geometry = def.createGeometry(params);
   const material = new MeshStandardNodeMaterial({
-    color: new Color(color ?? nextColor()),
+    color: new Color(color ?? 0xffffff),
     roughness: 0.4,
     metalness: 0.1,
   });
