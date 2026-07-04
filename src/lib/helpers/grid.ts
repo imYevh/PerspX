@@ -18,12 +18,20 @@ export function createInfiniteGrid(options?: {
   const group = new Group();
   group.name = '_PerspX_grid';
 
-  // Main grid
+  // Main grid (smaller 1x1 cells)
   const grid = new GridHelper(size, divisions, color1, color2);
+  if (!Array.isArray(grid.material)) {
+    grid.material.transparent = true;
+    grid.material.opacity = 0.15; // Make smaller grid very transparent
+  }
   group.add(grid);
 
   // Overlay a coarser 10-unit grid for clearer subdivisions
   const coarseGrid = new GridHelper(size, divisions / 10, 0x555566, 0x555566);
+  if (!Array.isArray(coarseGrid.material)) {
+    coarseGrid.material.transparent = true;
+    coarseGrid.material.opacity = 0.4;
+  }
   group.add(coarseGrid);
 
   return group;
