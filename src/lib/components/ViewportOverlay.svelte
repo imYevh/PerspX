@@ -77,7 +77,7 @@
   }
 
   .marquee-box {
-    position: absolute;
+    position: fixed;
     border: 1px solid rgba(74, 158, 255, 0.8);
     background: rgba(74, 158, 255, 0.15);
     pointer-events: none;
