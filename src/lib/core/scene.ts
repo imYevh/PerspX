@@ -124,6 +124,14 @@ export class SceneManager {
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
   }
 
+  selectMultiple(ids: string[], additive = false): void {
+    if (!additive) this.selectedIds.clear();
+    for (const id of ids) {
+      this.selectedIds.add(id);
+    }
+    this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
+  }
+
   deselect(id: string): void {
     this.selectedIds.delete(id);
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });

@@ -1,5 +1,5 @@
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { Camera, Object3D } from 'three';
+import { Camera, Object3D, Matrix4, Vector3 } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 import type { CameraController } from '$lib/camera/camera-controller';
 
@@ -8,7 +8,9 @@ export type TransformSpace = 'world' | 'local';
 
 export class TransformSystem {
   public controls: TransformControls;
-  private activeObjectId: string | null = null;
+  private activeObjectIds: string[] = [];
+  private dummyPivot = new Object3D();
+  private previousPivotMatrix = new Matrix4();
   private sceneManager: SceneManager;
   private cameraController: CameraController;
 
@@ -23,6 +25,21 @@ export class TransformSystem {
 
     this.controls = new TransformControls(camera, canvas);
     sceneManager.scene.add(this.controls.getHelper());
+    sceneManager.scene.add(this.dummyPivot);
+
+    // Apply delta matrix when transforming multiple objects
+    this.controls.addEventListener('change', () => {
+      if (this.activeObjectIds.length > 1 && this.controls.object === this.dummyPivot) {
+        const deltaMatrix = this.dummyPivot.matrixWorld.clone().multiply(this.previousPivotMatrix.clone().invert());
+        
+        for (const id of this.activeObjectIds) {
+          const obj = this.sceneManager.getObject(id);
+          if (obj) obj.applyMatrix4(deltaMatrix);
+        }
+        
+        this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
+      }
+    });
 
     // Disable orbit controls while transforming
     this.controls.addEventListener('dragging-changed', (event) => {
@@ -38,6 +55,8 @@ export class TransformSystem {
       const ids: string[] = data.selectedIds;
       if (ids.length === 1) {
         this.attachToObject(ids[0]);
+      } else if (ids.length > 1) {
+        this.attachToMultiple(ids);
       } else {
         this.detach();
       }
@@ -51,16 +70,52 @@ export class TransformSystem {
   attachToObject(id: string): void {
     const obj = this.sceneManager.getObject(id);
     const meta = this.sceneManager.getMeta(id);
-    if (!obj || !meta) return;
-    if (meta.locked) return; // Don't allow transforms on locked objects
+    if (!obj || !meta || meta.locked) return;
 
     this.controls.attach(obj);
-    this.activeObjectId = id;
+    this.activeObjectIds = [id];
+  }
+
+  attachToMultiple(ids: string[]): void {
+    const validIds = ids.filter(id => {
+      const meta = this.sceneManager.getMeta(id);
+      return meta && !meta.locked;
+    });
+
+    if (validIds.length === 0) {
+      this.detach();
+      return;
+    }
+    if (validIds.length === 1) {
+      this.attachToObject(validIds[0]);
+      return;
+    }
+
+    this.activeObjectIds = validIds;
+
+    const center = new Vector3();
+    for (const id of validIds) {
+      const obj = this.sceneManager.getObject(id);
+      if (obj) {
+        const pos = new Vector3();
+        obj.getWorldPosition(pos);
+        center.add(pos);
+      }
+    }
+    center.divideScalar(validIds.length);
+
+    this.dummyPivot.position.copy(center);
+    this.dummyPivot.rotation.set(0, 0, 0);
+    this.dummyPivot.scale.set(1, 1, 1);
+    this.dummyPivot.updateMatrixWorld(true);
+    this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
+
+    this.controls.attach(this.dummyPivot);
   }
 
   detach(): void {
     this.controls.detach();
-    this.activeObjectId = null;
+    this.activeObjectIds = [];
   }
 
   // --- Mode ---
@@ -156,10 +211,12 @@ export class TransformSystem {
         break;
       case 'delete':
       case 'backspace':
-        if (this.activeObjectId) {
-          const id = this.activeObjectId;
+        if (this.activeObjectIds.length > 0) {
+          const ids = [...this.activeObjectIds];
           this.detach();
-          this.sceneManager.removeObject(id);
+          for (const id of ids) {
+            this.sceneManager.removeObject(id);
+          }
         }
         break;
     }

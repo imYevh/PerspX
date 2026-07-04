@@ -1,6 +1,14 @@
 import { writable } from 'svelte/store';
 import type { TransformMode } from '../transforms/transform-controls';
 
+export interface MarqueeState {
+  active: boolean;
+  startX: number;
+  startY: number;
+  currentX: number;
+  currentY: number;
+}
+
 export interface UIState {
   transformMode: TransformMode;
   leftPanelOpen: boolean;
@@ -9,6 +17,7 @@ export interface UIState {
   libraryCollapsed: boolean;
   propertiesCollapsed: boolean;
   cameraCollapsed: boolean;
+  marquee: MarqueeState;
 }
 
 export const uiStore = writable<UIState>({
@@ -19,4 +28,11 @@ export const uiStore = writable<UIState>({
   libraryCollapsed: false,
   propertiesCollapsed: false,
   cameraCollapsed: false,
+  marquee: {
+    active: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+  }
 });
