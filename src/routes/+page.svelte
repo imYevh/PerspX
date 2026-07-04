@@ -16,6 +16,7 @@
   import { uiStore } from '$lib/stores/ui';
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
+  import { get } from 'svelte/store';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -158,6 +159,8 @@
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
 
+    let lastSunElev = $environmentStore.sunElevation;
+
     async function init() {
       if (!canvas) return;
 
@@ -298,19 +301,21 @@
         if (lightManager) lightManager.updateHelpers();
 
         // Apply store values to controllers if changed by UI
-        if (_cameraController.getDollyZoom?.() !== $cameraStore.dollyZoom) {
-          _cameraController.setDollyZoom?.($cameraStore.dollyZoom);
-          $cameraStore.fov = $cameraStore.dollyZoom; // sync UI
-        } else if (_cameraController.getFOV() !== $cameraStore.fov) {
-          _cameraController.setFOV($cameraStore.fov);
-          $cameraStore.dollyZoom = $cameraStore.fov; // sync UI
+        const camState = get(cameraStore);
+        const envState = get(environmentStore);
+
+        if (_cameraController.getFOV() !== camState.fov) {
+          _cameraController.setFOV(camState.fov);
+        }
+        if (_cameraController.getRoll() !== camState.roll) {
+          _cameraController.setRoll(camState.roll);
         }
         
-        if (_cameraController.getRoll() !== $cameraStore.roll) {
-          _cameraController.setRoll($cameraStore.roll);
+        // Let's also check if sun elevation changed (we need to track last value)
+        if (lightManager && lastSunElev !== envState.sunElevation) {
+          lightManager.setSunElevation(envState.sunElevation);
+          lastSunElev = envState.sunElevation;
         }
-        
-        // Curve was removed
 
         // Live-update vanishing lines for selected object
         _sceneManager.on('selection-changed', () => {

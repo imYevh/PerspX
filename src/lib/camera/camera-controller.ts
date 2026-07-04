@@ -134,18 +134,13 @@ export class CameraController {
 
   // --- FOV Control ---
 
-  private _fovTracker = 50;
-  private _dollyZoomTracker = 50;
-
   setFOV(fov: number): void {
     this.perspCamera.fov = MathUtils.clamp(fov, 1, 170);
     this.perspCamera.updateProjectionMatrix();
-    this._fovTracker = this.perspCamera.fov;
-    this._dollyZoomTracker = this.perspCamera.fov;
   }
 
   getFOV(): number {
-    return this._fovTracker;
+    return this.perspCamera.fov;
   }
 
   // --- Roll Control ---
@@ -156,31 +151,6 @@ export class CameraController {
 
   getRoll(): number {
     return this.roll;
-  }
-
-  // --- Dolly Zoom ---
-
-  setDollyZoom(fov: number): void {
-    if (this.perspCamera.fov === fov) return;
-    
-    // Dolly Zoom logic: adjust distance to maintain object screen size
-    const oldFov = this.perspCamera.fov;
-    const oldDist = this.sphericalTarget.radius;
-    
-    const heightAtTarget = oldDist * Math.tan((oldFov / 2) * MathUtils.DEG2RAD);
-    const newDist = heightAtTarget / Math.tan((fov / 2) * MathUtils.DEG2RAD);
-    
-    this.sphericalTarget.radius = MathUtils.clamp(newDist, this.minDist, this.maxDist);
-    this.spherical.radius = this.sphericalTarget.radius;
-
-    this.perspCamera.fov = MathUtils.clamp(fov, 1, 170);
-    this.perspCamera.updateProjectionMatrix();
-    this._dollyZoomTracker = this.perspCamera.fov;
-    this._fovTracker = this.perspCamera.fov;
-  }
-
-  getDollyZoom(): number {
-    return this._dollyZoomTracker;
   }
 
   // --- Presets ---

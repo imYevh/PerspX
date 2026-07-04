@@ -5,17 +5,17 @@
   // Handle input events to ensure we coerce to numbers and update store properly
   function onFovInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, v, $cameraStore.roll, $cameraStore.dollyZoom);
+    updateCameraStore($cameraStore.mode, v, $cameraStore.roll);
   }
 
   function onRollInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, v, $cameraStore.dollyZoom);
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, v);
   }
 
-  function onDollyInput(e: Event) {
+  function onSunInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, $cameraStore.roll, v);
+    environmentStore.set({ sunElevation: v });
   }
 </script>
 
@@ -31,11 +31,11 @@
 
   <div class="control-group">
     <div class="control-header">
-      <span class="control-label">DOLLY ZOOM</span>
-      <span class="control-value">{$cameraStore.dollyZoom.toFixed(0)}</span>
+      <span class="control-label">SUN ELEVATION</span>
+      <span class="control-value">{$environmentStore.sunElevation.toFixed(0)}°</span>
     </div>
-    <input type="range" min="10" max="150" step="1" 
-           value={$cameraStore.dollyZoom} oninput={onDollyInput} class="slider" />
+    <input type="range" min="5" max="85" step="1" 
+           value={$environmentStore.sunElevation} oninput={onSunInput} class="slider" />
   </div>
 
   <div class="control-group">

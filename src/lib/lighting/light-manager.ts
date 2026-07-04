@@ -230,18 +230,20 @@ export class LightManager {
     if (light) light.intensity = intensity;
   }
 
+  private cachedSun: DirectionalLight | null = null;
+
   setSunElevation(elevationDegrees: number): void {
-    const dirLights = this.sceneManager.getObjectsByType('light')
-      .map(entry => entry.object)
-      .filter(obj => obj.type === 'DirectionalLight');
+    if (!this.cachedSun || !this.sceneManager.scene.children.includes(this.cachedSun)) {
+      const dirLights = this.sceneManager.getObjectsByType('light')
+        .map(entry => entry.object)
+        .filter(obj => obj.type === 'DirectionalLight');
+      this.cachedSun = (dirLights[0] as DirectionalLight) || null;
+    }
     
-    if (dirLights.length > 0) {
-      // Rotate the first directional light around the scene center
-      const light = dirLights[0];
+    if (this.cachedSun) {
       const radius = 20;
       const elevationRad = elevationDegrees * (Math.PI / 180);
-      // Keep azimuth at 45 degrees (Math.PI / 4)
-      light.position.setFromSphericalCoords(radius, Math.PI / 2 - elevationRad, Math.PI / 4);
+      this.cachedSun.position.setFromSphericalCoords(radius, Math.PI / 2 - elevationRad, Math.PI / 4);
       this.updateHelpers();
     }
   }
