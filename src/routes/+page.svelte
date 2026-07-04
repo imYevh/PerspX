@@ -317,11 +317,6 @@
           lastSunElev = envState.sunElevation;
         }
 
-        // Live-update vanishing lines for selected object
-        _sceneManager.on('selection-changed', () => {
-          sceneStore.update((s) => ({ ...s, selectedIds: _sceneManager.getSelectedIds() }));
-        });
-
 
 
         if (vanishingHelper.group.visible) {
