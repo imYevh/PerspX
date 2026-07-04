@@ -20,7 +20,7 @@
   let { objectManager, sceneManager, lightManager, renderer }: Props = $props();
 
   const mainMenu: DropdownItem[] = [
-    { id: 'new', label: 'New Scene', icon: '✨' },
+    { id: 'new', label: 'Clear Scene', icon: '✨' },
     { id: 'divider1', label: '', divider: true },
     { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
