@@ -209,9 +209,9 @@
       // Keyboard toggles: 1=grid, 2=vanishing
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-        switch (e.key) {
-          case '1': grid.visible = !grid.visible; break;
-          case '2': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
+        switch (e.code) {
+          case 'Digit1': grid.visible = !grid.visible; break;
+          case 'Digit2': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
         }
       };
       window.addEventListener('keydown', onKeyDown);
@@ -244,19 +244,19 @@
         const cmdKey = isMac ? e.metaKey : e.ctrlKey;
 
         if (cmdKey) {
-          const key = e.key.toLowerCase();
+          const code = e.code;
           
-          if (key === 'z') {
+          if (code === 'KeyZ') {
             e.preventDefault();
             if (e.shiftKey) {
               if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
             } else {
               if (objectManager && lightManager) undo(_sceneManager, objectManager, lightManager);
             }
-          } else if (key === 'y') {
+          } else if (code === 'KeyY') {
             e.preventDefault();
             if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
-          } else if (key === 'c' || key === 'x') {
+          } else if (code === 'KeyC' || code === 'KeyX') {
             e.preventDefault();
             const selectedIds = _sceneManager.getSelectedIds();
             if (selectedIds.length > 0) {
@@ -265,14 +265,14 @@
               const data = JSON.stringify({ type: 'perspx-clipboard', objects });
               await navigator.clipboard.writeText(data);
               
-              if (key === 'x') {
+              if (code === 'KeyX') {
                 for (const id of selectedIds) {
                   _sceneManager.removeObject(id);
                 }
                 commitHistory(_sceneManager);
               }
             }
-          } else if (key === 'v') {
+          } else if (code === 'KeyV') {
             e.preventDefault();
             try {
               const text = await navigator.clipboard.readText();

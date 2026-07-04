@@ -206,8 +206,8 @@ export class TransformSystem {
     // Don't trigger if typing in an input
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-    switch (e.key.toLowerCase()) {
-      case 'a':
+    switch (e.code) {
+      case 'KeyA':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           const allIds = this.sceneManager.objects
@@ -216,25 +216,25 @@ export class TransformSystem {
           this.sceneManager.selectMultiple(allIds, false);
         }
         break;
-      case 't':
-      case 'g': // Grab (Blender style)
+      case 'KeyT':
+      case 'KeyG': // Grab (Blender style)
         this.setMode('translate');
         break;
-      case 'r':
+      case 'KeyR':
         this.setMode('rotate');
         break;
-      case 's':
+      case 'KeyS':
         this.setMode('scale');
         break;
-      case 'x':
+      case 'KeyX':
         this.toggleSpace();
         break;
-      case 'escape':
+      case 'Escape':
         this.detach();
         this.sceneManager.deselectAll();
         break;
-      case 'delete':
-      case 'backspace':
+      case 'Delete':
+      case 'Backspace':
         if (this.activeObjectIds.length > 0) {
           const ids = [...this.activeObjectIds];
           this.detach();
