@@ -140,7 +140,7 @@ export class CameraController {
 
   setFOV(fov: number, zolly: boolean = false): void {
     if (this.mode !== 'perspective') return;
-    fov = MathUtils.clamp(fov, 10, 120);
+    fov = MathUtils.clamp(fov, 1, 179);
     
     if (zolly && this.perspCamera.fov !== fov) {
       const target = this.target;
