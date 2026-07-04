@@ -469,9 +469,9 @@ You will type some terminal commands and paste some config code.
 
 ### 5.2 — Create the ObjectManager
 
-- [ ] Create new file: `src/lib/objects/object-manager.ts`
-- [ ] Copy the `ObjectManager` class from `05-primitives-library.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/objects/object-manager.ts`
+- [x] Copy the `ObjectManager` class from `05-primitives-library.md`
+- [x] Save the file
 
 > **What this does:** Wraps `SceneManager` to handle adding/removing/naming objects with IDs.
 
