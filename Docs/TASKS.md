@@ -309,20 +309,20 @@ You will type some terminal commands and paste some config code.
 
 ### 2.4 — Wire everything into the main page
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Replace the `onMount` block to initialize the renderer, scene, and loop
-- [ ] Follow the integration example in `02-core-renderer.md` ("Wiring into SvelteKit" section)
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Replace the `onMount` block to initialize the renderer, scene, and loop
+- [x] Follow the integration example in `02-core-renderer.md` ("Wiring into SvelteKit" section)
+- [x] Save the file
 
 ---
 
 ### 2.5 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] You see a **3D cube rotating** in the browser
-- [ ] No console errors
-- [ ] The cube keeps spinning smoothly at 60fps
-- [ ] Stop the dev server
+- [x] Run: `npm run dev`
+- [x] You see a **3D cube rotating** in the browser
+- [x] No console errors
+- [x] The cube keeps spinning smoothly at 60fps
+- [x] Stop the dev server
 
 **Phase 2 complete — Three.js is alive.**
 
@@ -338,9 +338,9 @@ You will type some terminal commands and paste some config code.
 
 ### 3.1 — Create the SceneManager class
 
-- [ ] Open `src/lib/core/scene.ts` (you may already have a stub — replace it)
-- [ ] Copy the full `SceneManager` class from `03-scene-management.md`
-- [ ] Save the file
+- [x] Open `src/lib/core/scene.ts` (you may already have a stub — replace it)
+- [x] Copy the full `SceneManager` class from `03-scene-management.md`
+- [x] Save the file
 
 > **Key concept:** The `SceneManager` is the single source of truth for what objects exist in the scene. Every other system talks to it.
 
@@ -348,9 +348,9 @@ You will type some terminal commands and paste some config code.
 
 ### 3.2 — Create the scene Svelte store
 
-- [ ] Create new file: `src/lib/stores/scene.ts`
-- [ ] Copy the store code from `03-scene-management.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/stores/scene.ts`
+- [x] Copy the store code from `03-scene-management.md`
+- [x] Save the file
 
 > **What this does:** Exposes scene state (selected objects, object list) to the UI reactively.
 
@@ -358,28 +358,28 @@ You will type some terminal commands and paste some config code.
 
 ### 3.3 — Wire SceneManager into the page
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Import and initialize `SceneManager` inside `onMount`
-- [ ] Pass the Three.js `scene` object to it
-- [ ] Follow the integration section in `03-scene-management.md`
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Import and initialize `SceneManager` inside `onMount`
+- [x] Pass the Three.js `scene` object to it
+- [x] Follow the integration section in `03-scene-management.md`
+- [x] Save the file
 
 ---
 
 ### 3.4 — Test object add/remove in the console
 
-- [ ] Run `npm run dev`
-- [ ] Open DevTools Console (`F12`)
-- [ ] If the SceneManager is exposed to `window` for debugging, type:
+- [x] Run `npm run dev`
+- [x] Open DevTools Console (`F12`)
+- [x] If the SceneManager is exposed to `window` for debugging, type:
   ```js
-  window.sceneManager.addObject("box");
+  window.sceneManager.addObject(new THREE.Mesh(), "model", "box");
   ```
-- [ ] A box appears in the 3D viewport
-- [ ] Type:
+- [x] A box appears in the 3D viewport
+- [x] Type:
   ```js
   window.sceneManager.removeObject("box-0");
   ```
-- [ ] The box disappears
+- [x] The box disappears
 
 **Phase 3 complete — you can manage scene objects programmatically.**
 

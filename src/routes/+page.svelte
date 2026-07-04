@@ -2,8 +2,7 @@
   import { Renderer } from '$lib/core/renderer';
   import { SceneManager } from '$lib/core/scene';
   import { RenderLoop } from '$lib/core/loop';
-
-
+  import { bindSceneManager } from '$lib/stores/scene';
   import { PerspectiveCamera, BoxGeometry, MeshBasicMaterial, Mesh, AmbientLight, DirectionalLight } from 'three';
 
   let canvas: HTMLCanvasElement;
@@ -21,6 +20,16 @@
       await renderer.init();
 
       sceneManager = new SceneManager(renderer.scene);
+      bindSceneManager(sceneManager);
+      
+      // Listen for changes (per docs)
+      sceneManager.on('object-added', (data) => {
+        console.log(`Added: ${data.meta.name} (${data.id})`);
+      });
+
+      // Expose for debugging (Step 3.4)
+      // @ts-ignore
+      window.sceneManager = sceneManager;
 
       const camera = new PerspectiveCamera(50, renderer.getAspect(), 0.1, 1000);
       camera.position.set(3, 3, 3);
