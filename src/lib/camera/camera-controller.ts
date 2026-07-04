@@ -34,6 +34,7 @@ export class CameraController {
   public orthoCamera: OrthographicCamera;
   public mode: CameraMode = 'perspective';
   public target = new Vector3(0, 0, 0);
+  public roll = 0;
 
   private _enabled = true;
 
@@ -142,6 +143,16 @@ export class CameraController {
     return this.perspCamera.fov;
   }
 
+  // --- Roll Control ---
+
+  setRoll(roll: number): void {
+    this.roll = roll;
+  }
+
+  getRoll(): number {
+    return this.roll;
+  }
+
   // --- Presets ---
 
   applyState(position: Vector3, target: Vector3): void {
@@ -176,9 +187,15 @@ export class CameraController {
 
     this.perspCamera.position.copy(newPos);
     this.perspCamera.lookAt(this.target);
+    if (this.roll !== 0) {
+      this.perspCamera.rotateZ(this.roll * MathUtils.DEG2RAD);
+    }
 
     this.orthoCamera.position.copy(newPos);
     this.orthoCamera.lookAt(this.target);
+    if (this.roll !== 0) {
+      this.orthoCamera.rotateZ(this.roll * MathUtils.DEG2RAD);
+    }
   }
 
   handleResize(aspect: number): void {
@@ -326,6 +343,9 @@ export class CameraController {
         : this.perspCamera.position
     );
     active.lookAt(this.target);
+    if (this.roll !== 0) {
+      active.rotateZ(this.roll * MathUtils.DEG2RAD);
+    }
   }
 
   dispose(): void {

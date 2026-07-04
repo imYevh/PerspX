@@ -12,6 +12,7 @@
   import { LightManager } from '$lib/lighting/light-manager';
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
+  import { environmentStore } from '$lib/stores/environment';
   import { uiStore } from '$lib/stores/ui';
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
@@ -23,6 +24,7 @@
   import CameraPanel from '$lib/components/panels/CameraPanel.svelte';
   import LibraryPanel from '$lib/components/panels/LibraryPanel.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
+  import ViewportControls from '$lib/components/ViewportControls.svelte';
   import BottomSheet from '$lib/components/BottomSheet.svelte';
   import SubToolbar from '$lib/components/SubToolbar.svelte';
   import { getBreakpoint } from '$lib/stores/ui';
@@ -155,6 +157,8 @@
     let vanishingHelper: VanishingPointHelper;
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
+
+    let lastSunElev = $environmentStore.sunElevation;
 
     async function init() {
       if (!canvas) return;
@@ -295,10 +299,18 @@
         inputSystem.updateCamera(_cameraController.camera);
         if (lightManager) lightManager.updateHelpers();
 
-        // Sync FOV to store every frame (handles slider changes)
-        const fov = _cameraController.getFOV();
-        if (fov !== $cameraStore.fov) {
-          updateCameraStore(_cameraController.mode, fov);
+        // Apply store values to controllers if changed by UI
+        if (_cameraController.getFOV() !== $cameraStore.fov) {
+          _cameraController.setFOV($cameraStore.fov);
+        }
+        if (_cameraController.getRoll() !== $cameraStore.roll) {
+          _cameraController.setRoll($cameraStore.roll);
+        }
+        
+        // Let's also check if sun elevation changed (we need to track last value)
+        if (lightManager && lastSunElev !== $environmentStore.sunElevation) {
+          lightManager.setSunElevation($environmentStore.sunElevation);
+          lastSunElev = $environmentStore.sunElevation;
         }
 
         // Live-update vanishing lines for selected object
@@ -373,6 +385,7 @@
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
+      <ViewportControls />
     </div>
 
     <!-- Right Panel -->

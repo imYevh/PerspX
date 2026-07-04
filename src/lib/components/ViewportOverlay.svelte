@@ -48,7 +48,7 @@
 <style>
   .hud {
     position: absolute;
-    bottom: 16px;
+    bottom: 96px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;

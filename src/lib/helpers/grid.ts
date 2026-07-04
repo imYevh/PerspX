@@ -1,49 +1,38 @@
-import { Group, SphereGeometry, WireframeGeometry, LineSegments, LineBasicMaterial, MathUtils } from 'three';
+import { GridHelper, Group } from 'three';
 
 /**
- * A spherical perspective grid (like a dome) to resemble the competitor app.
+ * A two-level grid on the XZ plane using the built-in GridHelper.
+ * Compatible with both WebGL and WebGPU renderers.
  */
 export function createInfiniteGrid(options?: {
-  radius?: number;
-  widthSegments?: number;
-  heightSegments?: number;
-  color?: number;
+  size?: number;
+  divisions?: number;
+  color1?: number;
+  color2?: number;
 }): Group {
-  const radius = options?.radius ?? 50;
-  const widthSegments = options?.widthSegments ?? 24; // Longitude lines
-  const heightSegments = options?.heightSegments ?? 12; // Latitude lines
-  const color = options?.color ?? 0x444455;
+  const size = options?.size ?? 100;
+  const divisions = options?.divisions ?? 100;
+  const color1 = options?.color1 ?? 0x444455; // Major lines
+  const color2 = options?.color2 ?? 0x333344; // Minor lines
 
   const group = new Group();
   group.name = '_PerspX_grid';
 
-  // Create a sphere geometry
-  const sphereGeo = new SphereGeometry(radius, widthSegments, heightSegments);
-  
-  // Convert to wireframe lines
-  const wireframeGeo = new WireframeGeometry(sphereGeo);
+  // Main grid (smaller 1x1 cells)
+  const grid = new GridHelper(size, divisions, color1, color2);
+  if (!Array.isArray(grid.material)) {
+    grid.material.transparent = true;
+    grid.material.opacity = 0.15; // Make smaller grid very transparent
+  }
+  group.add(grid);
 
-  const material = new LineBasicMaterial({
-    color: color,
-    transparent: true,
-    opacity: 0.15,
-  });
-
-  const lines = new LineSegments(wireframeGeo, material);
-  
-  // Rotate so the "poles" are at top and bottom (Y axis)
-  // SphereGeometry by default has poles on the Y axis, which is perfect.
-  group.add(lines);
-
-  // Add a slightly more visible "horizon" (equator) ring
-  const equatorGeo = new SphereGeometry(radius, widthSegments, 2, 0, Math.PI * 2, Math.PI / 2 - 0.01, 0.02);
-  const equatorWireframe = new WireframeGeometry(equatorGeo);
-  const equatorMat = new LineBasicMaterial({
-    color: 0x666677,
-    transparent: true,
-    opacity: 0.4
-  });
-  group.add(new LineSegments(equatorWireframe, equatorMat));
+  // Overlay a coarser 10-unit grid for clearer subdivisions
+  const coarseGrid = new GridHelper(size, divisions / 10, 0x555566, 0x555566);
+  if (!Array.isArray(coarseGrid.material)) {
+    coarseGrid.material.transparent = true;
+    coarseGrid.material.opacity = 0.4;
+  }
+  group.add(coarseGrid);
 
   return group;
 }
