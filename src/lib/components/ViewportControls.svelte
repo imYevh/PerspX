@@ -26,24 +26,26 @@
 </script>
 
 <div class="viewport-controls">
-  <div class="control-group">
-    <div class="control-header">
-      <span class="control-label">FIELD OF VIEW</span>
-      <div class="value-row">
-        <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
-        <button class="icon-btn" onclick={resetFov} title="Reset FOV">⟲</button>
-        <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
-          {#if $cameraStore.zolly}
-            <span>🔒</span>
-          {:else}
-            <span>🔓</span>
-          {/if}
-        </button>
+  {#if $cameraStore.mode === 'perspective'}
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-label">FIELD OF VIEW</span>
+        <div class="value-row">
+          <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
+          <button class="icon-btn" onclick={resetFov} title="Reset FOV">⟲</button>
+          <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
+            {#if $cameraStore.zolly}
+              <span>🔒</span>
+            {:else}
+              <span>🔓</span>
+            {/if}
+          </button>
+        </div>
       </div>
+      <input type="range" min="1" max="179" step="1" 
+             value={$cameraStore.fov} oninput={onFovInput} class="slider" />
     </div>
-    <input type="range" min="1" max="179" step="1" 
-           value={$cameraStore.fov} oninput={onFovInput} class="slider" />
-  </div>
+  {/if}
 
   <div class="control-group">
     <div class="control-header">
@@ -56,6 +58,17 @@
     <input type="range" min="-180" max="180" step="1" 
            value={$cameraStore.roll} oninput={onRollInput} class="slider" />
   </div>
+
+  {#if $cameraStore.mode === 'perspective'}
+    <div class="control-group fisheye-group">
+      <div class="control-header">
+        <span class="control-label">EFFECTS</span>
+      </div>
+      <button class="toggle-btn" class:active={$cameraStore.fisheye} onclick={() => updateCameraStore({ fisheye: !$cameraStore.fisheye })}>
+        <span class="emoji">🐟</span> Fisheye
+      </button>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -169,5 +182,41 @@
 
   .slider::-moz-range-thumb:hover {
     transform: scale(1.2);
+  }
+
+  .fisheye-group {
+    width: 80px;
+    justify-content: space-between;
+  }
+
+  .toggle-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #eee;
+  }
+
+  .toggle-btn.active {
+    background: rgba(74, 158, 255, 0.15);
+    border-color: rgba(74, 158, 255, 0.4);
+    color: #4a9eff;
+  }
+
+  .emoji {
+    font-size: 12px;
   }
 </style>

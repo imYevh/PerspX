@@ -6,6 +6,7 @@ export interface CameraState {
   fov: number;
   roll: number;
   zolly: boolean;
+  fisheye: boolean;
   lockPan: boolean;
   lockOrbit: boolean;
 }
@@ -15,6 +16,7 @@ export const cameraStore = writable<CameraState>({
   fov: 50,
   roll: 0,
   zolly: false,
+  fisheye: false,
   lockPan: false,
   lockOrbit: false
 });
