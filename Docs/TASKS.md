@@ -643,35 +643,35 @@ You will type some terminal commands and paste some config code.
 
 ### 8.1 — Create the LightManager
 
-- [ ] Create new file: `src/lib/lighting/light-manager.ts`
-- [ ] Copy the `LightManager` class from `08-lighting-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/lighting/light-manager.ts`
+- [x] Copy the `LightManager` class from `08-lighting-system.md`
+- [x] Save the file
 
 ---
 
 ### 8.2 — Create lighting presets
 
-- [ ] Create new file: `src/lib/lighting/light-presets.ts`
-- [ ] Copy the presets code from `08-lighting-system.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/lighting/light-presets.ts`
+- [x] Copy the presets code from `08-lighting-system.md`
+- [x] Save the file
 
 ---
 
 ### 8.3 — Wire lighting into the page
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Initialize `LightManager` in `onMount`
-- [ ] Apply the default "Studio" preset on startup
-- [ ] Follow the integration example in `08-lighting-system.md`
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Initialize `LightManager` in `onMount`
+- [x] Apply the default "Studio" preset on startup
+- [x] Follow the integration example in `08-lighting-system.md`
+- [x] Save the file
 
 ---
 
 ### 8.4 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] Objects are **lit** (not flat gray) — shadows and highlights visible
-- [ ] Changing the preset changes the mood of the lighting
+- [x] Run: `npm run dev`
+- [x] Objects are **lit** (not flat gray) — shadows and highlights visible
+- [x] Changing the preset changes the mood of the lighting
 
 **Phase 8 complete — the scene has dynamic lighting.**
 

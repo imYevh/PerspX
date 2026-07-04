@@ -10,7 +10,9 @@
   import { createInfiniteGrid } from '$lib/helpers/grid';
   import { createGroundPlane } from '$lib/helpers/ground-plane';
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
-  import { AmbientLight, DirectionalLight, Vector3 } from 'three';
+  import { LightManager } from '$lib/lighting/light-manager';
+  import { LIGHTING_PRESETS } from '$lib/lighting/light-presets';
+  import { Vector3 } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { uiStore } from '$lib/stores/ui';
 
@@ -79,12 +81,19 @@
       });
 
       // Add lights
-      const ambientLight = new AmbientLight(0xffffff, 0.5);
-      const dirLight = new DirectionalLight(0xffffff, 1);
-      dirLight.position.set(5, 8, 5);
-      dirLight.castShadow = true;
-      renderer.scene.add(ambientLight);
-      renderer.scene.add(dirLight);
+      const lightManager = new LightManager(_sceneManager);
+      function applyLightingPreset(presetName: string): void {
+        const existingLights = _sceneManager.getObjectsByType('light');
+        for (const { id } of existingLights) {
+          lightManager.removeLight(id);
+        }
+        const preset = LIGHTING_PRESETS[presetName];
+        if (!preset) return;
+        for (const config of preset.lights) {
+          lightManager.addLight(config);
+        }
+      }
+      applyLightingPreset('studio');
 
       // Add helpers
       const grid = createInfiniteGrid();
@@ -112,6 +121,7 @@
         loop.setCamera(_cameraController.camera);
         _transformSystem.updateCamera(_cameraController.camera);
         inputSystem.updateCamera(_cameraController.camera);
+        lightManager.updateHelpers();
 
         // Sync FOV to store every frame (handles slider changes)
         const fov = _cameraController.getFOV();
