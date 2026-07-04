@@ -13,6 +13,9 @@ import {
   Mesh,
   Color,
   DoubleSide,
+  EdgesGeometry,
+  LineSegments,
+  LineBasicMaterial,
 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
@@ -158,11 +161,18 @@ export function createPrimitive(
     roughness: 0.4,
     metalness: 0.1,
     side: DoubleSide,
+    transparent: true,
+    opacity: 0.75,
   });
 
   const mesh = new Mesh(geometry, material);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+
+  // Add solid outline
+  const edges = new EdgesGeometry(geometry);
+  const line = new LineSegments(edges, new LineBasicMaterial({ color: 0xffffff }));
+  mesh.add(line);
 
   return mesh;
 }
