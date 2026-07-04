@@ -5,6 +5,8 @@
   import { bindSceneManager } from '$lib/stores/scene';
   import { CameraController } from '$lib/camera/camera-controller';
   import { ObjectManager } from '$lib/objects/object-manager';
+  import { TransformSystem } from '$lib/transforms/transform-controls';
+  import { InputSystem } from '$lib/core/input';
   import { AmbientLight, DirectionalLight, Vector3 } from 'three';
 
   let canvas: HTMLCanvasElement;
@@ -15,6 +17,8 @@
     let loop: RenderLoop;
     let sceneManager: SceneManager;
     let cameraController: CameraController;
+    let transformSystem: TransformSystem;
+    let inputSystem: InputSystem;
     let cleanupResize = () => {};
 
     async function init() {
@@ -43,6 +47,9 @@
         initialPosition: new Vector3(3, 3, 3)
       });
 
+      transformSystem = new TransformSystem(cameraController.camera, canvas, sceneManager, cameraController);
+      inputSystem = new InputSystem(canvas, cameraController.camera, sceneManager);
+
       // Add lights
       const ambientLight = new AmbientLight(0xffffff, 0.5);
       const dirLight = new DirectionalLight(0xffffff, 1);
@@ -54,6 +61,8 @@
       loop.onUpdate((dt) => {
         cameraController.update();
         loop.setCamera(cameraController.camera);
+        transformSystem.updateCamera(cameraController.camera);
+        inputSystem.updateCamera(cameraController.camera);
       });
       loop.start();
 
@@ -74,6 +83,8 @@
       if (renderer) renderer.dispose();
       if (sceneManager) sceneManager.clearAll();
       if (cameraController) cameraController.dispose();
+      if (transformSystem) transformSystem.dispose();
+      if (inputSystem) inputSystem.dispose();
     };
   });
 </script>

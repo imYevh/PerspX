@@ -533,11 +533,11 @@ You will type some terminal commands and paste some config code.
 
 ### 6.3 — Wire TransformSystem into the page
 
-- [ ] Open `src/routes/+page.svelte`
-- [ ] Initialize `TransformSystem` in `onMount` with the camera, canvas, SceneManager, and CameraController
-- [ ] Add it to the scene and the render loop
-- [ ] Follow the integration example in `06-transform-controls.md`
-- [ ] Save the file
+- [x] Open `src/routes/+page.svelte`
+- [x] Initialize `TransformSystem` in `onMount` with the camera, canvas, SceneManager, and CameraController
+- [x] Add it to the scene and the render loop
+- [x] Follow the integration example in `06-transform-controls.md`
+- [x] Save the file
 
 ---
 
@@ -553,11 +553,13 @@ You will type some terminal commands and paste some config code.
 
 ### 6.5 — Run and verify
 
-- [ ] Run: `npm run dev`
-- [ ] Add a box with your test button
-- [ ] Click the box — **gizmo appears** on it
-- [ ] Drag a gizmo axis — object **moves** along that axis
-- [ ] Press `R` — gizmo switches to **rotate rings**
+- [x] Run: `npm run dev`
+- [x] Add a box with your test button
+- [x] Click the box — **gizmo appears** on it
+- [x] Drag a gizmo axis — object **moves** along that axis
+- [x] Press `R` — gizmo switches to **rotate rings**
+
+**Phase 6 complete — you can transform objects.**
 - [ ] Press `S` — gizmo switches to **scale handles**
 - [ ] Press `Escape` — gizmo disappears, object deselects
 - [ ] Press `Delete` — selected object is removed
