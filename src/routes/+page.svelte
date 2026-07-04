@@ -195,7 +195,7 @@
 
       // Sync camera changes to store
       _transformSystem.controls.addEventListener('change', () => {
-        updateCameraStore(_cameraController.mode, _cameraController.getFOV());
+        updateCameraStore(_cameraController.mode, _cameraController.getFOV(), _cameraController.getRoll());
       });
 
       // Add lights
