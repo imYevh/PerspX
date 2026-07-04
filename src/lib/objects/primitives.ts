@@ -12,6 +12,7 @@ import {
   BufferGeometry,
   Mesh,
   Color,
+  DoubleSide,
 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 
@@ -156,6 +157,7 @@ export function createPrimitive(
     color: new Color(color ?? 0xffffff),
     roughness: 0.4,
     metalness: 0.1,
+    side: DoubleSide,
   });
 
   const mesh = new Mesh(geometry, material);
