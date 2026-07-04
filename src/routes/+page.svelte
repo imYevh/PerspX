@@ -325,7 +325,6 @@
 
         // Apply Snap to Object
         if ($cameraStore.orbitMode === 'snap') {
-          _cameraController.lockPan = $cameraStore.lockPan;
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
             const currentObjId = selectedIds[0];
@@ -336,9 +335,13 @@
               
               if ((window as any).__lastSnapObjId === currentObjId) {
                 const delta = new THREE.Vector3().subVectors(worldPos, (window as any).__lastSnapObjPos);
-                _cameraController.target.add(delta);
+                if (delta.lengthSq() > 0.000001) {
+                  // Object moved. Keep camera position static, but rotate to focus on new target.
+                  _cameraController.applyState(_cameraController.perspCamera.position, worldPos);
+                }
               } else {
-                _cameraController.target.copy(worldPos);
+                // New object selected. Rotate to focus on it, keep camera position static.
+                _cameraController.applyState(_cameraController.perspCamera.position, worldPos);
               }
               
               (window as any).__lastSnapObjId = currentObjId;
@@ -349,7 +352,6 @@
             (window as any).__lastSnapObjId = null;
           }
         } else {
-          _cameraController.lockPan = $cameraStore.lockPan;
           (window as any).__lastSnapObjId = null;
         }
 
