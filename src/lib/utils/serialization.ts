@@ -62,6 +62,9 @@ export function applySceneSnapshot(
         obj.position.fromArray(snapObj.position);
         obj.rotation.fromArray(snapObj.rotation);
         obj.scale.fromArray(snapObj.scale);
+        if ('color' in obj && snapObj.color !== undefined) {
+          (obj as any).color.setHex(parseInt(snapObj.color, 16));
+        }
         obj.updateMatrixWorld();
       }
     }

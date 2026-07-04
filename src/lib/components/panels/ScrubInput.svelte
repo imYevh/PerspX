@@ -1,13 +1,14 @@
 <script lang="ts">
   interface Props {
-    value: number;
+    value?: number;
+    getValue?: () => number;
     step?: number;
     class?: string;
     tick?: number;
     oninput: (val: number) => void;
     onchange: () => void;
   }
-  let { value, step = 1, class: className = '', tick = 0, oninput, onchange }: Props = $props();
+  let { value, getValue, step = 1, class: className = '', tick = 0, oninput, onchange }: Props = $props();
 
   let isDragging = false;
   let isFocused = $state(false);
@@ -19,12 +20,16 @@
     return (v % 1 !== 0 ? v.toFixed(2) : v).toString();
   }
 
+  function getCurrentValue(): number {
+    return getValue ? getValue() : (value ?? 0);
+  }
+
   // Update input value when prop changes, unless user is interacting with it
   $effect(() => {
     const _ = tick; // Force Svelte to run this effect every frame
     if (!isFocused && !isDragging && inputElement) {
       // Force read of value
-      const v = value;
+      const v = getCurrentValue();
       if (parseFloat(inputElement.value) !== v) {
         inputElement.value = formatValue(v);
       }
@@ -36,7 +41,7 @@
     if (e.button !== 0) return;
     
     startX = e.clientX;
-    startValue = value;
+    startValue = getCurrentValue();
     isDragging = false;
 
     const onPointerMove = (moveEvent: PointerEvent) => {
