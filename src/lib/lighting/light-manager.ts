@@ -18,6 +18,8 @@ export interface LightConfig {
   type: LightType;
   color?: number;
   intensity?: number;
+  explicitId?: string;
+  explicitMeta?: any;
   // Directional / Spot
   position?: [number, number, number];
   target?: [number, number, number];
@@ -119,7 +121,9 @@ export class LightManager {
         throw new Error(`Unknown light type: ${config.type}`);
     }
 
-    const id = this.sceneManager.addObject(light, 'light', this.getLightLabel(config.type));
+    light.userData.itemType = config.type;
+
+    const id = this.sceneManager.addObject(light, 'light', this.getLightLabel(config.type), config.explicitId, config.explicitMeta);
 
     // Create visual helper
     this.createHelper(id, light, config.type);

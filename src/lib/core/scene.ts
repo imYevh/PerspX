@@ -35,13 +35,13 @@ export class SceneManager {
 
   // --- Object Lifecycle ---
 
-  addObject(object: Object3D, type: ObjectType, baseName?: string): string {
-    const id = generateId();
-    const name = this.generateUniqueName(baseName ?? "Object");
+  addObject(object: Object3D, type: ObjectType, baseName?: string, explicitId?: string, explicitMeta?: SceneObjectMeta): string {
+    const id = explicitId || generateId();
+    const name = baseName ? this.generateUniqueName(baseName) : "Object";
 
     object.userData.PerspXId = id;
 
-    const meta: SceneObjectMeta = {
+    const meta: SceneObjectMeta = explicitMeta || {
       id,
       name,
       type,

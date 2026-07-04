@@ -15,6 +15,7 @@
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { uiStore } from '$lib/stores/ui';
+  import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
 
   // UI Components
@@ -223,6 +224,34 @@
       window.addEventListener('keydown', onKeyDown);
       cleanupKeys = () => window.removeEventListener('keydown', onKeyDown);
 
+      // History tracking
+      initHistory(_sceneManager);
+      _sceneManager.on('object-added', () => commitHistory(_sceneManager));
+      _sceneManager.on('object-removed', () => commitHistory(_sceneManager));
+
+      // Keyboard Shortcuts for Undo/Redo
+      const onKeyDownUndo = (e: KeyboardEvent) => {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
+          } else {
+            if (objectManager && lightManager) undo(_sceneManager, objectManager, lightManager);
+          }
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+          e.preventDefault();
+          if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
+        }
+      };
+      window.addEventListener('keydown', onKeyDownUndo);
+      const oldCleanupKeys = cleanupKeys;
+      cleanupKeys = () => {
+        oldCleanupKeys();
+        window.removeEventListener('keydown', onKeyDownUndo);
+      };
+
       loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera);
       loop.onUpdate((_dt) => {
         _cameraController.update();
@@ -238,6 +267,12 @@
         }
 
         // Live-update vanishing lines for selected object
+        _sceneManager.on('selection-changed', () => {
+          sceneStore.update((s) => ({ ...s, selectedIds: _sceneManager.getSelectedIds() }));
+        });
+
+
+
         if (vanishingHelper.group.visible) {
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length === 1) {

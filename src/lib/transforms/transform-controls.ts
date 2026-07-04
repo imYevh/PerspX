@@ -2,6 +2,7 @@ import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { Camera, Object3D, Matrix4, Vector3 } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 import type { CameraController } from '$lib/camera/camera-controller';
+import { commitHistory } from '$lib/stores/history';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type TransformSpace = 'world' | 'local';
@@ -47,6 +48,10 @@ export class TransformSystem {
         this.cameraController.enabled = false;
       } else {
         this.cameraController.enabled = true;
+        // Transform ended, commit to history
+        if (this.activeObjectIds.length > 0) {
+          commitHistory(this.sceneManager);
+        }
       }
     });
 

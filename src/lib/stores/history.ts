@@ -1,0 +1,70 @@
+import { writable, get } from 'svelte/store';
+import { serializeScene, applySceneSnapshot, type SceneSnapshot } from '../utils/serialization';
+import type { SceneManager } from '$lib/core/scene';
+import type { ObjectManager } from '$lib/objects/object-manager';
+import type { LightManager } from '$lib/lighting/light-manager';
+
+export interface HistoryState {
+  past: SceneSnapshot[];
+  future: SceneSnapshot[];
+}
+
+export const historyStore = writable<HistoryState>({
+  past: [],
+  future: []
+});
+
+let isRestoring = false;
+export function isHistoryRestoring() {
+  return isRestoring;
+}
+
+export function initHistory(sceneManager: SceneManager) {
+  historyStore.set({
+    past: [serializeScene(sceneManager)],
+    future: []
+  });
+}
+
+export function commitHistory(sceneManager: SceneManager) {
+  if (isRestoring) return;
+  const snapshot = serializeScene(sceneManager);
+  
+  historyStore.update(s => ({
+    past: [...s.past, snapshot],
+    future: [] // Any new action clears the redo stack
+  }));
+}
+
+export function undo(sceneManager: SceneManager, objectManager: ObjectManager, lightManager: LightManager) {
+  const state = get(historyStore);
+  if (state.past.length <= 1) return; // Need at least the initial state
+
+  const currentSnapshot = state.past[state.past.length - 1];
+  const previousSnapshot = state.past[state.past.length - 2];
+
+  historyStore.update(s => ({
+    past: s.past.slice(0, -1),
+    future: [currentSnapshot, ...s.future]
+  }));
+
+  isRestoring = true;
+  applySceneSnapshot(previousSnapshot, sceneManager, objectManager, lightManager);
+  isRestoring = false;
+}
+
+export function redo(sceneManager: SceneManager, objectManager: ObjectManager, lightManager: LightManager) {
+  const state = get(historyStore);
+  if (state.future.length === 0) return;
+
+  const nextSnapshot = state.future[0];
+
+  historyStore.update(s => ({
+    past: [...s.past, nextSnapshot],
+    future: s.future.slice(1)
+  }));
+
+  isRestoring = true;
+  applySceneSnapshot(nextSnapshot, sceneManager, objectManager, lightManager);
+  isRestoring = false;
+}
