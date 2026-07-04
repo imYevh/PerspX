@@ -5,16 +5,16 @@ export interface CameraState {
   mode: CameraMode;
   fov: number;
   roll: number;
-  curve: number;
+  dollyZoom: number;
 }
 
 export const cameraStore = writable<CameraState>({
   mode: 'perspective',
   fov: 50,
   roll: 0,
-  curve: 0
+  dollyZoom: 50
 });
 
-export function updateCameraStore(mode: CameraMode, fov: number, roll: number, curve: number = 0) {
-  cameraStore.set({ mode, fov, roll, curve });
+export function updateCameraStore(mode: CameraMode, fov: number, roll: number, dollyZoom: number = 50) {
+  cameraStore.set({ mode, fov, roll, dollyZoom });
 }

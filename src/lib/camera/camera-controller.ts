@@ -134,26 +134,18 @@ export class CameraController {
 
   // --- FOV Control ---
 
-  setFOV(fov: number): void {
-    if (this.perspCamera.fov === fov) return;
-    
-    // Dolly Zoom logic: adjust distance to maintain object screen size
-    const oldFov = this.perspCamera.fov;
-    const oldDist = this.sphericalTarget.radius;
-    
-    const heightAtTarget = oldDist * Math.tan((oldFov / 2) * MathUtils.DEG2RAD);
-    const newDist = heightAtTarget / Math.tan((fov / 2) * MathUtils.DEG2RAD);
-    
-    this.sphericalTarget.radius = MathUtils.clamp(newDist, this.minDist, this.maxDist);
-    // Snap instantly so the slider feels responsive without rubber-banding
-    this.spherical.radius = this.sphericalTarget.radius;
+  private _fovTracker = 50;
+  private _dollyZoomTracker = 50;
 
+  setFOV(fov: number): void {
     this.perspCamera.fov = MathUtils.clamp(fov, 1, 170);
     this.perspCamera.updateProjectionMatrix();
+    this._fovTracker = this.perspCamera.fov;
+    this._dollyZoomTracker = this.perspCamera.fov;
   }
 
   getFOV(): number {
-    return this.perspCamera.fov;
+    return this._fovTracker;
   }
 
   // --- Roll Control ---
@@ -166,17 +158,29 @@ export class CameraController {
     return this.roll;
   }
 
-  // --- Curve Control (Lens Distortion placeholder) ---
-  public curve = 0;
+  // --- Dolly Zoom ---
 
-  setCurve(curve: number): void {
-    this.curve = curve;
-    // NOTE: True curvilinear lens distortion requires setting up a WebGPU 
-    // post-processing pipeline with a custom distortion shader.
+  setDollyZoom(fov: number): void {
+    if (this.perspCamera.fov === fov) return;
+    
+    // Dolly Zoom logic: adjust distance to maintain object screen size
+    const oldFov = this.perspCamera.fov;
+    const oldDist = this.sphericalTarget.radius;
+    
+    const heightAtTarget = oldDist * Math.tan((oldFov / 2) * MathUtils.DEG2RAD);
+    const newDist = heightAtTarget / Math.tan((fov / 2) * MathUtils.DEG2RAD);
+    
+    this.sphericalTarget.radius = MathUtils.clamp(newDist, this.minDist, this.maxDist);
+    this.spherical.radius = this.sphericalTarget.radius;
+
+    this.perspCamera.fov = MathUtils.clamp(fov, 1, 170);
+    this.perspCamera.updateProjectionMatrix();
+    this._dollyZoomTracker = this.perspCamera.fov;
+    this._fovTracker = this.perspCamera.fov;
   }
 
-  getCurve(): number {
-    return this.curve;
+  getDollyZoom(): number {
+    return this._dollyZoomTracker;
   }
 
   // --- Presets ---

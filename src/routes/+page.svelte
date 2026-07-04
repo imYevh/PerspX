@@ -298,16 +298,19 @@
         if (lightManager) lightManager.updateHelpers();
 
         // Apply store values to controllers if changed by UI
-        if (_cameraController.getFOV() !== $cameraStore.fov) {
+        if (_cameraController.getDollyZoom?.() !== $cameraStore.dollyZoom) {
+          _cameraController.setDollyZoom?.($cameraStore.dollyZoom);
+          $cameraStore.fov = $cameraStore.dollyZoom; // sync UI
+        } else if (_cameraController.getFOV() !== $cameraStore.fov) {
           _cameraController.setFOV($cameraStore.fov);
+          $cameraStore.dollyZoom = $cameraStore.fov; // sync UI
         }
+        
         if (_cameraController.getRoll() !== $cameraStore.roll) {
           _cameraController.setRoll($cameraStore.roll);
         }
         
-        if (_cameraController.getCurve?.() !== $cameraStore.curve) {
-          _cameraController.setCurve?.($cameraStore.curve);
-        }
+        // Curve was removed
 
         // Live-update vanishing lines for selected object
         _sceneManager.on('selection-changed', () => {
