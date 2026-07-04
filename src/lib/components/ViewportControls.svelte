@@ -1,6 +1,5 @@
 <script lang="ts">
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
-  import { environmentStore } from '$lib/stores/environment';
 
   // Handle input events to ensure we coerce to numbers and update store properly
   function onFovInput(e: Event) {
@@ -12,11 +11,6 @@
     const v = parseFloat((e.target as HTMLInputElement).value);
     updateCameraStore($cameraStore.mode, $cameraStore.fov, v);
   }
-
-  function onSunInput(e: Event) {
-    const v = parseFloat((e.target as HTMLInputElement).value);
-    environmentStore.set({ sunElevation: v });
-  }
 </script>
 
 <div class="viewport-controls">
@@ -27,15 +21,6 @@
     </div>
     <input type="range" min="10" max="120" step="1" 
            value={$cameraStore.fov} oninput={onFovInput} class="slider" />
-  </div>
-
-  <div class="control-group">
-    <div class="control-header">
-      <span class="control-label">SUN ELEVATION</span>
-      <span class="control-value">{$environmentStore.sunElevation.toFixed(0)}°</span>
-    </div>
-    <input type="range" min="5" max="85" step="1" 
-           value={$environmentStore.sunElevation} oninput={onSunInput} class="slider" />
   </div>
 
   <div class="control-group">

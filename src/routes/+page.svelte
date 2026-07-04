@@ -12,7 +12,6 @@
   import { LightManager } from '$lib/lighting/light-manager';
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
-  import { environmentStore } from '$lib/stores/environment';
   import { uiStore } from '$lib/stores/ui';
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
@@ -157,8 +156,6 @@
     let vanishingHelper: VanishingPointHelper;
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
-
-    let lastSunElev = $environmentStore.sunElevation;
 
     async function init() {
       if (!canvas) return;
@@ -305,12 +302,6 @@
         }
         if (_cameraController.getRoll() !== $cameraStore.roll) {
           _cameraController.setRoll($cameraStore.roll);
-        }
-        
-        // Let's also check if sun elevation changed (we need to track last value)
-        if (lightManager && lastSunElev !== $environmentStore.sunElevation) {
-          lightManager.setSunElevation($environmentStore.sunElevation);
-          lastSunElev = $environmentStore.sunElevation;
         }
 
 
