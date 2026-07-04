@@ -525,9 +525,9 @@ You will type some terminal commands and paste some config code.
 
 ### 6.2 — Create the snapping module
 
-- [ ] Create new file: `src/lib/transforms/snapping.ts`
-- [ ] Copy the snapping code from `06-transform-controls.md`
-- [ ] Save the file
+- [x] Create new file: `src/lib/transforms/snapping.ts`
+- [x] Copy the snapping code from `06-transform-controls.md`
+- [x] Save the file
 
 ---
 
