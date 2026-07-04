@@ -8,10 +8,9 @@
   import { TransformSystem } from '$lib/transforms/transform-controls';
   import { InputSystem } from '$lib/core/input';
   import { createInfiniteGrid } from '$lib/helpers/grid';
-  import { createAxesHelper } from '$lib/helpers/axes';
   import { createGroundPlane } from '$lib/helpers/ground-plane';
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
-  import { AmbientLight, DirectionalLight, Vector3, Mesh, type PerspectiveCamera } from 'three';
+  import { AmbientLight, DirectionalLight, Vector3 } from 'three';
 
   let canvas: HTMLCanvasElement;
   let objectManager: ObjectManager | undefined = $state();
@@ -65,38 +64,19 @@
 
       // Add helpers
       const grid = createInfiniteGrid();
-      const axes = createAxesHelper(3);
       const ground = createGroundPlane();
       vanishingHelper = new VanishingPointHelper();
       renderer.scene.add(grid);
-      renderer.scene.add(axes);
       renderer.scene.add(ground);
       renderer.scene.add(vanishingHelper.group);
 
-      // Update vanishing lines when selection changes
-      sceneManager.on('selection-changed', (data) => {
-        if (data.selectedIds.length === 1) {
-          const obj = sceneManager.getObject(data.selectedIds[0]);
-          if (obj) {
-            vanishingHelper.updateForBox(
-              obj.position,
-              new Vector3(1, 1, 1),
-              cameraController.perspCamera
-            );
-          }
-        } else {
-          vanishingHelper.clear();
-        }
-      });
-
-      // Keyboard toggles: 1=grid, 2=axes, 3=ground, 4=vanishing
+      // Keyboard toggles: 1=grid, 2=ground, 3=vanishing
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         switch (e.key) {
           case '1': grid.visible = !grid.visible; break;
-          case '2': axes.visible = !axes.visible; break;
-          case '3': ground.visible = !ground.visible; break;
-          case '4': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
+          case '2': ground.visible = !ground.visible; break;
+          case '3': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
         }
       };
       window.addEventListener('keydown', onKeyDown);
@@ -108,6 +88,23 @@
         loop.setCamera(cameraController.camera);
         transformSystem.updateCamera(cameraController.camera);
         inputSystem.updateCamera(cameraController.camera);
+
+        // Update vanishing lines every frame so they follow the object while being dragged
+        if (vanishingHelper.group.visible) {
+          const selectedIds = sceneManager.getSelectedIds();
+          if (selectedIds.length === 1) {
+            const obj = sceneManager.getObject(selectedIds[0]);
+            if (obj) {
+              vanishingHelper.updateForBox(
+                obj.position,
+                new Vector3(1, 1, 1),
+                cameraController.perspCamera
+              );
+            }
+          } else {
+            vanishingHelper.clear();
+          }
+        }
       });
       loop.start();
 
