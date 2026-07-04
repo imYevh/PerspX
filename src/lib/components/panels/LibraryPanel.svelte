@@ -28,6 +28,11 @@
     {#each primitives as p}
       <button
         class="lib-item"
+        draggable="true"
+        ondragstart={(e) => {
+          e.dataTransfer?.setData('application/perspx-type', 'primitive');
+          e.dataTransfer?.setData('application/perspx-item', p.type);
+        }}
         onclick={() => addPrimitive(p.type)}
         title="Add {p.label}"
       >
@@ -39,15 +44,21 @@
 
   <div class="library-section-title">Lights</div>
   <div class="library-grid">
-    <button class="lib-item" onclick={() => addLight('point')} title="Add Point Light">
+    <button class="lib-item" draggable="true"
+      ondragstart={(e) => { e.dataTransfer?.setData('application/perspx-type', 'light'); e.dataTransfer?.setData('application/perspx-item', 'point'); }}
+      onclick={() => addLight('point')} title="Add Point Light">
       <span class="lib-icon">💡</span>
       <span class="lib-label">Point</span>
     </button>
-    <button class="lib-item" onclick={() => addLight('directional')} title="Add Directional Light">
+    <button class="lib-item" draggable="true"
+      ondragstart={(e) => { e.dataTransfer?.setData('application/perspx-type', 'light'); e.dataTransfer?.setData('application/perspx-item', 'directional'); }}
+      onclick={() => addLight('directional')} title="Add Directional Light">
       <span class="lib-icon">☀️</span>
       <span class="lib-label">Directional</span>
     </button>
-    <button class="lib-item" onclick={() => addLight('spot')} title="Add Spot Light">
+    <button class="lib-item" draggable="true"
+      ondragstart={(e) => { e.dataTransfer?.setData('application/perspx-type', 'light'); e.dataTransfer?.setData('application/perspx-item', 'spot'); }}
+      onclick={() => addLight('spot')} title="Add Spot Light">
       <span class="lib-icon">🔦</span>
       <span class="lib-label">Spot</span>
     </button>

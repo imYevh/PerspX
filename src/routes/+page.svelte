@@ -12,7 +12,7 @@
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
   import { LightManager } from '$lib/lighting/light-manager';
   import { LIGHTING_PRESETS } from '$lib/lighting/light-presets';
-  import { Vector3 } from 'three';
+  import { Vector3, Vector2, Raycaster, Plane } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { uiStore } from '$lib/stores/ui';
 
@@ -32,6 +32,52 @@
   let cameraController: CameraController | undefined = $state();
   let transformSystem: TransformSystem | undefined = $state();
   let lightManager: LightManager | undefined = $state();
+
+  function onDragOver(e: DragEvent) {
+    e.preventDefault();
+  }
+
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    if (!sceneManager || !cameraController || !canvas) return;
+    
+    const perspxType = e.dataTransfer?.getData('application/perspx-type');
+    const itemType = e.dataTransfer?.getData('application/perspx-item');
+    if (!perspxType || !itemType) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouse = new Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new Raycaster();
+    raycaster.setFromCamera(mouse, cameraController.camera);
+    const plane = new Plane(new Vector3(0, 1, 0), 0);
+    const intersectPoint = new Vector3();
+    const intersectResult = raycaster.ray.intersectPlane(plane, intersectPoint);
+
+    if (perspxType === 'primitive' && objectManager) {
+      const id = objectManager.addPrimitive(itemType as any);
+      if (id && intersectResult) {
+        const obj = sceneManager.getObject(id);
+        if (obj) {
+          obj.position.x = intersectPoint.x;
+          obj.position.z = intersectPoint.z;
+        }
+      }
+    } else if (perspxType === 'light' && lightManager) {
+      const id = lightManager.addLight({ type: itemType as any, intensity: 1, color: 0xffffff });
+      if (id && intersectResult) {
+        const obj = sceneManager.getObject(id);
+        if (obj) {
+          obj.position.x = intersectPoint.x;
+          obj.position.z = intersectPoint.z;
+          lightManager.updateHelpers();
+        }
+      }
+    }
+  }
 
   $effect(() => {
     let renderer: Renderer;
@@ -182,7 +228,7 @@
     </aside>
 
     <!-- Viewport -->
-    <div class="viewport-wrapper">
+    <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
     </div>
