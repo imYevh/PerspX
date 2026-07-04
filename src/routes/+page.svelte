@@ -208,13 +208,12 @@
       renderer.scene.add(ground);
       renderer.scene.add(vanishingHelper.group);
 
-      // Keyboard toggles: 1=grid, 2=ground, 3=vanishing
+      // Keyboard toggles: 1=grid, 2=vanishing
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         switch (e.key) {
           case '1': grid.visible = !grid.visible; break;
-          case '2': ground.visible = !ground.visible; break;
-          case '3': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
+          case '2': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
         }
       };
       window.addEventListener('keydown', onKeyDown);
