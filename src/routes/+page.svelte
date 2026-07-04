@@ -225,27 +225,70 @@
       _sceneManager.on('object-added', () => commitHistory(_sceneManager));
       _sceneManager.on('object-removed', () => commitHistory(_sceneManager));
 
-      // Keyboard Shortcuts for Undo/Redo
-      const onKeyDownUndo = (e: KeyboardEvent) => {
+      // Keyboard Shortcuts for Undo/Redo & Clipboard
+      const onKeyDownGlobal = async (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-          e.preventDefault();
-          if (e.shiftKey) {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const cmdKey = isMac ? e.metaKey : e.ctrlKey;
+
+        if (cmdKey) {
+          const key = e.key.toLowerCase();
+          
+          if (key === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) {
+              if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
+            } else {
+              if (objectManager && lightManager) undo(_sceneManager, objectManager, lightManager);
+            }
+          } else if (key === 'y') {
+            e.preventDefault();
             if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
-          } else {
-            if (objectManager && lightManager) undo(_sceneManager, objectManager, lightManager);
+          } else if (key === 'c' || key === 'x') {
+            e.preventDefault();
+            const selectedIds = _sceneManager.getSelectedIds();
+            if (selectedIds.length > 0) {
+              const { serializeObjects } = await import('$lib/utils/serialization');
+              const objects = serializeObjects(_sceneManager, selectedIds);
+              const data = JSON.stringify({ type: 'perspx-clipboard', objects });
+              await navigator.clipboard.writeText(data);
+              
+              if (key === 'x') {
+                for (const id of selectedIds) {
+                  _sceneManager.removeObject(id);
+                }
+                commitHistory(_sceneManager);
+              }
+            }
+          } else if (key === 'v') {
+            e.preventDefault();
+            try {
+              const text = await navigator.clipboard.readText();
+              if (text) {
+                const data = JSON.parse(text);
+                if (data.type === 'perspx-clipboard' && Array.isArray(data.objects)) {
+                  const { pasteObjects } = await import('$lib/utils/serialization');
+                  if (objectManager && lightManager) {
+                    const newIds = pasteObjects(data.objects, _sceneManager, objectManager, lightManager);
+                    if (newIds.length > 0) {
+                      _sceneManager.selectMultiple(newIds, false);
+                      commitHistory(_sceneManager);
+                    }
+                  }
+                }
+              }
+            } catch (err) {
+              console.warn('Clipboard read failed or invalid data', err);
+            }
           }
-        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-          e.preventDefault();
-          if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
         }
       };
-      window.addEventListener('keydown', onKeyDownUndo);
+      window.addEventListener('keydown', onKeyDownGlobal);
       const oldCleanupKeys = cleanupKeys;
       cleanupKeys = () => {
         oldCleanupKeys();
-        window.removeEventListener('keydown', onKeyDownUndo);
+        window.removeEventListener('keydown', onKeyDownGlobal);
       };
 
       loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera);

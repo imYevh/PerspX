@@ -75,3 +75,74 @@ export function applySceneSnapshot(
     sceneManager.selectMultiple(snapshot.selectedIds, false);
   }
 }
+
+export function serializeObjects(sceneManager: SceneManager, ids: string[]): SnapshotObject[] {
+  const objects: SnapshotObject[] = [];
+  for (const id of ids) {
+    const obj = sceneManager.getObject(id);
+    const meta = sceneManager.getMeta(id);
+    if (!obj || !meta) continue;
+
+    objects.push({
+      meta,
+      position: [obj.position.x, obj.position.y, obj.position.z],
+      rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+      scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+      itemType: obj.userData.itemType,
+      intensity: 'intensity' in obj ? (obj as any).intensity : undefined,
+      color: 'color' in obj ? (obj as any).color.getHexString() : undefined,
+    });
+  }
+  return objects;
+}
+
+export function pasteObjects(
+  objects: SnapshotObject[],
+  sceneManager: SceneManager,
+  objectManager: ObjectManager,
+  lightManager: LightManager
+): string[] {
+  const newIds: string[] = [];
+
+  for (const snapObj of objects) {
+    let id: string | null = null;
+    
+    // We create a fresh meta without the old ID to let the managers assign a new UUID.
+    // We also append "(Copy)" to the name.
+    const newMeta = { ...snapObj.meta };
+    delete (newMeta as any).id;
+    newMeta.name = `${newMeta.name} (Copy)`;
+
+    if (newMeta.type === 'primitive' && snapObj.itemType) {
+      id = objectManager.addPrimitive(snapObj.itemType as any, undefined, newMeta);
+    } else if (newMeta.type === 'light' && snapObj.itemType) {
+      id = lightManager.addLight({
+        type: snapObj.itemType as any,
+        intensity: snapObj.intensity ?? 1,
+        color: snapObj.color ? parseInt(snapObj.color, 16) : 0xffffff,
+        explicitMeta: newMeta
+      });
+    }
+
+    if (id) {
+      newIds.push(id);
+      const obj = sceneManager.getObject(id);
+      if (obj) {
+        // Offset slightly to make the paste obvious
+        obj.position.fromArray(snapObj.position);
+        obj.position.x += 0.5;
+        obj.position.z += 0.5;
+        
+        obj.rotation.fromArray(snapObj.rotation);
+        obj.scale.fromArray(snapObj.scale);
+        
+        if ('color' in obj && snapObj.color !== undefined) {
+          (obj as any).color.setHex(parseInt(snapObj.color, 16));
+        }
+        obj.updateMatrixWorld();
+      }
+    }
+  }
+
+  return newIds;
+}
