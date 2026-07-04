@@ -1,56 +1,50 @@
 <script lang="ts">
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { environmentStore } from '$lib/stores/environment';
-  import ScrubInput from './panels/ScrubInput.svelte';
 
-  // These will be passed in from +page.svelte to handle the actual 3D updates if needed,
-  // though the loop usually syncs from stores. However, since the loop only syncs TO the store,
-  // we might need to dispatch an event or directly update the controllers if they don't listen to the store.
-  // For simplicity, we can dispatch updates to the +page.svelte via a callback or rely on the store.
+  // Handle input events to ensure we coerce to numbers and update store properly
+  function onFovInput(e: Event) {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    updateCameraStore($cameraStore.mode, v, $cameraStore.roll);
+  }
 
-  let fov = $state($cameraStore.fov);
-  let roll = $state($cameraStore.roll);
-  let sunElev = $state($environmentStore.sunElevation);
+  function onRollInput(e: Event) {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, v);
+  }
 
-  // Sync state -> store
-  $effect(() => {
-    updateCameraStore($cameraStore.mode, fov, roll);
-  });
-
-  $effect(() => {
-    environmentStore.set({ sunElevation: sunElev });
-  });
-
-  // Sync store -> state (if changed elsewhere)
-  $effect(() => { fov = $cameraStore.fov; });
-  $effect(() => { roll = $cameraStore.roll; });
-  $effect(() => { sunElev = $environmentStore.sunElevation; });
-
+  function onSunInput(e: Event) {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    environmentStore.set({ sunElevation: v });
+  }
 </script>
 
 <div class="viewport-controls">
   <div class="control-group">
     <div class="control-header">
       <span class="control-label">FIELD OF VIEW</span>
-      <span class="control-value">{fov.toFixed(0)}°</span>
+      <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
     </div>
-    <input type="range" min="10" max="120" step="1" bind:value={fov} class="slider" />
+    <input type="range" min="10" max="120" step="1" 
+           value={$cameraStore.fov} oninput={onFovInput} class="slider" />
   </div>
 
   <div class="control-group">
     <div class="control-header">
       <span class="control-label">SUN ELEVATION</span>
-      <span class="control-value">{sunElev.toFixed(0)}°</span>
+      <span class="control-value">{$environmentStore.sunElevation.toFixed(0)}°</span>
     </div>
-    <input type="range" min="5" max="85" step="1" bind:value={sunElev} class="slider" />
+    <input type="range" min="5" max="85" step="1" 
+           value={$environmentStore.sunElevation} oninput={onSunInput} class="slider" />
   </div>
 
   <div class="control-group">
     <div class="control-header">
       <span class="control-label">HORIZON ROLL</span>
-      <span class="control-value">{roll.toFixed(0)}°</span>
+      <span class="control-value">{$cameraStore.roll.toFixed(0)}°</span>
     </div>
-    <input type="range" min="-45" max="45" step="1" bind:value={roll} class="slider" />
+    <input type="range" min="-45" max="45" step="1" 
+           value={$cameraStore.roll} oninput={onRollInput} class="slider" />
   </div>
 </div>
 
