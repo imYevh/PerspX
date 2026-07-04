@@ -1,5 +1,6 @@
 <script lang="ts">
   import Panel from './Panel.svelte';
+  import ScrubInput from './ScrubInput.svelte';
   import { sceneStore } from '$lib/stores/scene';
   import type { SceneManager } from '$lib/core/scene';
   import { MathUtils } from 'three';
@@ -119,36 +120,36 @@
       <div class="prop-row">
         <label>Position</label>
         <div class="xyz">
-          <input class="pi x" type="number" step="0.1" value={fmt(obj.position.x)}
-            oninput={(e) => setPosition('x', (e.target as HTMLInputElement).value)} onchange={commit} />
-          <input class="pi y" type="number" step="0.1" value={fmt(obj.position.y)}
-            oninput={(e) => setPosition('y', (e.target as HTMLInputElement).value)} onchange={commit} />
-          <input class="pi z" type="number" step="0.1" value={fmt(obj.position.z)}
-            oninput={(e) => setPosition('z', (e.target as HTMLInputElement).value)} onchange={commit} />
+          <ScrubInput class="pi x" step={0.1} value={obj.position.x}
+            oninput={(v) => setPosition('x', v.toString())} onchange={commit} />
+          <ScrubInput class="pi y" step={0.1} value={obj.position.y}
+            oninput={(v) => setPosition('y', v.toString())} onchange={commit} />
+          <ScrubInput class="pi z" step={0.1} value={obj.position.z}
+            oninput={(v) => setPosition('z', v.toString())} onchange={commit} />
         </div>
       </div>
 
       <div class="prop-row">
         <label>Rotation °</label>
         <div class="xyz">
-          <input class="pi x" type="number" step="1" value={MathUtils.radToDeg(obj.rotation.x).toFixed(0)}
-            oninput={(e) => setRotation('x', (e.target as HTMLInputElement).value)} onchange={commit} />
-          <input class="pi y" type="number" step="1" value={MathUtils.radToDeg(obj.rotation.y).toFixed(0)}
-            oninput={(e) => setRotation('y', (e.target as HTMLInputElement).value)} onchange={commit} />
-          <input class="pi z" type="number" step="1" value={MathUtils.radToDeg(obj.rotation.z).toFixed(0)}
-            oninput={(e) => setRotation('z', (e.target as HTMLInputElement).value)} onchange={commit} />
+          <ScrubInput class="pi x" step={1} value={MathUtils.radToDeg(obj.rotation.x)}
+            oninput={(v) => setRotation('x', v.toString())} onchange={commit} />
+          <ScrubInput class="pi y" step={1} value={MathUtils.radToDeg(obj.rotation.y)}
+            oninput={(v) => setRotation('y', v.toString())} onchange={commit} />
+          <ScrubInput class="pi z" step={1} value={MathUtils.radToDeg(obj.rotation.z)}
+            oninput={(v) => setRotation('z', v.toString())} onchange={commit} />
         </div>
       </div>
 
       <div class="prop-row">
         <label>Scale</label>
         <div class="xyz">
-          <input class="pi" type="number" step="0.1" value={fmt(obj.scale.x)}
-            oninput={(e) => setScale('x', (e.target as HTMLInputElement).value)} onchange={commit} />
-          <input class="pi" type="number" step="0.1" value={fmt(obj.scale.y)}
-            oninput={(e) => setScale('y', (e.target as HTMLInputElement).value)} onchange={commit} />
-          <input class="pi" type="number" step="0.1" value={fmt(obj.scale.z)}
-            oninput={(e) => setScale('z', (e.target as HTMLInputElement).value)} onchange={commit} />
+          <ScrubInput class="pi" step={0.1} value={obj.scale.x}
+            oninput={(v) => setScale('x', v.toString())} onchange={commit} />
+          <ScrubInput class="pi" step={0.1} value={obj.scale.y}
+            oninput={(v) => setScale('y', v.toString())} onchange={commit} />
+          <ScrubInput class="pi" step={0.1} value={obj.scale.z}
+            oninput={(v) => setScale('z', v.toString())} onchange={commit} />
         </div>
       </div>
     </div>
@@ -168,8 +169,8 @@
       {#if 'intensity' in obj}
         <div class="prop-row">
           <label>Intensity</label>
-          <input class="pi full" type="number" step="0.1" value={fmt((obj as any).intensity)}
-            oninput={(e) => setIntensity((e.target as HTMLInputElement).value)} onchange={commit} />
+          <ScrubInput class="pi full" step={0.1} value={(obj as any).intensity}
+            oninput={(v) => setIntensity(v.toString())} onchange={commit} />
         </div>
       {/if}
 
