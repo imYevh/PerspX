@@ -1,6 +1,5 @@
 <script lang="ts">
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
-  import { Lock, Unlock } from 'lucide-svelte';
 
   // Handle input events to ensure we coerce to numbers and update store properly
   function onFovInput(e: Event) {
@@ -26,9 +25,9 @@
         <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
         <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
           {#if $cameraStore.zolly}
-            <Lock size={12} strokeWidth={2.5} />
+            <span>🔒</span>
           {:else}
-            <Unlock size={12} strokeWidth={2} />
+            <span>🔓</span>
           {/if}
         </button>
       </div>
