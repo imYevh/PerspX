@@ -78,6 +78,8 @@ export class LightManager {
         if (config.castShadow ?? true) {
           dirLight.castShadow = true;
           dirLight.shadow.mapSize.set(2048, 2048);
+          dirLight.shadow.bias = -0.0001;
+          dirLight.shadow.normalBias = 0.02;
           dirLight.shadow.camera.near = 0.1;
           dirLight.shadow.camera.far = 100;
           dirLight.shadow.camera.left = -20;
@@ -100,6 +102,7 @@ export class LightManager {
         if (config.castShadow) {
           pointLight.castShadow = true;
           pointLight.shadow.mapSize.set(1024, 1024);
+          pointLight.shadow.bias = -0.0001;
         }
         light = pointLight;
         break;
@@ -118,6 +121,7 @@ export class LightManager {
         if (config.castShadow ?? true) {
           spotLight.castShadow = true;
           spotLight.shadow.mapSize.set(1024, 1024);
+          spotLight.shadow.bias = -0.0001;
         }
         light = spotLight;
         break;
