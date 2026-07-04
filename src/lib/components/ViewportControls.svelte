@@ -74,12 +74,12 @@
         <div class="control-header">
           <span class="control-label">FISHEYE</span>
           <div class="value-row">
-            <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(2)}</span>
-            <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0.5 })} title="Reset Fisheye">⟲</button>
-            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false, fisheyeIntensity: 0.5 })} title="Remove Fisheye">✕</button>
+            <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(1)}</span>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0 })} title="Reset Fisheye">⟲</button>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false, fisheyeIntensity: 0 })} title="Remove Fisheye">✕</button>
           </div>
         </div>
-        <input type="range" min="0" max="1" step="0.01" 
+        <input type="range" min="-10" max="10" step="0.1" 
                value={$cameraStore.fisheyeIntensity} 
                oninput={(e) => updateCameraStore({ fisheyeIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
                class="slider" />

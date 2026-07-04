@@ -18,7 +18,7 @@ export const cameraStore = writable<CameraState>({
   roll: 0,
   zolly: false,
   fisheye: false,
-  fisheyeIntensity: 0.5,
+  fisheyeIntensity: 0,
   lockPan: false,
   lockOrbit: false
 });

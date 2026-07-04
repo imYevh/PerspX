@@ -39,8 +39,7 @@ export class RenderLoop {
 
   setFisheye(enabled: boolean, intensity: number): void {
     this.fisheyeEnabled = enabled;
-    // Map UI slider [0, 1] to a reasonable distortion range, e.g., [0, 2]
-    this.fisheyeIntensityUniform.value = intensity * 1.5; 
+    this.fisheyeIntensityUniform.value = intensity; 
   }
 
   onUpdate(callback: UpdateCallback): void {
