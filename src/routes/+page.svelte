@@ -16,8 +16,6 @@
   import { uiStore } from '$lib/stores/ui';
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
-  import { get } from 'svelte/store';
-  import { onMount } from 'svelte';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -149,7 +147,7 @@
     }
   });
 
-  onMount(() => {
+  $effect(() => {
     let renderer: Renderer;
     let loop: RenderLoop;
     let _sceneManager: SceneManager;
@@ -160,7 +158,7 @@
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
 
-    let lastSunElev = get(environmentStore).sunElevation;
+    let lastSunElev = $environmentStore.sunElevation;
 
     async function init() {
       if (!canvas) return;
@@ -302,21 +300,21 @@
         if (lightManager) lightManager.updateHelpers();
 
         // Apply store values to controllers if changed by UI
-        const camState = get(cameraStore);
-        const envState = get(environmentStore);
-
-        if (_cameraController.getFOV() !== camState.fov) {
-          _cameraController.setFOV(camState.fov);
+        if (_cameraController.getFOV() !== $cameraStore.fov) {
+          _cameraController.setFOV($cameraStore.fov);
         }
-        if (_cameraController.getRoll() !== camState.roll) {
-          _cameraController.setRoll(camState.roll);
+        if (_cameraController.getRoll() !== $cameraStore.roll) {
+          _cameraController.setRoll($cameraStore.roll);
         }
         
         // Let's also check if sun elevation changed (we need to track last value)
-        if (lightManager && lastSunElev !== envState.sunElevation) {
-          lightManager.setSunElevation(envState.sunElevation);
-          lastSunElev = envState.sunElevation;
+        if (lightManager && lastSunElev !== $environmentStore.sunElevation) {
+          lightManager.setSunElevation($environmentStore.sunElevation);
+          lastSunElev = $environmentStore.sunElevation;
         }
+
+
+
 
         if (vanishingHelper.group.visible) {
           const selectedIds = _sceneManager.getSelectedIds();
@@ -332,15 +330,9 @@
       });
       loop.start();
 
-      // Register selection listener once (not inside render loop)
-      _sceneManager.on('selection-changed', () => {
-        sceneStore.update((s) => ({ ...s, selectedIds: _sceneManager.getSelectedIds() }));
-      });
-
       const handleResize = () => {
         const bp = getBreakpoint(window.innerWidth);
-        const currentBp = get(uiStore).breakpoint;
-        if (currentBp !== bp) {
+        if ($uiStore.breakpoint !== bp) {
           uiStore.update(s => ({ ...s, breakpoint: bp }));
         }
         
