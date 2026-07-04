@@ -134,8 +134,34 @@ export class CameraController {
 
   // --- FOV Control ---
 
-  setFOV(fov: number): void {
-    this.perspCamera.fov = MathUtils.clamp(fov, 1, 170);
+  setFOV(fov: number, zolly: boolean = false): void {
+    if (this.mode !== 'perspective') return;
+    fov = MathUtils.clamp(fov, 10, 120);
+    
+    if (zolly && this.perspCamera.fov !== fov) {
+      const target = this.target;
+      const distance = this.perspCamera.position.distanceTo(target);
+      
+      // Calculate current frustum height at target plane
+      const currentHeight = 2 * distance * Math.tan(MathUtils.degToRad(this.perspCamera.fov) / 2);
+      
+      // Calculate new distance to maintain that height at new FOV
+      const newDistance = currentHeight / (2 * Math.tan(MathUtils.degToRad(fov) / 2));
+      
+      // Move camera along its look vector (from target to camera)
+      const direction = new Vector3().subVectors(this.perspCamera.position, target).normalize();
+      
+      // If camera is exactly at target (distance 0), direction is NaN. Fallback to z-axis.
+      if (direction.lengthSq() === 0) direction.set(0, 0, 1);
+      
+      this.perspCamera.position.copy(target).add(direction.multiplyScalar(newDistance));
+      
+      // Update the radius to keep the spherical consistent
+      this.spherical.radius = newDistance;
+      this.sphericalTarget.radius = newDistance;
+    }
+
+    this.perspCamera.fov = fov;
     this.perspCamera.updateProjectionMatrix();
   }
 

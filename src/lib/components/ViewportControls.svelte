@@ -1,15 +1,20 @@
 <script lang="ts">
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
+  import { Lock, Unlock } from 'lucide-svelte';
 
   // Handle input events to ensure we coerce to numbers and update store properly
   function onFovInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, v, $cameraStore.roll);
+    updateCameraStore($cameraStore.mode, v, $cameraStore.roll, $cameraStore.zolly);
   }
 
   function onRollInput(e: Event) {
     const v = parseFloat((e.target as HTMLInputElement).value);
-    updateCameraStore($cameraStore.mode, $cameraStore.fov, v);
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, v, $cameraStore.zolly);
+  }
+
+  function toggleZolly() {
+    updateCameraStore($cameraStore.mode, $cameraStore.fov, $cameraStore.roll, !$cameraStore.zolly);
   }
 </script>
 
@@ -17,7 +22,16 @@
   <div class="control-group">
     <div class="control-header">
       <span class="control-label">FIELD OF VIEW</span>
-      <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
+      <div class="value-row">
+        <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
+        <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
+          {#if $cameraStore.zolly}
+            <Lock size={12} strokeWidth={2.5} />
+          {:else}
+            <Unlock size={12} strokeWidth={2} />
+          {/if}
+        </button>
+      </div>
     </div>
     <input type="range" min="10" max="120" step="1" 
            value={$cameraStore.fov} oninput={onFovInput} class="slider" />
@@ -78,6 +92,34 @@
     font-weight: 500;
     color: #eee;
     font-variant-numeric: tabular-nums;
+  }
+
+  .value-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #eee;
+  }
+
+  .icon-btn.locked {
+    color: #ff6b6b;
   }
 
   .slider {

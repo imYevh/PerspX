@@ -192,7 +192,7 @@
 
       // Sync camera changes to store
       _transformSystem.controls.addEventListener('change', () => {
-        updateCameraStore(_cameraController.mode, _cameraController.getFOV(), _cameraController.getRoll());
+        updateCameraStore(_cameraController.mode, _cameraController.getFOV(), _cameraController.getRoll(), $cameraStore.zolly);
       });
 
       // Add lights
@@ -298,7 +298,7 @@
 
         // Apply store values to controllers if changed by UI
         if (_cameraController.getFOV() !== $cameraStore.fov) {
-          _cameraController.setFOV($cameraStore.fov);
+          _cameraController.setFOV($cameraStore.fov, $cameraStore.zolly);
         }
         if (_cameraController.getRoll() !== $cameraStore.roll) {
           _cameraController.setRoll($cameraStore.roll);
