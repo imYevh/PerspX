@@ -239,8 +239,10 @@
       
       const onResetCamera = () => {
         if (_cameraController) {
-          _cameraController.perspCamera.position.set(5, 4, 5);
-          _cameraController.target.set(0, 0, 0);
+          _cameraController.applyState(new Vector3(5, 4, 5), new Vector3(0, 0, 0));
+          _cameraController.setRoll(0);
+          _cameraController.setFOV(50, false);
+          _cameraController.mode = 'perspective';
           _cameraController.update();
         }
         
@@ -253,7 +255,26 @@
         if ((window as any).__guidelinesNearest) {
           (window as any).__guidelinesNearest.visible = false;
         }
-        updateCameraStore({ guidelines: 'disabled' });
+        
+        // Reset every camera effect and setting to default values
+        updateCameraStore({
+          mode: 'perspective',
+          fov: 50,
+          roll: 0,
+          zolly: false,
+          fisheye: false,
+          fisheyeIntensity: 0,
+          chromaticAberration: false,
+          chromaticAberrationIntensity: 0,
+          tiltShift: false,
+          tiltShiftPosition: 0.5,
+          tiltShiftWidth: 0.2,
+          tiltShiftIntensity: 0.5,
+          guidelines: 'disabled',
+          lockPan: false,
+          lockOrbit: false,
+          orbitMode: 'free'
+        });
 
         // Reset theme to default
         import('$lib/stores/theme.svelte').then(({ THEME_MODES, ACCENT_PRESETS }) => {
@@ -261,7 +282,6 @@
            // but we can dispatch a custom event that Toolbar can listen to.
         });
       };
-      window.addEventListener('perspx-reset-camera', onResetCamera);
       const onTakeScreenshot = async (e: any) => {
         const filename = e.detail?.filename || 'perspx-screenshot.png';
 
@@ -353,6 +373,7 @@
            _lightManager.updateHelpers();
         }
       };
+      window.addEventListener('perspx-reset-camera', onResetCamera);
       window.addEventListener('perspx-take-screenshot', onTakeScreenshot);
 
       cleanupKeys = () => {
