@@ -157,15 +157,22 @@
     if (lightManager) lightManager.applyPreset(id);
   }
 
+  function getTimestamp() {
+    const d = new Date();
+    const date = d.toISOString().split('T')[0];
+    const time = d.toTimeString().split(' ')[0].replace(/:/g, '-');
+    return `${date}_${time}`;
+  }
+
   function saveScene() {
     if (!sceneManager) return;
-    const snapshot = serializeScene(sceneManager);
+    const snapshot = serializeScene(sceneManager, $cameraStore, (window as any).cameraController);
     const data = JSON.stringify(snapshot, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'scene.perspx.json';
+    a.download = `perspx_scene_${getTimestamp()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -183,7 +190,7 @@
         try {
           const content = ev.target?.result as string;
           const snapshot = JSON.parse(content);
-          applySceneSnapshot(snapshot, sceneManager, objectManager, lightManager);
+          applySceneSnapshot(snapshot, sceneManager, objectManager, lightManager, updateCameraStore, (window as any).cameraController);
         } catch (err) {
           console.error("Failed to load scene", err);
           alert("Failed to load scene file. It may be corrupted or invalid.");
@@ -203,7 +210,7 @@
     const url = renderer.domElement.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'perspx-screenshot.png';
+    a.download = `perspx_render_${getTimestamp()}.png`;
     a.click();
   }
 </script>

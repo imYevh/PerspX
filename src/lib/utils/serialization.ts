@@ -1,6 +1,8 @@
 import type { SceneManager, SceneObjectMeta } from '$lib/core/scene';
 import type { ObjectManager } from '$lib/objects/object-manager';
 import type { LightManager } from '$lib/lighting/light-manager';
+import type { CameraState } from '$lib/stores/camera';
+import { Vector3 } from 'three';
 
 export interface SnapshotObject {
   meta: SceneObjectMeta;
@@ -15,9 +17,12 @@ export interface SnapshotObject {
 export interface SceneSnapshot {
   objects: SnapshotObject[];
   selectedIds: string[];
+  camera?: CameraState;
+  cameraPosition?: [number, number, number];
+  cameraTarget?: [number, number, number];
 }
 
-export function serializeScene(sceneManager: SceneManager): SceneSnapshot {
+export function serializeScene(sceneManager: SceneManager, cameraState?: CameraState, cameraController?: any): SceneSnapshot {
   const objects = sceneManager.getAllObjects().map(({ object, meta }) => ({
     meta,
     position: [object.position.x, object.position.y, object.position.z] as [number, number, number],
@@ -27,9 +32,21 @@ export function serializeScene(sceneManager: SceneManager): SceneSnapshot {
     intensity: 'intensity' in object ? (object as any).intensity : undefined,
     color: 'color' in object ? (object as any).color.getHexString() : undefined,
   }));
+  
+  let cameraPosition: [number, number, number] | undefined;
+  let cameraTarget: [number, number, number] | undefined;
+  
+  if (cameraController && cameraController.perspCamera && cameraController.target) {
+     cameraPosition = [cameraController.perspCamera.position.x, cameraController.perspCamera.position.y, cameraController.perspCamera.position.z];
+     cameraTarget = [cameraController.target.x, cameraController.target.y, cameraController.target.z];
+  }
+  
   return { 
     objects,
-    selectedIds: sceneManager.getSelectedIds()
+    selectedIds: sceneManager.getSelectedIds(),
+    camera: cameraState,
+    cameraPosition,
+    cameraTarget
   };
 }
 
@@ -37,7 +54,9 @@ export function applySceneSnapshot(
   snapshot: SceneSnapshot,
   sceneManager: SceneManager,
   objectManager: ObjectManager,
-  lightManager: LightManager
+  lightManager: LightManager,
+  updateCameraStore?: (updates: Partial<CameraState>) => void,
+  cameraController?: any
 ): void {
   sceneManager.clearAll();
 
@@ -73,6 +92,19 @@ export function applySceneSnapshot(
   // Restore selection
   if (snapshot.selectedIds.length > 0) {
     sceneManager.selectMultiple(snapshot.selectedIds, false);
+  }
+
+  // Restore camera state
+  if (snapshot.camera && updateCameraStore) {
+    updateCameraStore(snapshot.camera);
+  }
+  
+  // Restore camera position
+  if (snapshot.cameraPosition && snapshot.cameraTarget && cameraController) {
+    const pos = new Vector3().fromArray(snapshot.cameraPosition);
+    const target = new Vector3().fromArray(snapshot.cameraTarget);
+    cameraController.applyState(pos, target);
+    cameraController.update();
   }
 }
 

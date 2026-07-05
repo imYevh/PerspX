@@ -183,9 +183,13 @@
       });
       cameraController = _cameraController;
 
-      _transformSystem = new TransformSystem(_cameraController.camera, canvas, _sceneManager, _cameraController);
+      // @ts-ignore
+      window.cameraController = _cameraController;
+
+      // Use the appropriate camera from controller
+      _transformSystem = new TransformSystem(_cameraController.perspCamera, canvas, _sceneManager, _cameraController);
       transformSystem = _transformSystem;
-      inputSystem = new InputSystem(canvas, _cameraController.camera, _sceneManager);
+      inputSystem = new InputSystem(canvas, _cameraController.perspCamera, _sceneManager);
       inputSystem.setTransformSystem(_transformSystem);
 
       // Sync camera changes to store
