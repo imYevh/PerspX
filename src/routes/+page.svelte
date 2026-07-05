@@ -292,39 +292,20 @@
            _lightManager.hideHelpers();
         }
 
+        // Wait a frame for visibility changes to apply? No, synchronous is fine for three.js
         // 2. Render synchronous frame
         loop.renderOnce();
 
         // 3. Get Data URL
         const dataUrl = renderer.instance.domElement.toDataURL('image/png');
 
-        // 4. Restore UI helpers synchronously before yielding to the event loop, so they remain visible on the viewport
-        grid.visible = wasGridVisible;
-        vanishingHelper.group.visible = wasVanishingVisible;
-        if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = wasFullLinesVisible;
-        if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = wasNearestLinesVisible;
-        updateCameraStore({ guidelines: wasGuidelinesState });
-        
-        // Re-attach transform control if an object was selected
-        const selectedIds = _sceneManager.getSelectedIds();
-        if (selectedIds.length === 1) {
-           const obj = _sceneManager.getObject(selectedIds[0]);
-           if (obj) _transformSystem.attach(obj);
-        }
-        
-        _sceneManager.getAllObjects().forEach(({ object }) => {
-           if (object.userData.boundingBoxHelper && selectedIds.includes(object.userData.id)) {
-             object.userData.boundingBoxHelper.visible = true;
-           }
-        });
-        _sceneManager.updateSelection(selectedIds);
-
+        // Restore light helpers on viewport immediately after capturing dataUrl
         if (_lightManager) {
            _lightManager.restoreHelpers();
            _lightManager.updateHelpers();
         }
 
-        // 5. Download file
+        // 4. Download file
         try {
           if ('showSaveFilePicker' in window) {
             // Modern API to specify path
@@ -350,6 +331,27 @@
         } catch (err) {
           console.log('User cancelled screenshot save or failed', err);
         }
+
+        // 5. Restore UI helpers
+        grid.visible = wasGridVisible;
+        vanishingHelper.group.visible = wasVanishingVisible;
+        if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = wasFullLinesVisible;
+        if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = wasNearestLinesVisible;
+        updateCameraStore({ guidelines: wasGuidelinesState });
+        
+        // Re-attach transform control if an object was selected
+        const selectedIds = _sceneManager.getSelectedIds();
+        if (selectedIds.length === 1) {
+           const obj = _sceneManager.getObject(selectedIds[0]);
+           if (obj) _transformSystem.attach(obj);
+        }
+        
+        _sceneManager.getAllObjects().forEach(({ object }) => {
+           if (object.userData.boundingBoxHelper && selectedIds.includes(object.userData.id)) {
+             object.userData.boundingBoxHelper.visible = true;
+           }
+        });
+        _sceneManager.updateSelection(selectedIds);
       };
       window.addEventListener('perspx-take-screenshot', onTakeScreenshot);
 
