@@ -1,6 +1,6 @@
 <script lang="ts">
   import Panel from './Panel.svelte';
-  import { cameraStore } from '$lib/stores/camera';
+  import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import type { CameraController, CameraMode } from '$lib/camera/camera-controller';
   import { CAMERA_PRESETS, fovToFocalLength } from '$lib/camera/camera-presets';
 
@@ -38,6 +38,32 @@
       ? Object.keys(CAMERA_PRESETS).slice(0, 6)
       : Object.keys(CAMERA_PRESETS)
   );
+
+  function onFovInput(e: Event) {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    updateCameraStore({ fov: v });
+  }
+
+  function onRollInput(e: Event) {
+    const v = parseFloat((e.target as HTMLInputElement).value);
+    updateCameraStore({ roll: v });
+  }
+
+  function toggleZolly() {
+    updateCameraStore({ zolly: !$cameraStore.zolly });
+  }
+
+  function toggleGuidelines() {
+    updateCameraStore({ guidelines: !$cameraStore.guidelines });
+  }
+
+  function resetFov() {
+    updateCameraStore({ fov: 50 });
+  }
+
+  function resetRoll() {
+    updateCameraStore({ roll: 0 });
+  }
 </script>
 
 <Panel title="📷 Camera">
@@ -67,11 +93,139 @@
       {/each}
     </div>
   </div>
+
+  {#if $cameraStore.mode === 'perspective'}
+    <div class="cam-section">
+      <div class="prop-header">
+        <div class="prop-title">Field of View</div>
+        <div class="value-row">
+          <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
+          <button class="icon-btn" onclick={resetFov} title="Reset FOV">⟲</button>
+          <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
+            {#if $cameraStore.zolly}
+              <span>🔒</span>
+            {:else}
+              <span>🔓</span>
+            {/if}
+          </button>
+          <button class="icon-btn" class:locked={$cameraStore.guidelines} onclick={toggleGuidelines} title="Toggle Vertical Guidelines">
+            <span style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
+          </button>
+        </div>
+      </div>
+      <input type="range" min="1" max="179" step="1" value={$cameraStore.fov} oninput={onFovInput} class="slider" />
+    </div>
+  {/if}
+
+  <div class="cam-section">
+    <div class="prop-header">
+      <div class="prop-title">Horizon Roll</div>
+      <div class="value-row">
+        <span class="control-value">{$cameraStore.roll.toFixed(0)}°</span>
+        <button class="icon-btn" onclick={resetRoll} title="Reset Roll">⟲</button>
+      </div>
+    </div>
+    <input type="range" min="-180" max="180" step="1" value={$cameraStore.roll} oninput={onRollInput} class="slider" />
+  </div>
+
+
+    <div class="cam-section">
+      <div class="prop-header">
+        <div class="prop-title">Fisheye</div>
+        {#if $cameraStore.fisheye}
+          <div class="value-row">
+            <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(1)}</span>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0 })} title="Reset Fisheye">⟲</button>
+            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false, fisheyeIntensity: 0 })} title="Remove Fisheye">✕</button>
+          </div>
+        {/if}
+      </div>
+      {#if !$cameraStore.fisheye}
+        <button class="action-btn" onclick={() => updateCameraStore({ fisheye: true })}>
+          <span class="emoji">🐟</span> Add Fisheye
+        </button>
+      {:else}
+        <input type="range" min="-50" max="50" step="0.1" 
+               value={$cameraStore.fisheyeIntensity} 
+               oninput={(e) => updateCameraStore({ fisheyeIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      {/if}
+    </div>
+
+    <div class="cam-section">
+      <div class="prop-header">
+        <div class="prop-title">Chromatic Aberration</div>
+        {#if $cameraStore.chromaticAberration}
+          <div class="value-row">
+            <span class="control-value">{$cameraStore.chromaticAberrationIntensity.toFixed(2)}</span>
+            <button class="icon-btn" onclick={() => updateCameraStore({ chromaticAberrationIntensity: 0 })} title="Reset">⟲</button>
+            <button class="icon-btn" onclick={() => updateCameraStore({ chromaticAberration: false, chromaticAberrationIntensity: 0 })} title="Remove">✕</button>
+          </div>
+        {/if}
+      </div>
+      {#if !$cameraStore.chromaticAberration}
+        <button class="action-btn" onclick={() => updateCameraStore({ chromaticAberration: true })}>
+          <span class="emoji">🌈</span> Add Aberration
+        </button>
+      {:else}
+        <input type="range" min="-1" max="1" step="0.01" 
+               value={$cameraStore.chromaticAberrationIntensity} 
+               oninput={(e) => updateCameraStore({ chromaticAberrationIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      {/if}
+    </div>
+
+
+    <div class="cam-section">
+      <div class="prop-header">
+        <div class="prop-title">Tilt-Shift</div>
+        {#if $cameraStore.tiltShift}
+          <div class="value-row">
+            <button class="icon-btn" onclick={() => updateCameraStore({ tiltShift: false })} title="Remove">✕</button>
+          </div>
+        {/if}
+      </div>
+      {#if !$cameraStore.tiltShift}
+        <button class="action-btn" onclick={() => updateCameraStore({ tiltShift: true })}>
+          <span class="emoji">🏙️</span> Add Tilt-Shift
+        </button>
+      {:else}
+        <div class="sub-prop">
+          <span class="sub-label">Position: {$cameraStore.tiltShiftPosition.toFixed(2)}</span>
+          <input type="range" min="0" max="1" step="0.01" 
+                 value={$cameraStore.tiltShiftPosition} 
+                 oninput={(e) => updateCameraStore({ tiltShiftPosition: parseFloat((e.target as HTMLInputElement).value) })} 
+                 class="slider" />
+        </div>
+        <div class="sub-prop">
+          <span class="sub-label">Width: {$cameraStore.tiltShiftWidth.toFixed(2)}</span>
+          <input type="range" min="0" max="1" step="0.01" 
+                 value={$cameraStore.tiltShiftWidth} 
+                 oninput={(e) => updateCameraStore({ tiltShiftWidth: parseFloat((e.target as HTMLInputElement).value) })} 
+                 class="slider" />
+        </div>
+        <div class="sub-prop">
+          <span class="sub-label">Intensity: {$cameraStore.tiltShiftIntensity.toFixed(2)}</span>
+          <input type="range" min="0" max="1" step="0.01" 
+                 value={$cameraStore.tiltShiftIntensity} 
+                 oninput={(e) => updateCameraStore({ tiltShiftIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+                 class="slider" />
+        </div>
+      {/if}
+    </div>
+
 </Panel>
 
 <style>
   .cam-section {
     margin-bottom: 12px;
+  }
+
+  .prop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
   }
 
   .prop-title {
@@ -81,6 +235,22 @@
     text-transform: uppercase;
     letter-spacing: 0.7px;
     margin-bottom: 6px;
+  }
+  
+  .prop-header .prop-title {
+    margin-bottom: 0;
+  }
+
+  .sub-prop {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .sub-label {
+    font-size: 10px;
+    color: #888;
   }
 
   .mode-toggle {
@@ -127,5 +297,106 @@
     background: rgba(74, 158, 255, 0.1);
     border-color: rgba(74, 158, 255, 0.3);
     color: #ccc;
+  }
+
+  .value-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .control-value {
+    font-size: 11px;
+    font-weight: 500;
+    color: #ccc;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 12px;
+  }
+
+  .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #eee;
+  }
+
+  .icon-btn.locked {
+    color: #ff6b6b;
+  }
+
+  .slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+    margin-top: 4px;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4a9eff;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  .slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4a9eff;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s;
+  }
+
+  .slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+  }
+
+  .action-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #eee;
+  }
+
+  .emoji {
+    font-size: 12px;
   }
 </style>

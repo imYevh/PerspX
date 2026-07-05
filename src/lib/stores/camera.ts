@@ -8,6 +8,13 @@ export interface CameraState {
   zolly: boolean;
   fisheye: boolean;
   fisheyeIntensity: number;
+  chromaticAberration: boolean;
+  chromaticAberrationIntensity: number;
+  tiltShift: boolean;
+  tiltShiftPosition: number;
+  tiltShiftWidth: number;
+  tiltShiftIntensity: number;
+  guidelines: boolean;
   lockPan: boolean;
   lockOrbit: boolean;
   orbitMode: 'free' | 'snap';
@@ -20,6 +27,13 @@ export const cameraStore = writable<CameraState>({
   zolly: false,
   fisheye: false,
   fisheyeIntensity: 0,
+  chromaticAberration: false,
+  chromaticAberrationIntensity: 0,
+  tiltShift: false,
+  tiltShiftPosition: 0.5,
+  tiltShiftWidth: 0.2,
+  tiltShiftIntensity: 0.5,
+  guidelines: false,
   lockPan: false,
   lockOrbit: false,
   orbitMode: 'free'

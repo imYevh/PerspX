@@ -1,7 +1,7 @@
 import type { WebGPURenderer } from "three/webgpu";
 import type { Scene, Camera } from "three";
 import { PostProcessing } from "three/webgpu";
-import { pass, uv, sub, mul, add, dot, Fn, uniform } from "three/tsl";
+import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix } from "three/tsl";
 
 export type UpdateCallback = (deltaTime: number, elapsedTime: number) => void;
 
@@ -13,9 +13,18 @@ export class RenderLoop {
 
   private postProcessing: PostProcessing;
   private scenePass: any;
-  private fisheyeNode: any;
-  private fisheyeIntensityUniform = uniform(0.5);
+  private combinedEffectNode: any;
+  
+  private fisheyeIntensityUniform = uniform(0.0);
   public fisheyeEnabled = false;
+
+  private caIntensityUniform = uniform(0.0);
+  public caEnabled = false;
+
+  private tiltShiftPositionUniform = uniform(0.5);
+  private tiltShiftWidthUniform = uniform(0.2);
+  private tiltShiftIntensityUniform = uniform(0.5);
+  public tiltShiftEnabled = false;
 
   constructor(
     private renderer: WebGPURenderer,
@@ -25,21 +34,74 @@ export class RenderLoop {
     this.postProcessing = new PostProcessing(this.renderer);
     this.scenePass = pass(this.scene, this.camera);
 
-    const fisheyeUV = Fn(() => {
+    const postProcessFn = Fn(() => {
+      // 1. Fisheye Math (UV deformation)
       const p = sub(mul(uv(), 2.0), 1.0); // p = uv * 2 - 1
       const r2 = dot(p, p);
-      const distortion = add(1.0, mul(this.fisheyeIntensityUniform, r2)); // barrel distortion
-      const newP = mul(p, distortion);
-      return add(mul(newP, 0.5), 0.5);
+      
+      const k = mul(this.fisheyeIntensityUniform, 0.009);
+      const maxScale = add(1.0, mul(k, 2.0));
+      const scale = div(add(1.0, mul(k, r2)), maxScale);
+      const newP = mul(p, scale);
+      
+      const fisheyeUV = add(mul(newP, 0.5), 0.5);
+
+      // 2. Chromatic Aberration Math
+      const caOffset = mul(sub(fisheyeUV, 0.5), this.caIntensityUniform, 0.05);
+      const texNode = this.scenePass.getTextureNode();
+      const r = texNode.sample(add(fisheyeUV, caOffset)).r;
+      const g = texNode.sample(fisheyeUV).g;
+      const b = texNode.sample(sub(fisheyeUV, caOffset)).b;
+      const caColor = vec4(r, g, b, 1.0);
+
+      // 3. Blur Amount Calculation
+      let blurAmount = float(0.0);
+
+      // Tilt-Shift blur amount
+      const yDist = abs(sub(fisheyeUV.y, this.tiltShiftPositionUniform));
+      const w2 = mul(this.tiltShiftWidthUniform, 0.5);
+      const tBlur = mul(smoothstep(w2, this.tiltShiftWidthUniform, yDist), this.tiltShiftIntensityUniform);
+      
+      blurAmount = max(blurAmount, tBlur);
+      blurAmount = clamp(blurAmount, 0.0, 1.0);
+
+      // 4. Compute Blur
+      // 9-tap box blur
+      const blurRadius = mul(blurAmount, 0.02); // 2% of screen at max blur
+      
+      let bColor = texNode.sample(fisheyeUV);
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(-1.0, -1.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(0.0, -1.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(1.0, -1.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(-1.0, 0.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(1.0, 0.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(-1.0, 1.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(0.0, 1.0), blurRadius))));
+      bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(1.0, 1.0), blurRadius))));
+      bColor = mul(bColor, div(1.0, 9.0));
+
+      return mix(caColor, bColor, blurAmount);
     })();
 
-    this.fisheyeNode = this.scenePass.getTextureNode().sample(fisheyeUV);
+    this.combinedEffectNode = postProcessFn;
     this.postProcessing.outputNode = this.scenePass;
   }
 
   setFisheye(enabled: boolean, intensity: number): void {
     this.fisheyeEnabled = enabled;
-    this.fisheyeIntensityUniform.value = intensity; 
+    this.fisheyeIntensityUniform.value = enabled ? intensity : 0.0; 
+  }
+
+  setChromaticAberration(enabled: boolean, intensity: number): void {
+    this.caEnabled = enabled;
+    this.caIntensityUniform.value = enabled ? intensity : 0.0;
+  }
+
+  setTiltShift(enabled: boolean, position: number, width: number, intensity: number): void {
+    this.tiltShiftEnabled = enabled;
+    this.tiltShiftPositionUniform.value = position;
+    this.tiltShiftWidthUniform.value = width;
+    this.tiltShiftIntensityUniform.value = enabled ? intensity : 0.0;
   }
 
   onUpdate(callback: UpdateCallback): void {
@@ -62,19 +124,21 @@ export class RenderLoop {
     this.animationId = requestAnimationFrame(this.tick);
 
     const now = performance.now();
-    const delta = (now - this.lastTime) / 1000; // seconds
+    const delta = (now - this.lastTime) / 1000;
     this.lastTime = now;
     this.elapsed += delta;
 
-    // Run all update callbacks
     for (const cb of this.updateCallbacks) {
       cb(delta, this.elapsed);
     }
 
-    // Render
-    if (this.fisheyeEnabled && this.fisheyeIntensityUniform.value > 0) {
-      if (this.postProcessing.outputNode !== this.fisheyeNode) {
-        this.postProcessing.outputNode = this.fisheyeNode;
+    const hasFisheye = this.fisheyeEnabled && this.fisheyeIntensityUniform.value !== 0;
+    const hasCA = this.caEnabled && this.caIntensityUniform.value !== 0;
+    const hasTiltShift = this.tiltShiftEnabled && this.tiltShiftIntensityUniform.value !== 0;
+
+    if (hasFisheye || hasCA || hasTiltShift) {
+      if (this.postProcessing.outputNode !== this.combinedEffectNode) {
+        this.postProcessing.outputNode = this.combinedEffectNode;
         this.postProcessing.needsUpdate = true;
       }
       this.postProcessing.render();
@@ -83,7 +147,6 @@ export class RenderLoop {
         this.postProcessing.outputNode = this.scenePass;
         this.postProcessing.needsUpdate = true;
       }
-      // Can also just call this.renderer.render, but postProcessing allows future effects
       this.renderer.render(this.scene, this.camera);
     }
   };
