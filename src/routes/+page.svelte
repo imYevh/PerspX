@@ -336,8 +336,9 @@
         // Re-attach transform control if an object was selected
         const selectedIds = _sceneManager.getSelectedIds();
         if (selectedIds.length === 1) {
-           const obj = _sceneManager.getObject(selectedIds[0]);
-           if (obj) _transformSystem.attach(obj);
+           _transformSystem.attachToObject(selectedIds[0]);
+        } else if (selectedIds.length > 1) {
+           _transformSystem.attachToMultiple(selectedIds);
         }
         
         _sceneManager.getAllObjects().forEach(({ object }) => {
@@ -345,7 +346,6 @@
              object.userData.boundingBoxHelper.visible = true;
            }
         });
-        _sceneManager.updateSelection(selectedIds);
 
         if (_lightManager) {
            _lightManager.restoreHelpers();
