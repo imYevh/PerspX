@@ -1,7 +1,7 @@
 import type { WebGPURenderer } from "three/webgpu";
-import type { Scene, Camera } from "three";
+import { Scene, type Camera } from "three";
 import { PostProcessing } from "three/webgpu";
-import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix } from "three/tsl";
+import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, select } from "three/tsl";
 
 export type UpdateCallback = (deltaTime: number, elapsedTime: number) => void;
 
@@ -13,6 +13,7 @@ export class RenderLoop {
 
   private postProcessing: PostProcessing;
   private scenePass: any;
+  private overlayPass: any;
   private combinedEffectNode: any;
   
   private fisheyeIntensityUniform = uniform(0.0);
@@ -26,14 +27,16 @@ export class RenderLoop {
   private tiltShiftIntensityUniform = uniform(0.5);
   public tiltShiftEnabled = false;
 
+  public overlayScene = new Scene();
+
   constructor(
     private renderer: WebGPURenderer,
     private scene: Scene,
     private camera: Camera,
-    private helperScene?: Scene,
   ) {
     this.postProcessing = new PostProcessing(this.renderer);
     this.scenePass = pass(this.scene, this.camera);
+    this.overlayPass = pass(this.overlayScene, this.camera);
 
     const postProcessFn = Fn(() => {
       // 1. Fisheye Math (UV deformation)
@@ -47,7 +50,7 @@ export class RenderLoop {
       
       const fisheyeUV = add(mul(newP, 0.5), 0.5);
 
-      // 2. Chromatic Aberration Math
+      // 2. Chromatic Aberration Math (Main Scene)
       const caOffset = mul(sub(fisheyeUV, 0.5), this.caIntensityUniform, 0.05);
       const texNode = this.scenePass.getTextureNode();
       const r = texNode.sample(add(fisheyeUV, caOffset)).r;
@@ -55,8 +58,12 @@ export class RenderLoop {
       const b = texNode.sample(sub(fisheyeUV, caOffset)).b;
       const caColor = vec4(r, g, b, 1.0);
 
-      // 3. Blur Amount Calculation
-      let blurAmount = float(0.0);
+      // 3. Overlay Scene Math (Fisheye only, NO Chromatic Aberration)
+      const overlayTexNode = this.overlayPass.getTextureNode();
+      const overlayColor = overlayTexNode.sample(fisheyeUV);
+
+      // 4. Blur Amount Calculation
+      let blurAmount: any = float(0.0);
 
       // Tilt-Shift blur amount
       const yDist = abs(sub(fisheyeUV.y, this.tiltShiftPositionUniform));
@@ -66,7 +73,7 @@ export class RenderLoop {
       blurAmount = max(blurAmount, tBlur);
       blurAmount = clamp(blurAmount, 0.0, 1.0);
 
-      // 4. Compute Blur
+      // 5. Compute Blur
       // 9-tap box blur
       const blurRadius = mul(blurAmount, 0.02); // 2% of screen at max blur
       
@@ -81,7 +88,17 @@ export class RenderLoop {
       bColor = add(bColor, texNode.sample(add(fisheyeUV, mul(vec2(1.0, 1.0), blurRadius))));
       bColor = mul(bColor, div(1.0, 9.0));
 
-      return mix(caColor, bColor, blurAmount);
+      const mainOutputColor = mix(caColor, bColor, blurAmount);
+
+      // 6. Combine main color and overlay color using depth testing
+      const mainDepth = this.scenePass.getDepthNode().sample(fisheyeUV);
+      const overlayDepth = this.overlayPass.getDepthNode().sample(fisheyeUV);
+
+      const isOverlayCloser = lessThan(overlayDepth, mainDepth);
+      const isOverlayVisible = lessThan(0.0, overlayColor.a);
+      const showOverlay = and(isOverlayCloser, isOverlayVisible);
+
+      return select(showOverlay, overlayColor, mainOutputColor);
     })();
 
     this.combinedEffectNode = postProcessFn;
@@ -153,13 +170,11 @@ export class RenderLoop {
         this.postProcessing.needsUpdate = true;
       }
       this.renderer.render(this.scene, this.camera);
-    }
-
-    if (this.helperScene) {
-      const prevAutoClear = this.renderer.autoClear;
+      
+      const oldAutoClear = this.renderer.autoClear;
       this.renderer.autoClear = false;
-      this.renderer.render(this.helperScene, this.camera);
-      this.renderer.autoClear = prevAutoClear;
+      this.renderer.render(this.overlayScene, this.camera);
+      this.renderer.autoClear = oldAutoClear;
     }
   }
 
@@ -167,6 +182,9 @@ export class RenderLoop {
     this.camera = camera;
     if (this.scenePass) {
       this.scenePass.camera = camera;
+    }
+    if (this.overlayPass) {
+      this.overlayPass.camera = camera;
     }
   }
 }

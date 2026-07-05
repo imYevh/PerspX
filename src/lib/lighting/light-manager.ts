@@ -178,11 +178,7 @@ export class LightManager {
       helper.visible = this.showHelpers;
       helper.name = `_PerspX_light_helper_${id}`;
       helper.userData.PerspXId = id; // Attach ID so raycaster knows this is the light
-      if (this.sceneManager.helperScene) {
-        this.sceneManager.helperScene.add(helper);
-      } else {
-        this.sceneManager.scene.add(helper);
-      }
+      this.sceneManager.scene.add(helper);
       this.helpers.set(id, helper);
     }
   }
@@ -190,11 +186,7 @@ export class LightManager {
   private removeHelper(id: string): void {
     const helper = this.helpers.get(id);
     if (helper) {
-      if (this.sceneManager.helperScene) {
-        this.sceneManager.helperScene.remove(helper);
-      } else {
-        this.sceneManager.scene.remove(helper);
-      }
+      this.sceneManager.scene.remove(helper);
       this.helpers.delete(id);
     }
   }

@@ -22,7 +22,6 @@ export type SceneEventCallback = (data: any) => void;
 
 export class SceneManager {
   public readonly scene: Scene;
-  public readonly helperScene?: Scene;
   private objects: Map<string, Object3D> = new Map();
   private metadata: Map<string, SceneObjectMeta> = new Map();
   private selectedIds: Set<string> = new Set();
@@ -30,9 +29,8 @@ export class SceneManager {
   private raycaster = new Raycaster();
   private nameCounters: Map<string, number> = new Map();
 
-  constructor(scene: Scene, helperScene?: Scene) {
+  constructor(scene: Scene) {
     this.scene = scene;
-    this.helperScene = helperScene;
   }
 
   // --- Object Lifecycle ---

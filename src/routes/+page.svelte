@@ -162,7 +162,7 @@
       renderer = new Renderer({ canvas });
       await renderer.init();
 
-      _sceneManager = new SceneManager(renderer.scene, renderer.helperScene);
+      _sceneManager = new SceneManager(renderer.scene);
       bindSceneManager(_sceneManager);
       sceneManager = _sceneManager;
 
@@ -211,16 +211,16 @@
       guidelinesFull.visible = $cameraStore.guidelines === 'full';
       guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
       
-      renderer.helperScene.add(grid);
-      renderer.helperScene.add(guidelinesFull);
-      renderer.helperScene.add(guidelinesNearest);
+      renderer.scene.add(grid);
+      renderer.scene.add(guidelinesFull);
+      renderer.scene.add(guidelinesNearest);
       
       // Store reference to guidelines so we can toggle and move them
       (window as any).__guidelinesFull = guidelinesFull;
       (window as any).__guidelinesNearest = guidelinesNearest;
       
       vanishingHelper = new VanishingPointHelper();
-      renderer.helperScene.add(vanishingHelper.group);
+      renderer.scene.add(vanishingHelper.group);
 
       // Sync UI store visibility toggles
       const unsubscribeUI = uiStore.subscribe(s => {
@@ -460,7 +460,19 @@
         window.removeEventListener('keydown', onKeyDownGlobal);
       };
 
-      loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera, renderer.helperScene);
+      loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera);
+      
+      // Move helpers to the overlay scene in loop to keep them free from chromatic aberration
+      renderer.scene.remove(grid);
+      renderer.scene.remove(guidelinesFull);
+      renderer.scene.remove(guidelinesNearest);
+      renderer.scene.remove(vanishingHelper.group);
+      
+      loop.overlayScene.add(grid);
+      loop.overlayScene.add(guidelinesFull);
+      loop.overlayScene.add(guidelinesNearest);
+      loop.overlayScene.add(vanishingHelper.group);
+
       loop.onUpdate((_dt) => {
         // Apply Store settings
         if (_cameraController.getFOV() !== $cameraStore.fov) {

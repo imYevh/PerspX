@@ -10,7 +10,6 @@ export interface RendererOptions {
 export class Renderer {
   public readonly instance: WebGPURenderer;
   public readonly scene: Scene;
-  public readonly helperScene: Scene;
 
   constructor(options: RendererOptions) {
     this.instance = new WebGPURenderer({
@@ -23,7 +22,6 @@ export class Renderer {
     this.instance.shadowMap.enabled = true;
 
     this.scene = new Scene();
-    this.helperScene = new Scene();
 
     this.handleResize();
     window.addEventListener("resize", () => this.handleResize());
