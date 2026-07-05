@@ -49,13 +49,9 @@
     updateCameraStore({ roll: v });
   }
 
-  function toggleZolly() {
-    updateCameraStore({ zolly: !$cameraStore.zolly });
-  }
 
-  function toggleGuidelines() {
-    updateCameraStore({ guidelines: !$cameraStore.guidelines });
-  }
+
+
 
   function resetFov() {
     updateCameraStore({ fov: 50 });
@@ -100,20 +96,33 @@
         <div class="prop-title">Field of View</div>
         <div class="value-row">
           <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
-          <button class="icon-btn" onclick={resetFov} title="Reset FOV">⟲</button>
-          <button class="icon-btn" class:locked={$cameraStore.zolly} onclick={toggleZolly} title="Toggle Dolly Zoom (Zolly)">
-            {#if $cameraStore.zolly}
-              <span>🔒</span>
-            {:else}
-              <span>🔓</span>
-            {/if}
-          </button>
-          <button class="icon-btn" class:locked={$cameraStore.guidelines} onclick={toggleGuidelines} title="Toggle Vertical Guidelines">
-            <span style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
-          </button>
+          <button class="icon-btn" onclick={() => updateCameraStore({ zolly: false, fov: 50 })} title="Reset">⟲</button>
         </div>
       </div>
-      <input type="range" min="1" max="179" step="1" value={$cameraStore.fov} oninput={onFovInput} class="slider" />
+      <input type="range" min="1" max="179" step="1" value={$cameraStore.fov} 
+             oninput={(e) => updateCameraStore({ zolly: false, fov: parseFloat((e.target as HTMLInputElement).value) })} 
+             class="slider" />
+    </div>
+
+    <div class="cam-section">
+      <div class="guidelines-toggle" style="margin-bottom: 8px;">
+        <label class="toggle-label">
+          <input type="checkbox" checked={$cameraStore.zolly} onchange={(e) => updateCameraStore({ zolly: (e.target as HTMLInputElement).checked })} />
+          <span>Enable Dolly Zoom</span>
+        </label>
+      </div>
+      {#if $cameraStore.zolly}
+        <div class="prop-header">
+          <div class="prop-title" style="color: #4a9eff;">Zolly Angle</div>
+          <div class="value-row">
+            <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
+            <button class="icon-btn" onclick={() => updateCameraStore({ zolly: true, fov: 50 })} title="Reset">⟲</button>
+          </div>
+        </div>
+        <input type="range" min="1" max="179" step="1" value={$cameraStore.fov} 
+               oninput={(e) => updateCameraStore({ zolly: true, fov: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      {/if}
     </div>
   {/if}
 

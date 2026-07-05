@@ -308,6 +308,17 @@
         <span class="tool-label">Vanishing</span>
       {/if}
     </button>
+    <button
+      class="tool-btn"
+      class:active={$cameraStore.guidelines}
+      onclick={() => updateCameraStore({ guidelines: !$cameraStore.guidelines })}
+      title="Toggle Vertical Guidelines"
+    >
+      <span class="tool-icon" style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">Guidelines</span>
+      {/if}
+    </button>
     <div class="toolbar-sep"></div>
     <button class="tool-btn" title="Take Screenshot" onclick={takeScreenshot}>
       <span class="tool-icon">📷</span>
