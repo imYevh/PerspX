@@ -65,6 +65,8 @@ export class SceneManager {
     this.scene.remove(object);
     this.objects.delete(id);
     this.metadata.delete(id);
+
+    const wasSelected = this.selectedIds.has(id);
     this.selectedIds.delete(id);
 
     // Dispose geometry and materials
@@ -76,6 +78,9 @@ export class SceneManager {
     }
 
     this.emit("object-removed", { id });
+    if (wasSelected) {
+      this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
+    }
   }
 
   clearAll(): void {
@@ -190,9 +195,15 @@ export class SceneManager {
   // --- Naming ---
 
   private generateUniqueName(baseName: string): string {
-    const count = (this.nameCounters.get(baseName) ?? 0) + 1;
-    this.nameCounters.set(baseName, count);
-    return `${baseName} ${count}`;
+    let suffix = 1;
+    let name = `${baseName} ${suffix}`;
+    const existingNames = new Set(Array.from(this.metadata.values()).map(m => m.name));
+    
+    while (existingNames.has(name)) {
+      suffix++;
+      name = `${baseName} ${suffix}`;
+    }
+    return name;
   }
 
   // --- Events ---

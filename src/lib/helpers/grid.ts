@@ -1,4 +1,4 @@
-import { GridHelper, Group } from 'three';
+import { GridHelper, Group, LineSegments, BufferGeometry, Float32BufferAttribute, LineBasicMaterial } from 'three';
 
 /**
  * A two-level grid on the XZ plane using the built-in GridHelper.
@@ -34,5 +34,42 @@ export function createInfiniteGrid(options?: {
   }
   group.add(coarseGrid);
 
+  return group;
+}
+
+export function createVerticalGuidelines(options?: {
+  size?: number;
+  divisions?: number;
+  color?: number;
+}): Group {
+  const size = options?.size ?? 100;
+  const divisions = options?.divisions ?? 10;
+  const color = options?.color ?? 0x555566;
+
+  const group = new Group();
+  group.name = '_PerspX_guidelines';
+  
+  const step = size / divisions;
+  const halfSize = size / 2;
+  const height = size;
+  
+  const vertices = [];
+  
+  // Create a grid of vertical lines (from bottom to top)
+  // to act as 3D guidelines perpendicular to the XZ floor grid.
+  for (let x = -halfSize; x <= halfSize; x += step) {
+    for (let z = -halfSize; z <= halfSize; z += step) {
+      // Line from y=-height/2 to y=height/2
+      vertices.push(x, -height/2, z,  x, height/2, z);
+    }
+  }
+  
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
+  const material = new LineBasicMaterial({ color, transparent: true, opacity: 0.25 });
+  
+  const lines = new LineSegments(geometry, material);
+  group.add(lines);
+  
   return group;
 }

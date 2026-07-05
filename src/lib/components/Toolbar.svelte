@@ -5,11 +5,12 @@
   import type { Renderer } from '$lib/core/renderer';
   import { uiStore } from '$lib/stores/ui';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
-  import { undo, redo } from '$lib/stores/history';
+  import { undo, redo, initHistory } from '$lib/stores/history';
   import { serializeScene, applySceneSnapshot } from '$lib/utils/serialization';
   
   import Dropdown from './ui/Dropdown.svelte';
   import type { DropdownItem } from './ui/Dropdown.svelte';
+  import ConfirmDialog from './ui/ConfirmDialog.svelte';
 
   interface Props {
     objectManager: ObjectManager | undefined;
@@ -20,8 +21,18 @@
   
   let { objectManager, sceneManager, lightManager, renderer }: Props = $props();
 
+  let confirmDialog = $state<{
+    title: string;
+    message: string;
+    danger?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
+
   const mainMenu: DropdownItem[] = [
-    { id: 'new', label: 'Clear Scene', icon: '✨' },
+    { id: 'reset', label: 'Reset Scene', icon: '🎥' },
+    { id: 'clear', label: 'Clear Scene', icon: '✨' },
+    { id: 'save', label: 'Save Scene', icon: '💾' },
+    { id: 'load', label: 'Load Scene', icon: '📁' },
     { id: 'divider1', label: '', divider: true },
     { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
@@ -38,13 +49,107 @@
   ];
 
   function handleMenuSelect(id: string) {
-    if (id === 'new') {
-      if (confirm('Clear current scene? All unsaved progress will be lost.')) {
-        if (sceneManager) sceneManager.clearAll();
-      }
+    if (id === 'reset') {
+      confirmDialog = {
+        title: 'Reset Scene',
+        message: 'Are you sure you want to reset the entire application to its initial state? All added objects will be deleted and settings will return to default.',
+        danger: false,
+        onConfirm: () => {
+          resetSettings();
+          confirmDialog = null;
+        }
+      };
+    } else if (id === 'clear') {
+      confirmDialog = {
+        title: 'Clear Scene',
+        message: 'Are you sure you want to delete all objects and wipe the scene clean? This cannot be undone.',
+        danger: true,
+        onConfirm: () => {
+          clearSceneLogic();
+          confirmDialog = null;
+        }
+      };
+    } else if (id === 'save') {
+      saveScene();
+    } else if (id === 'load') {
+      loadScene();
     } else {
       alert(`Feature "${id}" coming soon!`);
     }
+  }
+
+  function resetSettings() {
+    if (sceneManager) {
+      sceneManager.deselectAll();
+      const objects = sceneManager.getAllObjects();
+      for (const { id, meta } of objects) {
+        if (meta.type !== 'light') {
+          sceneManager.removeObject(id);
+        }
+      }
+      initHistory(sceneManager);
+    }
+    
+    if (lightManager) {
+      lightManager.applyPreset('studio');
+    }
+    resetCameraAndUI();
+  }
+
+  function resetCameraAndUI() {
+    updateCameraStore({
+      mode: 'perspective',
+      fov: 50,
+      roll: 0,
+      zolly: false,
+      fisheye: false,
+      fisheyeIntensity: 0,
+      chromaticAberration: false,
+      chromaticAberrationIntensity: 0,
+      tiltShift: false,
+      tiltShiftPosition: 0.5,
+      tiltShiftWidth: 0.2,
+      tiltShiftIntensity: 0.5,
+      guidelines: false,
+      lockPan: false,
+      lockOrbit: false,
+      orbitMode: 'free'
+    });
+    
+    uiStore.update(s => ({
+      ...s,
+      transformMode: 'translate',
+      snapEnabled: false
+    }));
+
+    import('$lib/stores/theme.svelte').then(({ setTheme, setAccentHue }) => {
+      setTheme('dark');
+      setAccentHue(217);
+    });
+
+    import('$lib/objects/primitives').then(({ resetColorCycle }) => {
+      resetColorCycle();
+    });
+
+    window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
+  }
+
+  function clearSceneLogic() {
+    if (sceneManager) {
+      sceneManager.deselectAll();
+      sceneManager.clearAll();
+      initHistory(sceneManager);
+    }
+    updateCameraStore({
+      fisheye: false,
+      fisheyeIntensity: 0,
+      chromaticAberration: false,
+      chromaticAberrationIntensity: 0,
+      tiltShift: false,
+      tiltShiftPosition: 0.5,
+      tiltShiftWidth: 0.2,
+      tiltShiftIntensity: 0.5
+    });
   }
 
   function handleLightSelect(id: string) {
@@ -181,23 +286,47 @@
 
   <!-- Utility actions -->
   <div class="toolbar-group">
-    <button class="tool-btn" title="Save Scene" onclick={saveScene}>
-      <span class="tool-icon">💾</span>
+    <button
+      class="tool-btn"
+      class:active={$uiStore.gridVisible}
+      onclick={() => uiStore.update(s => ({ ...s, gridVisible: !s.gridVisible }))}
+      title="Toggle Infinite Grid (1)"
+    >
+      <span class="tool-icon">▦</span>
       {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Save</span>
+        <span class="tool-label">Grid</span>
       {/if}
     </button>
-    <button class="tool-btn" title="Load Scene" onclick={loadScene}>
-      <span class="tool-icon">📁</span>
+    <button
+      class="tool-btn"
+      class:active={$uiStore.vanishingVisible}
+      onclick={() => uiStore.update(s => ({ ...s, vanishingVisible: !s.vanishingVisible }))}
+      title="Toggle Vanishing Helper (2)"
+    >
+      <span class="tool-icon">⨂</span>
       {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Load</span>
+        <span class="tool-label">Vanishing</span>
       {/if}
     </button>
+    <div class="toolbar-sep"></div>
     <button class="tool-btn" title="Take Screenshot" onclick={takeScreenshot}>
       <span class="tool-icon">📷</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">Screenshot</span>
+      {/if}
     </button>
   </div>
 </header>
+
+{#if confirmDialog}
+  <ConfirmDialog
+    title={confirmDialog.title}
+    message={confirmDialog.message}
+    danger={confirmDialog.danger}
+    onConfirm={confirmDialog.onConfirm}
+    onCancel={() => confirmDialog = null}
+  />
+{/if}
 
 <style>
   .toolbar {
@@ -210,7 +339,7 @@
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
-    z-index: 30; /* Higher than SubToolbar */
+    z-index: 100; /* Higher than Sidebar (50) and SubToolbar (20) */
   }
 
   .toolbar-brand {
