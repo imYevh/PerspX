@@ -286,10 +286,8 @@
         });
 
         // Hide light helpers
-        if (lightManager) {
-           renderer.scene.children.forEach(c => {
-             if (c.name.includes('_PerspX_light_helper_')) c.visible = false;
-           });
+        if (_lightManager) {
+           _lightManager.hideHelpers();
         }
 
         // Wait a frame for visibility changes to apply? No, synchronous is fine for three.js
@@ -346,11 +344,9 @@
         });
         _sceneManager.updateSelection(selectedIds);
 
-        if (lightManager) {
-           renderer.scene.children.forEach(c => {
-             if (c.name.includes('_PerspX_light_helper_')) c.visible = true;
-           });
-           lightManager.updateHelpers();
+        if (_lightManager) {
+           _lightManager.restoreHelpers();
+           _lightManager.updateHelpers();
         }
       };
       window.addEventListener('perspx-take-screenshot', onTakeScreenshot);

@@ -191,6 +191,18 @@ export class LightManager {
     }
   }
 
+  hideHelpers(): void {
+    for (const helper of this.helpers.values()) {
+      helper.visible = false;
+    }
+  }
+
+  restoreHelpers(): void {
+    for (const helper of this.helpers.values()) {
+      helper.visible = this.showHelpers;
+    }
+  }
+
   toggleHelpers(): boolean {
     this.showHelpers = !this.showHelpers;
     for (const helper of this.helpers.values()) {
