@@ -14,18 +14,16 @@
     return $sceneStore.objects.find(o => o.id === id)?.meta.name ?? null;
   });
 
-  const marqueeStyle = $derived(() => {
-    const { startX, startY, currentX, currentY } = $uiStore.marquee;
-    const left = Math.min(startX, currentX);
-    const top = Math.min(startY, currentY);
-    const width = Math.abs(currentX - startX);
-    const height = Math.abs(currentY - startY);
-    return `left: ${left}px; top: ${top}px; width: ${width}px; height: ${height}px;`;
-  });
+  const marqueeStyle = $derived(
+    `left: ${Math.min($uiStore.marquee.startX, $uiStore.marquee.currentX)}px; ` +
+    `top: ${Math.min($uiStore.marquee.startY, $uiStore.marquee.currentY)}px; ` +
+    `width: ${Math.abs($uiStore.marquee.currentX - $uiStore.marquee.startX)}px; ` +
+    `height: ${Math.abs($uiStore.marquee.currentY - $uiStore.marquee.startY)}px;`
+  );
 </script>
 
 {#if $uiStore.marquee.active}
-  <div class="marquee-box" style={marqueeStyle()}></div>
+  <div class="marquee-box" style={marqueeStyle}></div>
 {/if}
 
 <div class="hud">
