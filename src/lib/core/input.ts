@@ -15,6 +15,7 @@ export class InputSystem {
   private pointerDownPos = { x: 0, y: 0 };
   private isDragging = false;
   private isMarquee = false;
+  private isPointerDown = false;
   private transformSystem?: TransformSystem;
 
   constructor(canvas: HTMLCanvasElement, camera: Camera, sceneManager: SceneManager) {
@@ -25,7 +26,7 @@ export class InputSystem {
 
     this.canvas.addEventListener('pointerdown', this.onPointerDown);
     this.canvas.addEventListener('pointermove', this.onPointerMove);
-    this.canvas.addEventListener('pointerup', this.onPointerUp);
+    window.addEventListener('pointerup', this.onPointerUp);
   }
 
   setTransformSystem(ts: TransformSystem) {
@@ -38,11 +39,14 @@ export class InputSystem {
     // Ignore if clicking on a transform gizmo handle
     if (this.transformSystem && this.transformSystem.controls.axis !== null) return;
 
+    this.isPointerDown = true;
     this.pointerDownPos = { x: e.clientX, y: e.clientY };
     this.isDragging = false;
   };
 
   private onPointerMove = (e: PointerEvent): void => {
+    if (!this.isPointerDown) return;
+
     // Ignore if transform gizmo is being interacted with
     if (this.transformSystem && this.transformSystem.controls.dragging) return;
 
@@ -70,6 +74,8 @@ export class InputSystem {
 
   private onPointerUp = (e: PointerEvent): void => {
     if (e.button !== 0) return;
+    if (!this.isPointerDown) return;
+    this.isPointerDown = false;
 
     // Ignore if releasing a transform gizmo handle
     if (this.transformSystem && this.transformSystem.controls.axis !== null) return;
@@ -142,6 +148,6 @@ export class InputSystem {
   dispose() {
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas.removeEventListener('pointermove', this.onPointerMove);
-    this.canvas.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('pointerup', this.onPointerUp);
   }
 }

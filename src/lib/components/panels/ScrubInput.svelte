@@ -43,18 +43,36 @@
     startX = e.clientX;
     startValue = getCurrentValue();
     isDragging = false;
+    let accumulatedDx = 0;
 
     const onPointerMove = (moveEvent: PointerEvent) => {
-      const dx = moveEvent.clientX - startX;
-      if (!isDragging && Math.abs(dx) > 2) {
-        isDragging = true;
-        inputElement.blur(); // Remove focus to hide cursor while dragging
-        // Prevent body selection and set cursor
-        document.body.style.cursor = 'ew-resize';
-        document.body.style.userSelect = 'none';
+      if (!isDragging) {
+        const dx = moveEvent.clientX - startX;
+        if (Math.abs(dx) > 2) {
+          isDragging = true;
+          inputElement.blur(); // Remove focus to hide cursor while dragging
+          try {
+            inputElement.requestPointerLock();
+          } catch (err) {
+            console.warn("Pointer lock request failed", err);
+          }
+          // Prevent body selection and set cursor
+          document.body.style.cursor = 'ew-resize';
+          document.body.style.userSelect = 'none';
+        }
       }
+      
       if (isDragging) {
         moveEvent.preventDefault();
+        
+        let dx = 0;
+        if (document.pointerLockElement === inputElement) {
+          accumulatedDx += moveEvent.movementX;
+          dx = accumulatedDx;
+        } else {
+          dx = moveEvent.clientX - startX;
+        }
+
         const multiplier = moveEvent.shiftKey ? 10 : moveEvent.altKey ? 0.1 : 1;
         // For rotation (step 1), 1px = 1 unit. For position (step 0.1), 10px = 1 unit
         const sensitivity = step; 
@@ -67,6 +85,10 @@
     const onPointerUp = () => {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      
+      if (document.pointerLockElement === inputElement) {
+        document.exitPointerLock();
+      }
       
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
