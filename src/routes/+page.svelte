@@ -374,6 +374,10 @@
            _lightManager.updateHelpers();
         }
       };
+      const preventContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+      };
+      window.addEventListener('contextmenu', preventContextMenu);
       window.addEventListener('perspx-reset-camera', onResetCamera);
       window.addEventListener('perspx-take-screenshot', onTakeScreenshot);
 
@@ -382,6 +386,7 @@
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('perspx-reset-camera', onResetCamera);
         window.removeEventListener('perspx-take-screenshot', onTakeScreenshot);
+        window.removeEventListener('contextmenu', preventContextMenu);
       };
 
       // History tracking
