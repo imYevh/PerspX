@@ -210,6 +210,10 @@
   }
 
   const viewMenu = $derived([
+    ...($uiStore.breakpoint === 'desktop' ? [
+      { id: 'panelsVisible', label: $uiStore.panelsVisible ? 'Hide UI' : 'Show UI' },
+      { id: 'divider0', label: '', divider: true }
+    ] : []),
     { id: 'leftPanel', label: 'Left Panel', icon: $uiStore.leftPanelOpen ? '✓' : ' ' },
     { id: 'rightPanel', label: 'Right Panel', icon: $uiStore.rightPanelOpen ? '✓' : ' ' },
     { id: 'divider1', label: '', divider: true },
@@ -222,7 +226,9 @@
   ] as DropdownItem[]);
 
   function handleViewSelect(id: string) {
-    if (id === 'leftPanel') {
+    if (id === 'panelsVisible') {
+      uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }));
+    } else if (id === 'leftPanel') {
       uiStore.update(s => ({ ...s, leftPanelOpen: !s.leftPanelOpen }));
     } else if (id === 'rightPanel') {
       uiStore.update(s => ({ ...s, rightPanelOpen: !s.rightPanelOpen }));
@@ -270,20 +276,19 @@
   <!-- Central actions -->
   <div class="toolbar-group">
     <Dropdown 
-      icon="👁" 
+      icon="" 
       label="View" 
       items={viewMenu} 
       onSelect={handleViewSelect} 
       title="View Options" 
     />
     <div class="toolbar-sep"></div>
-    <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
-      <span class="tool-icon">{$uiStore.panelsVisible ? '👁️' : '🙈'}</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
+    {#if $uiStore.breakpoint !== 'desktop'}
+      <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
         <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
-      {/if}
-    </button>
-    <div class="toolbar-sep"></div>
+      </button>
+      <div class="toolbar-sep"></div>
+    {/if}
     <button class="tool-btn" class:locked={$cameraStore.lockOrbit} onclick={() => updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit })} title="Lock Orbit (Rotation)">
       <span class="tool-icon">{$cameraStore.lockOrbit ? '🔒' : '🔓'}</span>
       {#if $uiStore.breakpoint !== 'mobile'}
