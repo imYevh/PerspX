@@ -269,6 +269,7 @@
         const wasVanishingVisible = vanishingHelper.group.visible;
         const wasFullLinesVisible = (window as any).__guidelinesFull?.visible;
         const wasNearestLinesVisible = (window as any).__guidelinesNearest?.visible;
+        const wasGuidelinesState = $cameraStore.guidelines;
         
         // Disable Transform Controls temporarily
         _transformSystem.detach();
@@ -277,6 +278,7 @@
         vanishingHelper.group.visible = false;
         if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = false;
         if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = false;
+        updateCameraStore({ guidelines: 'disabled' });
         
         // Hide bounding box helpers
         _sceneManager.getAllObjects().forEach(({ object }) => {
@@ -329,6 +331,7 @@
         vanishingHelper.group.visible = wasVanishingVisible;
         if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = wasFullLinesVisible;
         if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = wasNearestLinesVisible;
+        updateCameraStore({ guidelines: wasGuidelinesState });
         
         // Re-attach transform control if an object was selected
         const selectedIds = _sceneManager.getSelectedIds();
