@@ -261,6 +261,7 @@
            // but we can dispatch a custom event that Toolbar can listen to.
         });
       };
+      window.addEventListener('perspx-reset-camera', onResetCamera);
       const onTakeScreenshot = async (e: any) => {
         const filename = e.detail?.filename || 'perspx-screenshot.png';
 
