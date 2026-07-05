@@ -208,6 +208,45 @@
       }
     }));
   }
+
+  const viewMenu = $derived([
+    { id: 'leftPanel', label: 'Left Panel', icon: $uiStore.leftPanelOpen ? '✓' : ' ' },
+    { id: 'rightPanel', label: 'Right Panel', icon: $uiStore.rightPanelOpen ? '✓' : ' ' },
+    { id: 'divider1', label: '', divider: true },
+    { id: 'inspector', label: 'Inspector (Left)', icon: !$uiStore.sceneCollapsed ? '✓' : ' ' },
+    { id: 'library', label: 'Library (Left)', icon: !$uiStore.libraryCollapsed ? '✓' : ' ' },
+    { id: 'properties', label: 'Properties (Right)', icon: !$uiStore.propertiesCollapsed ? '✓' : ' ' },
+    { id: 'camera', label: 'Camera Effects (Right)', icon: !$uiStore.cameraCollapsed ? '✓' : ' ' },
+    { id: 'divider2', label: '', divider: true },
+    { id: 'default', label: 'Restore Default', icon: '🔄' },
+  ] as DropdownItem[]);
+
+  function handleViewSelect(id: string) {
+    if (id === 'leftPanel') {
+      uiStore.update(s => ({ ...s, leftPanelOpen: !s.leftPanelOpen }));
+    } else if (id === 'rightPanel') {
+      uiStore.update(s => ({ ...s, rightPanelOpen: !s.rightPanelOpen }));
+    } else if (id === 'inspector') {
+      uiStore.update(s => ({ ...s, sceneCollapsed: !s.sceneCollapsed }));
+    } else if (id === 'library') {
+      uiStore.update(s => ({ ...s, libraryCollapsed: !s.libraryCollapsed }));
+    } else if (id === 'properties') {
+      uiStore.update(s => ({ ...s, propertiesCollapsed: !s.propertiesCollapsed }));
+    } else if (id === 'camera') {
+      uiStore.update(s => ({ ...s, cameraCollapsed: !s.cameraCollapsed }));
+    } else if (id === 'default') {
+      uiStore.update(s => ({
+        ...s,
+        leftPanelOpen: true,
+        rightPanelOpen: true,
+        sceneCollapsed: false,
+        libraryCollapsed: false,
+        propertiesCollapsed: false,
+        cameraCollapsed: false,
+        panelsVisible: true
+      }));
+    }
+  }
 </script>
 
 <header class="toolbar">
@@ -229,6 +268,14 @@
 
   <!-- Central actions -->
   <div class="toolbar-group">
+    <Dropdown 
+      icon="👁" 
+      label="View" 
+      items={viewMenu} 
+      onSelect={handleViewSelect} 
+      title="View Options" 
+    />
+    <div class="toolbar-sep"></div>
     <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
       <span class="tool-icon">{$uiStore.panelsVisible ? '👁️' : '🙈'}</span>
       {#if $uiStore.breakpoint !== 'mobile'}

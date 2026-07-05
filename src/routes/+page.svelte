@@ -581,12 +581,20 @@
 
   <div class="workspace">
     <!-- Left Panel -->
-    {#if $uiStore.panelsVisible && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
-      <aside class="sidebar left-sidebar">
-        <ScenePanel {sceneManager} />
-        <div class="panel-gap"></div>
-        <LibraryPanel {objectManager} {lightManager} />
-      </aside>
+    {#if $uiStore.panelsVisible && $uiStore.leftPanelOpen && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
+      {#if !$uiStore.sceneCollapsed || !$uiStore.libraryCollapsed}
+        <aside class="sidebar left-sidebar">
+          {#if !$uiStore.sceneCollapsed}
+            <ScenePanel {sceneManager} />
+          {/if}
+          {#if !$uiStore.sceneCollapsed && !$uiStore.libraryCollapsed}
+            <div class="panel-gap"></div>
+          {/if}
+          {#if !$uiStore.libraryCollapsed}
+            <LibraryPanel {objectManager} {lightManager} />
+          {/if}
+        </aside>
+      {/if}
     {/if}
 
     <!-- Viewport -->
@@ -596,12 +604,20 @@
     </div>
 
     <!-- Right Panel -->
-    {#if $uiStore.panelsVisible && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
-      <aside class="sidebar right-sidebar">
-        <PropertiesPanel {sceneManager} />
-        <div class="panel-gap"></div>
-        <CameraPanel {cameraController} />
-      </aside>
+    {#if $uiStore.panelsVisible && $uiStore.rightPanelOpen && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
+      {#if !$uiStore.propertiesCollapsed || !$uiStore.cameraCollapsed}
+        <aside class="sidebar right-sidebar">
+          {#if !$uiStore.propertiesCollapsed}
+            <PropertiesPanel {sceneManager} />
+          {/if}
+          {#if !$uiStore.propertiesCollapsed && !$uiStore.cameraCollapsed}
+            <div class="panel-gap"></div>
+          {/if}
+          {#if !$uiStore.cameraCollapsed}
+            <CameraPanel {cameraController} />
+          {/if}
+        </aside>
+      {/if}
     {/if}
   </div>
 
