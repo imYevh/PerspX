@@ -25,8 +25,13 @@ export class TransformSystem {
     this.cameraController = cameraController;
 
     this.controls = new TransformControls(camera, canvas);
-    sceneManager.scene.add(this.controls.getHelper());
-    sceneManager.scene.add(this.dummyPivot);
+    if (sceneManager.helperScene) {
+      sceneManager.helperScene.add(this.controls.getHelper());
+      sceneManager.helperScene.add(this.dummyPivot);
+    } else {
+      sceneManager.scene.add(this.controls.getHelper());
+      sceneManager.scene.add(this.dummyPivot);
+    }
 
     // Apply delta matrix when transforming multiple objects
     this.controls.addEventListener('change', () => {
@@ -253,5 +258,12 @@ export class TransformSystem {
   dispose(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     this.controls.dispose();
+    if (this.sceneManager.helperScene) {
+      this.sceneManager.helperScene.remove(this.controls.getHelper());
+      this.sceneManager.helperScene.remove(this.dummyPivot);
+    } else {
+      this.sceneManager.scene.remove(this.controls.getHelper());
+      this.sceneManager.scene.remove(this.dummyPivot);
+    }
   }
 }

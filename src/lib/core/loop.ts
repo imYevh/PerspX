@@ -30,6 +30,7 @@ export class RenderLoop {
     private renderer: WebGPURenderer,
     private scene: Scene,
     private camera: Camera,
+    private helperScene?: Scene,
   ) {
     this.postProcessing = new PostProcessing(this.renderer);
     this.scenePass = pass(this.scene, this.camera);
@@ -152,6 +153,13 @@ export class RenderLoop {
         this.postProcessing.needsUpdate = true;
       }
       this.renderer.render(this.scene, this.camera);
+    }
+
+    if (this.helperScene) {
+      const prevAutoClear = this.renderer.autoClear;
+      this.renderer.autoClear = false;
+      this.renderer.render(this.helperScene, this.camera);
+      this.renderer.autoClear = prevAutoClear;
     }
   }
 

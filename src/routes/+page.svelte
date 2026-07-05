@@ -162,7 +162,7 @@
       renderer = new Renderer({ canvas });
       await renderer.init();
 
-      _sceneManager = new SceneManager(renderer.scene);
+      _sceneManager = new SceneManager(renderer.scene, renderer.helperScene);
       bindSceneManager(_sceneManager);
       sceneManager = _sceneManager;
 
@@ -211,16 +211,16 @@
       guidelinesFull.visible = $cameraStore.guidelines === 'full';
       guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
       
-      renderer.scene.add(grid);
-      renderer.scene.add(guidelinesFull);
-      renderer.scene.add(guidelinesNearest);
+      renderer.helperScene.add(grid);
+      renderer.helperScene.add(guidelinesFull);
+      renderer.helperScene.add(guidelinesNearest);
       
       // Store reference to guidelines so we can toggle and move them
       (window as any).__guidelinesFull = guidelinesFull;
       (window as any).__guidelinesNearest = guidelinesNearest;
       
       vanishingHelper = new VanishingPointHelper();
-      renderer.scene.add(vanishingHelper.group);
+      renderer.helperScene.add(vanishingHelper.group);
 
       // Sync UI store visibility toggles
       const unsubscribeUI = uiStore.subscribe(s => {
@@ -460,7 +460,7 @@
         window.removeEventListener('keydown', onKeyDownGlobal);
       };
 
-      loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera);
+      loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera, renderer.helperScene);
       loop.onUpdate((_dt) => {
         // Apply Store settings
         if (_cameraController.getFOV() !== $cameraStore.fov) {
