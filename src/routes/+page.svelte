@@ -299,12 +299,6 @@
         // 3. Get Data URL
         const dataUrl = renderer.instance.domElement.toDataURL('image/png');
 
-        // Restore light helpers on viewport immediately after capturing dataUrl
-        if (_lightManager) {
-           _lightManager.restoreHelpers();
-           _lightManager.updateHelpers();
-        }
-
         // 4. Download file
         try {
           if ('showSaveFilePicker' in window) {
@@ -352,6 +346,11 @@
            }
         });
         _sceneManager.updateSelection(selectedIds);
+
+        if (_lightManager) {
+           _lightManager.restoreHelpers();
+           _lightManager.updateHelpers();
+        }
       };
       window.addEventListener('perspx-take-screenshot', onTakeScreenshot);
 
