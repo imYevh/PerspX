@@ -3,8 +3,9 @@
     title: string;
     children: import('svelte').Snippet;
     defaultCollapsed?: boolean;
+    maxHeight?: string;
   }
-  let { title, children, defaultCollapsed = false }: Props = $props();
+  let { title, children, defaultCollapsed = false, maxHeight }: Props = $props();
   let collapsed = $state(defaultCollapsed);
 </script>
 
@@ -14,7 +15,7 @@
     <span class="panel-chevron">{collapsed ? '▸' : '▾'}</span>
   </button>
   {#if !collapsed}
-    <div class="panel-content">
+    <div class="panel-content" style={maxHeight ? `max-height: ${maxHeight}; overflow-y: auto;` : ''}>
       {@render children()}
     </div>
   {/if}
@@ -65,7 +66,5 @@
 
   .panel-content {
     padding: 8px;
-    max-height: 400px;
-    overflow-y: auto;
   }
 </style>

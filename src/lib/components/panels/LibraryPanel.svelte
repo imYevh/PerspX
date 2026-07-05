@@ -23,7 +23,7 @@
   }
 </script>
 
-<Panel title="📦 Library">
+<Panel title="📚 Library">
   <div class="library-section-title">Primitives</div>
   <div class="library-grid">
     {#each primitives as p}

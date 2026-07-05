@@ -28,6 +28,8 @@ export interface UIState {
   marquee: MarqueeState;
   drag: DragState;
   breakpoint: 'desktop' | 'tablet' | 'mobile';
+  gridVisible: boolean;
+  vanishingVisible: boolean;
 }
 
 export const uiStore = writable<UIState>({
@@ -52,7 +54,9 @@ export const uiStore = writable<UIState>({
     type: null,
     item: null,
   },
-  breakpoint: 'desktop'
+  breakpoint: 'desktop',
+  gridVisible: true,
+  vanishingVisible: false
 });
 
 export function getBreakpoint(width: number): 'desktop' | 'tablet' | 'mobile' {

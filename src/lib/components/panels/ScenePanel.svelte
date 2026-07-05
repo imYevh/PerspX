@@ -22,6 +22,11 @@
     }
   }
 
+  function deleteObject(id: string, e: MouseEvent) {
+    e.stopPropagation();
+    sceneManager?.removeObject(id);
+  }
+
   function getIcon(type: string): string {
     switch (type) {
       case 'light': return '💡';
@@ -31,7 +36,7 @@
   }
 </script>
 
-<Panel title="🎬 Scene">
+<Panel title="🎬 Scene" maxHeight="250px">
   <div class="scene-list">
     {#each $sceneStore.objects as { id, meta }}
       <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
@@ -48,6 +53,13 @@
           onclick={(e) => toggleVisibility(id, e)}
         >
           {meta.visible ? '👁' : '👁‍🗨'}
+        </button>
+        <button
+          class="vis-btn"
+          title="Delete object"
+          onclick={(e) => deleteObject(id, e)}
+        >
+          🗑️
         </button>
       </div>
     {/each}

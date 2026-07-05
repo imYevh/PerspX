@@ -7,7 +7,7 @@
   import { ObjectManager } from '$lib/objects/object-manager';
   import { TransformSystem } from '$lib/transforms/transform-controls';
   import { InputSystem } from '$lib/core/input';
-  import { createInfiniteGrid } from '$lib/helpers/grid';
+  import { createInfiniteGrid, createVerticalGuidelines } from '$lib/helpers/grid';
   import { VanishingPointHelper } from '$lib/helpers/vanishing-points';
   import { LightManager } from '$lib/lighting/light-manager';
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
@@ -22,7 +22,6 @@
   import PropertiesPanel from '$lib/components/panels/PropertiesPanel.svelte';
   import CameraPanel from '$lib/components/panels/CameraPanel.svelte';
   import LibraryPanel from '$lib/components/panels/LibraryPanel.svelte';
-  import ViewportControls from '$lib/components/ViewportControls.svelte';
   import BottomSheet from '$lib/components/BottomSheet.svelte';
   import SubToolbar from '$lib/components/SubToolbar.svelte';
   import { getBreakpoint } from '$lib/stores/ui';
@@ -201,16 +200,30 @@
 
       // Add helpers
       const grid = createInfiniteGrid();
-      vanishingHelper = new VanishingPointHelper();
+      const guidelines = createVerticalGuidelines();
+      guidelines.visible = $cameraStore.guidelines;
+      
       renderer.scene.add(grid);
+      renderer.scene.add(guidelines);
+      
+      // Store reference to guidelines so we can toggle it
+      (window as any).__guidelines = guidelines;
+      
+      vanishingHelper = new VanishingPointHelper();
       renderer.scene.add(vanishingHelper.group);
+
+      // Sync UI store visibility toggles
+      const unsubscribeUI = uiStore.subscribe(s => {
+        if (grid) grid.visible = s.gridVisible;
+        if (vanishingHelper) vanishingHelper.group.visible = s.vanishingVisible;
+      });
 
       // Keyboard toggles: 1=grid, 2=vanishing
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
         switch (e.code) {
-          case 'Digit1': grid.visible = !grid.visible; break;
-          case 'Digit2': vanishingHelper.group.visible = !vanishingHelper.group.visible; break;
+          case 'Digit1': uiStore.update(s => ({ ...s, gridVisible: !s.gridVisible })); break;
+          case 'Digit2': uiStore.update(s => ({ ...s, vanishingVisible: !s.vanishingVisible })); break;
         }
       };
       window.addEventListener('keydown', onKeyDown);
@@ -219,13 +232,26 @@
         if (_cameraController) {
           _cameraController.perspCamera.position.set(5, 4, 5);
           _cameraController.target.set(0, 0, 0);
-          _cameraController.controls.target.set(0, 0, 0);
-          _cameraController.controls.update();
+          _cameraController.update();
         }
+        
+        // Reset helpers
+        uiStore.update(s => ({ ...s, gridVisible: true, vanishingVisible: false }));
+        vanishingHelper.clear();
+        if ((window as any).__guidelines) {
+          (window as any).__guidelines.visible = false;
+        }
+
+        // Reset theme to default
+        import('$lib/stores/theme.svelte').then(({ THEME_MODES, ACCENT_PRESETS }) => {
+           // We can't easily call the setter from here without importing the stores, 
+           // but we can dispatch a custom event that Toolbar can listen to.
+        });
       };
       window.addEventListener('perspx-reset-camera', onResetCamera);
 
       cleanupKeys = () => {
+        unsubscribeUI();
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('perspx-reset-camera', onResetCamera);
       };
@@ -303,50 +329,41 @@
 
       loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera);
       loop.onUpdate((_dt) => {
-        _cameraController.update();
-        loop.setCamera(_cameraController.camera);
-        _transformSystem.updateCamera(_cameraController.camera);
-        inputSystem.updateCamera(_cameraController.camera);
-        if (lightManager) lightManager.updateHelpers();
-
-        // Apply store values to controllers if changed by UI
+        // Apply Store settings
         if (_cameraController.getFOV() !== $cameraStore.fov) {
           _cameraController.setFOV($cameraStore.fov, $cameraStore.zolly);
         }
         if (_cameraController.getRoll() !== $cameraStore.roll) {
           _cameraController.setRoll($cameraStore.roll);
         }
-        if (_cameraController.lockPan !== $cameraStore.lockPan) {
-          _cameraController.lockPan = $cameraStore.lockPan;
-        }
         if (_cameraController.lockOrbit !== $cameraStore.lockOrbit) {
           _cameraController.lockOrbit = $cameraStore.lockOrbit;
         }
+        // Force lockPan if in snap mode
+        const shouldLockPan = $cameraStore.lockPan || $cameraStore.orbitMode === 'snap';
+        if (_cameraController.lockPan !== shouldLockPan) {
+          _cameraController.lockPan = shouldLockPan;
+        }
 
-        // Apply Snap to Object
+        // Apply Snap to Object BEFORE updating camera controller
         if ($cameraStore.orbitMode === 'snap') {
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
             const currentObjId = selectedIds[0];
             const obj = _sceneManager.getObject(currentObjId);
             if (obj) {
-              const worldPos = new THREE.Vector3();
+              const worldPos = new Vector3();
               obj.getWorldPosition(worldPos);
               
-              if ((window as any).__lastSnapObjId === currentObjId) {
-                const delta = new THREE.Vector3().subVectors(worldPos, (window as any).__lastSnapObjPos);
-                if (delta.lengthSq() > 0.000001) {
-                  // Object moved. Keep camera position static, but rotate to focus on new target.
-                  _cameraController.applyState(_cameraController.perspCamera.position, worldPos);
-                }
-              } else {
-                // New object selected. Rotate to focus on it, keep camera position static.
+              if ((window as any).__lastSnapObjId !== currentObjId) {
+                // New object selected. Keep camera position static, but rotate to focus on it.
                 _cameraController.applyState(_cameraController.perspCamera.position, worldPos);
+              } else {
+                // Same object. Update target so camera follows it.
+                _cameraController.target.copy(worldPos);
               }
               
               (window as any).__lastSnapObjId = currentObjId;
-              if (!(window as any).__lastSnapObjPos) (window as any).__lastSnapObjPos = new THREE.Vector3();
-              (window as any).__lastSnapObjPos.copy(worldPos);
             }
           } else {
             (window as any).__lastSnapObjId = null;
@@ -355,8 +372,20 @@
           (window as any).__lastSnapObjId = null;
         }
 
-        // Apply fisheye settings
+        _cameraController.update();
+        loop.setCamera(_cameraController.camera);
+        _transformSystem.updateCamera(_cameraController.camera);
+        inputSystem.updateCamera(_cameraController.camera);
+        if (lightManager) lightManager.updateHelpers();
+
+        // Apply camera effects
         loop.setFisheye($cameraStore.fisheye, $cameraStore.fisheyeIntensity);
+        loop.setChromaticAberration($cameraStore.chromaticAberration, $cameraStore.chromaticAberrationIntensity);
+        loop.setTiltShift($cameraStore.tiltShift, $cameraStore.tiltShiftPosition, $cameraStore.tiltShiftWidth, $cameraStore.tiltShiftIntensity);
+
+        if ((window as any).__guidelines) {
+          (window as any).__guidelines.visible = $cameraStore.guidelines;
+        }
 
         if (vanishingHelper.group.visible) {
           const selectedIds = _sceneManager.getSelectedIds();
@@ -425,9 +454,6 @@
     <!-- Viewport -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
-      {#if $uiStore.panelsVisible}
-        <ViewportControls />
-      {/if}
     </div>
 
     <!-- Right Panel -->
