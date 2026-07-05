@@ -251,17 +251,18 @@
 
 <header class="toolbar">
   <div class="toolbar-brand">
-    <Dropdown 
-      icon="☰" 
-      items={mainMenu} 
-      onSelect={handleMenuSelect} 
-      title="Main Menu" 
-    />
     {#if $uiStore.breakpoint !== 'mobile'}
       <div class="brand-logo-container">
         <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
       </div>
     {/if}
+    <Dropdown 
+      icon={$uiStore.breakpoint === 'desktop' ? '' : '☰'} 
+      label={$uiStore.breakpoint === 'desktop' ? 'File' : ''} 
+      items={mainMenu} 
+      onSelect={handleMenuSelect} 
+      title={$uiStore.breakpoint === 'desktop' ? 'File Menu' : 'Main Menu'} 
+    />
   </div>
 
   <div class="toolbar-sep"></div>
