@@ -202,16 +202,11 @@
   }
 
   function takeScreenshot() {
-    if (!renderer) return;
-    
-    // Force a render immediately before capturing to ensure WebGL buffer isn't cleared
-    renderer.render(); 
-    
-    const url = renderer.domElement.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `perspx_render_${getTimestamp()}.png`;
-    a.click();
+    window.dispatchEvent(new CustomEvent('perspx-take-screenshot', {
+      detail: {
+        filename: `perspx_render_${getTimestamp()}.png`
+      }
+    }));
   }
 </script>
 

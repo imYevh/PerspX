@@ -261,12 +261,105 @@
            // but we can dispatch a custom event that Toolbar can listen to.
         });
       };
-      window.addEventListener('perspx-reset-camera', onResetCamera);
+      const onTakeScreenshot = async (e: any) => {
+        const filename = e.detail?.filename || 'perspx-screenshot.png';
+
+        // 1. Hide UI helpers
+        const wasGridVisible = grid.visible;
+        const wasVanishingVisible = vanishingHelper.group.visible;
+        const wasFullLinesVisible = (window as any).__guidelinesFull?.visible;
+        const wasNearestLinesVisible = (window as any).__guidelinesNearest?.visible;
+        
+        // Disable Transform Controls temporarily
+        _transformSystem.detach();
+        
+        grid.visible = false;
+        vanishingHelper.group.visible = false;
+        if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = false;
+        if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = false;
+        
+        // Hide bounding box helpers
+        _sceneManager.getAllObjects().forEach(({ object }) => {
+           if (object.userData.boundingBoxHelper) {
+             object.userData.boundingBoxHelper.visible = false;
+           }
+        });
+
+        // Hide light helpers
+        if (lightManager) {
+           renderer.scene.children.forEach(c => {
+             if (c.name.includes('_PerspX_light_helper_')) c.visible = false;
+           });
+        }
+
+        // Wait a frame for visibility changes to apply? No, synchronous is fine for three.js
+        // 2. Render synchronous frame
+        loop.renderOnce();
+
+        // 3. Get Data URL
+        const dataUrl = renderer.instance.domElement.toDataURL('image/png');
+
+        // 4. Download file
+        try {
+          if ('showSaveFilePicker' in window) {
+            // Modern API to specify path
+            const handle = await (window as any).showSaveFilePicker({
+              suggestedName: filename,
+              types: [{
+                description: 'PNG Image',
+                accept: {'image/png': ['.png']},
+              }],
+            });
+            const writable = await handle.createWritable();
+            const response = await fetch(dataUrl);
+            const blob = await response.blob();
+            await writable.write(blob);
+            await writable.close();
+          } else {
+            // Fallback for older devices/safari
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            a.click();
+          }
+        } catch (err) {
+          console.log('User cancelled screenshot save or failed', err);
+        }
+
+        // 5. Restore UI helpers
+        grid.visible = wasGridVisible;
+        vanishingHelper.group.visible = wasVanishingVisible;
+        if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = wasFullLinesVisible;
+        if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = wasNearestLinesVisible;
+        
+        // Re-attach transform control if an object was selected
+        const selectedIds = _sceneManager.getSelectedIds();
+        if (selectedIds.length === 1) {
+           const obj = _sceneManager.getObject(selectedIds[0]);
+           if (obj) _transformSystem.attach(obj);
+        }
+        
+        _sceneManager.getAllObjects().forEach(({ object }) => {
+           if (object.userData.boundingBoxHelper && selectedIds.includes(object.userData.id)) {
+             object.userData.boundingBoxHelper.visible = true;
+           }
+        });
+        _sceneManager.updateSelection(selectedIds);
+
+        if (lightManager) {
+           renderer.scene.children.forEach(c => {
+             if (c.name.includes('_PerspX_light_helper_')) c.visible = true;
+           });
+           lightManager.updateHelpers();
+        }
+      };
+      window.addEventListener('perspx-take-screenshot', onTakeScreenshot);
 
       cleanupKeys = () => {
         unsubscribeUI();
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('perspx-reset-camera', onResetCamera);
+        window.removeEventListener('perspx-take-screenshot', onTakeScreenshot);
       };
 
       // History tracking

@@ -132,6 +132,10 @@ export class RenderLoop {
       cb(delta, this.elapsed);
     }
 
+    this.renderOnce();
+  };
+
+  public renderOnce(): void {
     const hasFisheye = this.fisheyeEnabled && this.fisheyeIntensityUniform.value !== 0;
     const hasCA = this.caEnabled && this.caIntensityUniform.value !== 0;
     const hasTiltShift = this.tiltShiftEnabled && this.tiltShiftIntensityUniform.value !== 0;
@@ -149,7 +153,7 @@ export class RenderLoop {
       }
       this.renderer.render(this.scene, this.camera);
     }
-  };
+  }
 
   setCamera(camera: Camera): void {
     this.camera = camera;
