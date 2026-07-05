@@ -200,14 +200,19 @@
 
       // Add helpers
       const grid = createInfiniteGrid();
-      const guidelines = createVerticalGuidelines();
-      guidelines.visible = $cameraStore.guidelines;
+      const guidelinesFull = createVerticalGuidelines();
+      const guidelinesNearest = createVerticalGuidelines({ size: 12, divisions: 12, color: 0x666688 });
+      
+      guidelinesFull.visible = $cameraStore.guidelines === 'full';
+      guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
       
       renderer.scene.add(grid);
-      renderer.scene.add(guidelines);
+      renderer.scene.add(guidelinesFull);
+      renderer.scene.add(guidelinesNearest);
       
-      // Store reference to guidelines so we can toggle it
-      (window as any).__guidelines = guidelines;
+      // Store reference to guidelines so we can toggle and move them
+      (window as any).__guidelinesFull = guidelinesFull;
+      (window as any).__guidelinesNearest = guidelinesNearest;
       
       vanishingHelper = new VanishingPointHelper();
       renderer.scene.add(vanishingHelper.group);
@@ -238,9 +243,13 @@
         // Reset helpers
         uiStore.update(s => ({ ...s, gridVisible: true, vanishingVisible: false }));
         vanishingHelper.clear();
-        if ((window as any).__guidelines) {
-          (window as any).__guidelines.visible = false;
+        if ((window as any).__guidelinesFull) {
+          (window as any).__guidelinesFull.visible = false;
         }
+        if ((window as any).__guidelinesNearest) {
+          (window as any).__guidelinesNearest.visible = false;
+        }
+        updateCameraStore({ guidelines: 'disabled' });
 
         // Reset theme to default
         import('$lib/stores/theme.svelte').then(({ THEME_MODES, ACCENT_PRESETS }) => {
@@ -383,8 +392,18 @@
         loop.setChromaticAberration($cameraStore.chromaticAberration, $cameraStore.chromaticAberrationIntensity);
         loop.setTiltShift($cameraStore.tiltShift, $cameraStore.tiltShiftPosition, $cameraStore.tiltShiftWidth, $cameraStore.tiltShiftIntensity);
 
-        if ((window as any).__guidelines) {
-          (window as any).__guidelines.visible = $cameraStore.guidelines;
+        if ((window as any).__guidelinesFull) {
+          (window as any).__guidelinesFull.visible = $cameraStore.guidelines === 'full';
+        }
+        if ((window as any).__guidelinesNearest) {
+          (window as any).__guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
+          if ($cameraStore.guidelines === 'nearest') {
+            (window as any).__guidelinesNearest.position.set(
+              _cameraController.target.x,
+              _cameraController.target.y,
+              _cameraController.target.z
+            );
+          }
         }
 
         if (vanishingHelper.group.visible) {

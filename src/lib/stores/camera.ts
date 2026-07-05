@@ -14,7 +14,7 @@ export interface CameraState {
   tiltShiftPosition: number;
   tiltShiftWidth: number;
   tiltShiftIntensity: number;
-  guidelines: boolean;
+  guidelines: 'disabled' | 'nearest' | 'full';
   lockPan: boolean;
   lockOrbit: boolean;
   orbitMode: 'free' | 'snap';
@@ -33,7 +33,7 @@ export const cameraStore = writable<CameraState>({
   tiltShiftPosition: 0.5,
   tiltShiftWidth: 0.2,
   tiltShiftIntensity: 0.5,
-  guidelines: false,
+  guidelines: 'disabled',
   lockPan: false,
   lockOrbit: false,
   orbitMode: 'free'

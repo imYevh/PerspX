@@ -148,7 +148,8 @@
       tiltShift: false,
       tiltShiftPosition: 0.5,
       tiltShiftWidth: 0.2,
-      tiltShiftIntensity: 0.5
+      tiltShiftIntensity: 0.5,
+      guidelines: 'disabled'
     });
   }
 
@@ -310,9 +311,16 @@
     </button>
     <button
       class="tool-btn"
-      class:active={$cameraStore.guidelines}
-      onclick={() => updateCameraStore({ guidelines: !$cameraStore.guidelines })}
-      title="Toggle Vertical Guidelines"
+      class:active={$cameraStore.guidelines !== 'disabled'}
+      onclick={() => {
+        const next = {
+          'disabled': 'nearest',
+          'nearest': 'full',
+          'full': 'disabled'
+        };
+        updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'nearest' | 'full' });
+      }}
+      title="Vertical Guidelines: {$cameraStore.guidelines}"
     >
       <span class="tool-icon" style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
       {#if $uiStore.breakpoint !== 'mobile'}
