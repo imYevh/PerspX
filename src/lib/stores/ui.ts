@@ -30,6 +30,14 @@ export interface UIState {
   breakpoint: 'desktop' | 'tablet' | 'mobile';
   gridVisible: boolean;
   vanishingVisible: boolean;
+  overlays: {
+    edges: boolean;
+    half: boolean;
+    third: boolean;
+    cross: boolean;
+    solid: boolean;
+    xyz: boolean;
+  };
 }
 
 export const uiStore = writable<UIState>({
@@ -56,7 +64,15 @@ export const uiStore = writable<UIState>({
   },
   breakpoint: 'desktop',
   gridVisible: true,
-  vanishingVisible: false
+  vanishingVisible: false,
+  overlays: {
+    edges: true,
+    half: false,
+    third: false,
+    cross: false,
+    solid: false,
+    xyz: false,
+  }
 });
 
 export function getBreakpoint(width: number): 'desktop' | 'tablet' | 'mobile' {
