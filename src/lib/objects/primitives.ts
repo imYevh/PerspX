@@ -14,10 +14,22 @@ import {
   Color,
   DoubleSide,
   EdgesGeometry,
-  LineSegments,
   LineBasicMaterial,
+  MeshBasicMaterial,
+  CircleGeometry,
+  Group,
+  Box3,
+  LineSegments,
+  Object3D
 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
+import { 
+  generateIntersectionLines, 
+  assignXYZColors, 
+  getHalfPlanes, 
+  getThirdPlanes, 
+  getCrossPlanes 
+} from './overlay-utils';
 
 export type PrimitiveType =
   | 'cube'
@@ -26,10 +38,7 @@ export type PrimitiveType =
   | 'cone'
   | 'torus'
   | 'plane'
-  | 'capsule'
-  | 'torusKnot'
-  | 'icosahedron'
-  | 'dodecahedron';
+  | 'capsule';
 
 export interface PrimitiveDefinition {
   type: PrimitiveType;
@@ -118,30 +127,6 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
     createGeometry: (p) =>
       new CapsuleGeometry(p?.radius ?? 0.3, p?.length ?? 1, p?.capSegments ?? 10, p?.radialSegments ?? 16),
   },
-  torusKnot: {
-    type: 'torusKnot',
-    label: 'Torus Knot',
-    icon: '🔗',
-    defaultParams: { radius: 0.5, tube: 0.15 },
-    createGeometry: (p) =>
-      new TorusKnotGeometry(p?.radius ?? 0.5, p?.tube ?? 0.15),
-  },
-  icosahedron: {
-    type: 'icosahedron',
-    label: 'Icosahedron',
-    icon: '🔷',
-    defaultParams: { radius: 0.5, detail: 0 },
-    createGeometry: (p) =>
-      new IcosahedronGeometry(p?.radius ?? 0.5, p?.detail ?? 0),
-  },
-  dodecahedron: {
-    type: 'dodecahedron',
-    label: 'Dodecahedron',
-    icon: '💎',
-    defaultParams: { radius: 0.5, detail: 0 },
-    createGeometry: (p) =>
-      new DodecahedronGeometry(p?.radius ?? 0.5, p?.detail ?? 0),
-  },
 };
 
 /**
@@ -151,30 +136,105 @@ export function createPrimitive(
   type: PrimitiveType,
   params?: Record<string, number>,
   color?: number
-): Mesh {
+): Group {
   const def = PRIMITIVES[type];
   if (!def) throw new Error(`Unknown primitive type: ${type}`);
 
+  const group = new Group();
   const geometry = def.createGeometry(params);
+  
+  // Base Mesh
+  const baseColor = color ?? 0xffffff;
   const material = new MeshStandardNodeMaterial({
-    color: new Color(color ?? 0xffffff),
+    color: new Color(baseColor),
     roughness: 0.4,
     metalness: 0.1,
     side: DoubleSide,
     transparent: true,
     opacity: 0.75,
+    depthWrite: false,
   });
 
   const mesh = new Mesh(geometry, material);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+  mesh.userData.isBaseMesh = true;
+  mesh.userData.baseColor = baseColor;
+  group.add(mesh);
 
-  // Add solid outline
-  const edges = new EdgesGeometry(geometry);
-  const line = new LineSegments(edges, new LineBasicMaterial({ color: 0xffffff }));
-  mesh.add(line);
+  // Compute bounding box for plane generation
+  geometry.computeBoundingBox();
+  const bbox = geometry.boundingBox!;
 
-  return mesh;
+  // 1. Default Edges
+  let defaultEdges: Object3D;
+  if (type === 'sphere') {
+    defaultEdges = new Group();
+    const radius = params?.radius ?? 0.5;
+    const dotGeo = new CircleGeometry(radius * 0.04, 16);
+    const dotMat = new MeshBasicMaterial({ color: 0x000000, side: DoubleSide });
+    
+    const topDot = new Mesh(dotGeo, dotMat);
+    topDot.position.y = radius;
+    topDot.rotation.x = -Math.PI / 2;
+    
+    const bottomDot = new Mesh(dotGeo, dotMat);
+    bottomDot.position.y = -radius;
+    bottomDot.rotation.x = Math.PI / 2;
+    
+    defaultEdges.add(topDot, bottomDot);
+  } else {
+    const edgesGeo = new EdgesGeometry(geometry);
+    defaultEdges = new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff }));
+  }
+  defaultEdges.userData.isDefaultEdges = true;
+  group.add(defaultEdges);
+
+  // 2. XYZ Edges
+  let xyzEdges: Object3D;
+  if (type === 'sphere') {
+    const xyzPlanes = getHalfPlanes(bbox);
+    const xyzGeo = generateIntersectionLines(geometry, xyzPlanes);
+    assignXYZColors(xyzGeo);
+    xyzEdges = new LineSegments(xyzGeo, new LineBasicMaterial({ vertexColors: true }));
+  } else {
+    // Other primitives use colored default edges for XYZ
+    const edgesGeo = new EdgesGeometry(geometry);
+    assignXYZColors(edgesGeo);
+    xyzEdges = new LineSegments(edgesGeo, new LineBasicMaterial({ vertexColors: true }));
+  }
+  xyzEdges.userData.isXYZEdges = true;
+  xyzEdges.visible = false;
+  group.add(xyzEdges);
+
+  // 3. Halfs
+  const halfPlanes = getHalfPlanes(bbox);
+  const halfGeo = generateIntersectionLines(geometry, halfPlanes);
+  const halfLines = new LineSegments(halfGeo, new LineBasicMaterial({ color: 0x4a9eff })); // Blue
+  halfLines.userData.isHalfLines = true;
+  halfLines.visible = false;
+  group.add(halfLines);
+
+  // 4. Thirds
+  let thirdPlanes = getThirdPlanes(bbox);
+  if (type === 'sphere') {
+    thirdPlanes = thirdPlanes.filter(p => Math.abs(p.normal.y) > 0.5);
+  }
+  const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
+  const thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b })); // Red
+  thirdLines.userData.isThirdLines = true;
+  thirdLines.visible = false;
+  group.add(thirdLines);
+
+  // 5. Cross
+  const crossPlanes = getCrossPlanes(bbox);
+  const crossGeo = generateIntersectionLines(geometry, crossPlanes);
+  const crossLines = new LineSegments(crossGeo, new LineBasicMaterial({ color: 0x51cf66 })); // Green
+  crossLines.userData.isCrossLines = true;
+  crossLines.visible = false;
+  group.add(crossLines);
+
+  return group;
 }
 
 /**

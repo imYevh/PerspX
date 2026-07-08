@@ -25,6 +25,7 @@
   import BottomSheet from '$lib/components/BottomSheet.svelte';
   import SubToolbar from '$lib/components/SubToolbar.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
+  import PrimitiveOverlays from '$lib/components/PrimitiveOverlays.svelte';
   import { getBreakpoint } from '$lib/stores/ui';
 
   let canvas: HTMLCanvasElement;
@@ -168,8 +169,53 @@
 
       objectManager = new ObjectManager(_sceneManager);
 
+      let currentOverlays: any = undefined; // just declare it
+      uiStore.subscribe(state => currentOverlays = state.overlays)(); // get initial synchronously
+      
+      const updateOverlays = (overlays: any) => {
+        if (!_sceneManager) return;
+        const objs = _sceneManager.getAllObjects();
+        for (const { object } of objs) {
+          if (object.userData.itemType) {
+            object.children.forEach((child: any) => {
+              if (child.userData.isDefaultEdges) child.visible = overlays.edges && !overlays.xyz;
+              if (child.userData.isXYZEdges) child.visible = overlays.xyz;
+              if (child.userData.isHalfLines) child.visible = overlays.half;
+              if (child.userData.isThirdLines) child.visible = overlays.third;
+              if (child.userData.isCrossLines) child.visible = overlays.cross;
+              
+              if (child.userData.isBaseMesh) {
+                const mat = child.material;
+                if (overlays.solid) {
+                  mat.transparent = false;
+                  mat.opacity = 1.0;
+                  mat.depthWrite = true;
+                  mat.color.setHex(0xffffff);
+                } else {
+                  mat.transparent = true;
+                  mat.opacity = 0.75;
+                  mat.depthWrite = false;
+                  mat.color.setHex(child.userData.baseColor);
+                }
+                mat.needsUpdate = true;
+              }
+            });
+            
+            object.children.forEach((child: any) => {
+              if (child.userData.isDefaultEdges) {
+                if (child.material && child.material.color) {
+                  child.material.color.setHex(overlays.solid ? 0x000000 : 0xffffff);
+                }
+              }
+            });
+          }
+        }
+      };
+
       _sceneManager.on('object-added', (data) => {
         console.log(`Added: ${data.meta.name} (${data.id})`);
+        updateOverlays(currentOverlays);
+        commitHistory(_sceneManager);
       });
 
       // @ts-ignore
@@ -224,8 +270,10 @@
 
       // Sync UI store visibility toggles
       const unsubscribeUI = uiStore.subscribe(s => {
+        currentOverlays = s.overlays;
         if (grid) grid.visible = s.gridVisible;
         if (vanishingHelper) vanishingHelper.group.visible = s.vanishingVisible;
+        updateOverlays(s.overlays);
       });
 
       // Keyboard toggles: 1=grid, 2=vanishing
@@ -618,6 +666,7 @@
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
+      <PrimitiveOverlays />
     </div>
 
     <!-- Right Panel -->
