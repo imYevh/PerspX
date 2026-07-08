@@ -1,7 +1,7 @@
 import type { WebGPURenderer } from "three/webgpu";
 import { Scene, type Camera } from "three";
 import { PostProcessing } from "three/webgpu";
-import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, select } from "three/tsl";
+import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, select, texture } from "three/tsl";
 
 export type UpdateCallback = (deltaTime: number, elapsedTime: number) => void;
 
@@ -35,8 +35,8 @@ export class RenderLoop {
     private camera: Camera,
   ) {
     this.postProcessing = new PostProcessing(this.renderer);
-    this.scenePass = pass(this.scene, this.camera);
-    this.overlayPass = pass(this.overlayScene, this.camera);
+    this.scenePass = pass(this.scene, this.camera, { depthBuffer: true });
+    this.overlayPass = pass(this.overlayScene, this.camera, { depthBuffer: true });
 
     const postProcessFn = Fn(() => {
       // 1. Fisheye Math (UV deformation)
@@ -91,8 +91,8 @@ export class RenderLoop {
       const mainOutputColor = mix(caColor, bColor, blurAmount);
 
       // 6. Combine main color and overlay color using depth testing
-      const mainDepth = this.scenePass.getDepthNode().sample(fisheyeUV);
-      const overlayDepth = this.overlayPass.getDepthNode().sample(fisheyeUV);
+      const mainDepth = texture(this.scenePass.renderTarget.depthTexture).sample(fisheyeUV).r;
+      const overlayDepth = texture(this.overlayPass.renderTarget.depthTexture).sample(fisheyeUV).r;
 
       const isOverlayCloser = lessThan(overlayDepth, mainDepth);
       const isOverlayVisible = lessThan(0.0, overlayColor.a);
