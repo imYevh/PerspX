@@ -26,7 +26,7 @@
     <button
       class="toggle-btn"
       class:active={$uiStore.overlays[toggle.id]}
-      on:click={() => toggleOverlay(toggle.id)}
+      onclick={() => toggleOverlay(toggle.id)}
     >
       {toggle.label}
     </button>

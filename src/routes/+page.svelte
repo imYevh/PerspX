@@ -174,41 +174,45 @@
       
       const updateOverlays = (overlays: any) => {
         if (!_sceneManager) return;
-        const objs = _sceneManager.getAllObjects();
-        for (const { object } of objs) {
-          if (object.userData.itemType) {
-            object.children.forEach((child: any) => {
-              if (child.userData.isDefaultEdges) child.visible = overlays.edges && !overlays.xyz;
-              if (child.userData.isXYZEdges) child.visible = overlays.xyz;
-              if (child.userData.isHalfLines) child.visible = overlays.half;
-              if (child.userData.isThirdLines) child.visible = overlays.third;
-              if (child.userData.isCrossLines) child.visible = overlays.cross;
+        try {
+          const objs = _sceneManager.getAllObjects();
+          for (const { object } of objs) {
+            if (object.userData.itemType) {
+              object.children.forEach((child: any) => {
+                if (child.userData.isDefaultEdges) child.visible = overlays.edges && !overlays.xyz;
+                if (child.userData.isXYZEdges) child.visible = overlays.xyz;
+                if (child.userData.isHalfLines) child.visible = overlays.half;
+                if (child.userData.isThirdLines) child.visible = overlays.third;
+                if (child.userData.isCrossLines) child.visible = overlays.cross;
+                
+                if (child.userData.isBaseMesh) {
+                  const mat = child.material;
+                  if (overlays.solid) {
+                    mat.transparent = false;
+                    mat.opacity = 1.0;
+                    mat.depthWrite = true;
+                    mat.color.setHex(0xffffff);
+                  } else {
+                    mat.transparent = true;
+                    mat.opacity = 0.75;
+                    mat.depthWrite = false;
+                    mat.color.setHex(child.userData.baseColor);
+                  }
+                  mat.needsUpdate = true;
+                }
+              });
               
-              if (child.userData.isBaseMesh) {
-                const mat = child.material;
-                if (overlays.solid) {
-                  mat.transparent = false;
-                  mat.opacity = 1.0;
-                  mat.depthWrite = true;
-                  mat.color.setHex(0xffffff);
-                } else {
-                  mat.transparent = true;
-                  mat.opacity = 0.75;
-                  mat.depthWrite = false;
-                  mat.color.setHex(child.userData.baseColor);
+              object.children.forEach((child: any) => {
+                if (child.userData.isDefaultEdges) {
+                  if (child.material && child.material.color) {
+                    child.material.color.setHex(overlays.solid ? 0x000000 : 0xffffff);
+                  }
                 }
-                mat.needsUpdate = true;
-              }
-            });
-            
-            object.children.forEach((child: any) => {
-              if (child.userData.isDefaultEdges) {
-                if (child.material && child.material.color) {
-                  child.material.color.setHex(overlays.solid ? 0x000000 : 0xffffff);
-                }
-              }
-            });
+              });
+            }
           }
+        } catch (err) {
+          console.error("Error in updateOverlays:", err);
         }
       };
 
