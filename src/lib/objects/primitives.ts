@@ -183,6 +183,9 @@ export function createPrimitive(
     bottomDot.rotation.x = Math.PI / 2;
     
     defaultEdges.add(topDot, bottomDot);
+  } else if (type === 'cylinder') {
+    const edgesGeo = new EdgesGeometry(geometry, 30); // 30 deg threshold hides vertical seam
+    defaultEdges = new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff }));
   } else {
     const edgesGeo = new EdgesGeometry(geometry);
     defaultEdges = new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff }));

@@ -214,13 +214,13 @@
       { id: 'panelsVisible', label: $uiStore.panelsVisible ? 'Hide UI' : 'Show UI' },
       { id: 'divider0', label: '', divider: true }
     ] : []),
-    { id: 'leftPanel', label: 'Left Panel', icon: $uiStore.leftPanelOpen ? '✓' : ' ' },
-    { id: 'rightPanel', label: 'Right Panel', icon: $uiStore.rightPanelOpen ? '✓' : ' ' },
+    { id: 'leftPanel', label: 'Left Panel', icon: $uiStore.leftPanelOpen ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'rightPanel', label: 'Right Panel', icon: $uiStore.rightPanelOpen ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'divider1', label: '', divider: true },
-    { id: 'inspector', label: 'Inspector (Left)', icon: !$uiStore.sceneCollapsed ? '✓' : ' ' },
-    { id: 'library', label: 'Library (Left)', icon: !$uiStore.libraryCollapsed ? '✓' : ' ' },
-    { id: 'properties', label: 'Properties (Right)', icon: !$uiStore.propertiesCollapsed ? '✓' : ' ' },
-    { id: 'camera', label: 'Camera Effects (Right)', icon: !$uiStore.cameraCollapsed ? '✓' : ' ' },
+    { id: 'inspector', label: 'Inspector (Left)', icon: !$uiStore.sceneCollapsed ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'library', label: 'Library (Left)', icon: !$uiStore.libraryCollapsed ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'properties', label: 'Properties (Right)', icon: !$uiStore.propertiesCollapsed ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'camera', label: 'Camera Effects (Right)', icon: !$uiStore.cameraCollapsed ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'divider2', label: '', divider: true },
     { id: 'default', label: 'Restore Default', icon: '🔄' },
   ] as DropdownItem[]);
@@ -255,12 +255,12 @@
   }
 
   const overlaysMenu = $derived([
-    { id: 'edges', label: 'Edges', icon: $uiStore.overlays.edges ? '✓' : ' ' },
-    { id: 'half', label: 'Half', icon: $uiStore.overlays.half ? '✓' : ' ' },
-    { id: 'third', label: 'Third', icon: $uiStore.overlays.third ? '✓' : ' ' },
-    { id: 'cross', label: 'Cross', icon: $uiStore.overlays.cross ? '✓' : ' ' },
-    { id: 'solid', label: 'Solid', icon: $uiStore.overlays.solid ? '✓' : ' ' },
-    { id: 'xyz', label: 'XYZ', icon: $uiStore.overlays.xyz ? '✓' : ' ' },
+    { id: 'edges', label: 'Edges', icon: $uiStore.overlays.edges ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'half', label: 'Half', icon: $uiStore.overlays.half ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'third', label: 'Third', icon: $uiStore.overlays.third ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'cross', label: 'Cross', icon: $uiStore.overlays.cross ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'solid', label: 'Solid', icon: $uiStore.overlays.solid ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'xyz', label: 'XYZ', icon: $uiStore.overlays.xyz ? '✓' : ' ', keepOpenOnClick: true },
   ] as DropdownItem[]);
 
   function handleOverlaySelect(id: string) {

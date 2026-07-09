@@ -9,6 +9,7 @@
     disabled?: boolean;
     divider?: boolean;
     danger?: boolean;
+    keepOpenOnClick?: boolean;
   }
 
   interface Props {
@@ -40,7 +41,9 @@
 
   function handleSelect(item: DropdownItem) {
     if (item.disabled || item.divider) return;
-    isOpen = false;
+    if (!item.keepOpenOnClick) {
+      isOpen = false;
+    }
     onSelect(item.id);
   }
 
