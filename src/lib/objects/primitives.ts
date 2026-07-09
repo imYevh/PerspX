@@ -183,9 +183,21 @@ export function createPrimitive(
     bottomDot.rotation.x = Math.PI / 2;
     
     defaultEdges.add(topDot, bottomDot);
-  } else if (type === 'cylinder') {
+  } else if (type === 'cylinder' || type === 'cone') {
+    defaultEdges = new Group();
     const edgesGeo = new EdgesGeometry(geometry, 30); // 30 deg threshold hides vertical seam
-    defaultEdges = new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff }));
+    defaultEdges.add(new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff })));
+    
+    if (type === 'cone') {
+      const radius = params?.radius ?? 0.5;
+      const height = params?.height ?? 1;
+      const dotGeo = new CircleGeometry(radius * 0.04, 16);
+      const dotMat = new MeshBasicMaterial({ color: 0x000000, side: DoubleSide });
+      const topDot = new Mesh(dotGeo, dotMat);
+      topDot.position.y = height / 2;
+      topDot.rotation.x = -Math.PI / 2;
+      defaultEdges.add(topDot);
+    }
   } else {
     const edgesGeo = new EdgesGeometry(geometry);
     defaultEdges = new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff }));
@@ -200,7 +212,7 @@ export function createPrimitive(
     const xyzGeo = generateIntersectionLines(geometry, xyzPlanes);
     assignXYZColors(xyzGeo);
     xyzEdges = new LineSegments(xyzGeo, new LineBasicMaterial({ vertexColors: true }));
-  } else if (type === 'cylinder') {
+  } else if (type === 'cylinder' || type === 'cone') {
     const xyzPlanes = getHalfPlanes(bbox).filter(p => Math.abs(p.normal.y) < 0.5); // Only X and Z planes
     const xyzGeo = generateIntersectionLines(geometry, xyzPlanes);
     assignXYZColors(xyzGeo);
@@ -217,7 +229,7 @@ export function createPrimitive(
 
   // 3. Halfs
   let halfLines: Object3D;
-  if (type === 'cylinder') {
+  if (type === 'cylinder' || type === 'cone') {
     halfLines = new Group();
     const radius = params?.radius ?? 0.5;
     const height = params?.height ?? 1;
@@ -228,13 +240,17 @@ export function createPrimitive(
     
     // Cap concentric circles
     const capGeo = new EdgesGeometry(new CircleGeometry(radius / 2, 32));
-    const topCap = new LineSegments(capGeo, blueMat);
-    topCap.rotation.x = -Math.PI / 2;
-    topCap.position.y = height / 2;
     const bottomCap = new LineSegments(capGeo, blueMat);
     bottomCap.rotation.x = Math.PI / 2;
     bottomCap.position.y = -height / 2;
-    halfLines.add(topCap, bottomCap);
+    halfLines.add(bottomCap);
+
+    if (type === 'cylinder') {
+      const topCap = new LineSegments(capGeo, blueMat);
+      topCap.rotation.x = -Math.PI / 2;
+      topCap.position.y = height / 2;
+      halfLines.add(topCap);
+    }
   } else {
     const halfPlanes = getHalfPlanes(bbox);
     const halfGeo = generateIntersectionLines(geometry, halfPlanes);
@@ -251,7 +267,7 @@ export function createPrimitive(
     thirdPlanes = thirdPlanes.filter(p => Math.abs(p.normal.y) > 0.5);
     const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
     thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b }));
-  } else if (type === 'cylinder') {
+  } else if (type === 'cylinder' || type === 'cone') {
     thirdLines = new Group();
     const radius = params?.radius ?? 0.5;
     const height = params?.height ?? 1;
@@ -263,17 +279,20 @@ export function createPrimitive(
     // Cap concentric circles
     const capGeo1 = new EdgesGeometry(new CircleGeometry(radius / 3, 32));
     const capGeo2 = new EdgesGeometry(new CircleGeometry((radius * 2) / 3, 32));
-    const topCap1 = new LineSegments(capGeo1, redMat);
-    const topCap2 = new LineSegments(capGeo2, redMat);
-    topCap1.rotation.x = topCap2.rotation.x = -Math.PI / 2;
-    topCap1.position.y = topCap2.position.y = height / 2;
     
     const bottomCap1 = new LineSegments(capGeo1, redMat);
     const bottomCap2 = new LineSegments(capGeo2, redMat);
     bottomCap1.rotation.x = bottomCap2.rotation.x = Math.PI / 2;
     bottomCap1.position.y = bottomCap2.position.y = -height / 2;
-    
-    thirdLines.add(topCap1, topCap2, bottomCap1, bottomCap2);
+    thirdLines.add(bottomCap1, bottomCap2);
+
+    if (type === 'cylinder') {
+      const topCap1 = new LineSegments(capGeo1, redMat);
+      const topCap2 = new LineSegments(capGeo2, redMat);
+      topCap1.rotation.x = topCap2.rotation.x = -Math.PI / 2;
+      topCap1.position.y = topCap2.position.y = height / 2;
+      thirdLines.add(topCap1, topCap2);
+    }
   } else {
     const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
     thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b })); // Red
