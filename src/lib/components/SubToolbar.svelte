@@ -96,11 +96,11 @@
     gap: 8px;
     padding: 6px 12px;
     border-radius: 12px;
-    background: rgba(15, 15, 25, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    background: var(--color-surface);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-panel);
     z-index: 20;
     transition: all 0.2s ease;
   }
@@ -117,7 +117,7 @@
   .toolbar-sep {
     width: 1px;
     height: 24px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-border);
   }
 
   .toolbar-group {
@@ -133,7 +133,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 8px;
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 13px;
     cursor: pointer;
     transition: all 0.15s;
@@ -148,20 +148,20 @@
   }
 
   .tool-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #e0e0e0;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .tool-btn.active {
-    background: rgba(74, 158, 255, 0.15);
-    border-color: rgba(74, 158, 255, 0.4);
-    color: #4a9eff;
+    background: var(--color-accent-muted);
+    border-color: transparent;
+    color: var(--color-accent);
   }
   
   .snap-btn.active {
-    background: rgba(234, 179, 8, 0.15); /* Yellow tint for snap */
-    border-color: rgba(234, 179, 8, 0.4);
-    color: #eab308;
+    background: var(--color-accent-muted);
+    border-color: transparent;
+    color: var(--color-accent);
   }
 
   .tool-icon {

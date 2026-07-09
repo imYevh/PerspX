@@ -240,7 +240,7 @@
   .prop-title {
     font-size: 10px;
     font-weight: 700;
-    color: #666;
+    color: var(--color-text-dim);
     text-transform: uppercase;
     letter-spacing: 0.7px;
     margin-bottom: 8px;
@@ -255,8 +255,8 @@
 
   label {
     font-size: 11px;
-    color: #888;
-    min-width: 60px;
+    color: var(--color-text-muted);
+    width: 90px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -266,20 +266,20 @@
   .link-btn {
     background: none;
     border: none;
-    color: #666;
+    color: var(--color-text-muted);
     cursor: pointer;
     font-size: 11px;
     padding: 2px 4px;
     border-radius: 4px;
     margin-left: auto;
   }
-  .link-btn:hover { color: #aaa; background: rgba(255, 255, 255, 0.1); }
-  .link-btn.active { color: #fff; }
+  .link-btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
+  .link-btn.active { color: var(--color-accent); }
 
   .reset-btn {
     background: none;
     border: none;
-    color: #666;
+    color: var(--color-text-muted);
     cursor: pointer;
     font-size: 14px;
     padding: 0px 4px;
@@ -287,7 +287,7 @@
     margin-left: 4px;
     transition: all 0.2s;
   }
-  .reset-btn:hover { color: #aaa; background: rgba(255, 255, 255, 0.1); }
+  .reset-btn:hover { color: var(--color-text); background: var(--color-surface-hover); }
 
   .xyz {
     display: flex;
@@ -296,10 +296,10 @@
   }
 
   :global(.pi) {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--color-text);
     padding: 4px 6px;
     font-size: 11px;
     width: 100%;
@@ -309,9 +309,9 @@
   }
 
   :global(.pi:focus) {
-    border-color: #4a9eff;
+    border-color: var(--color-accent);
     outline: none;
-    background: rgba(74, 158, 255, 0.08);
+    background: var(--color-accent-muted);
   }
 
   :global(.pi.x) { border-left: 2px solid #ff5555; }
@@ -321,16 +321,17 @@
 
   .prop-badge {
     font-size: 11px;
-    color: #888;
-    background: rgba(255,255,255,0.06);
+    color: var(--color-text-muted);
+    background: var(--color-bg);
     padding: 2px 8px;
     border-radius: 10px;
     font-family: monospace;
+    border: 1px solid var(--color-border);
   }
 
   .empty-hint {
     font-size: 11px;
-    color: #555;
+    color: var(--color-text-muted);
     text-align: center;
     padding: 16px 0;
     margin: 0;

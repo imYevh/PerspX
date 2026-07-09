@@ -41,10 +41,11 @@
 :root {
   --accent-hue: 217;
 
-  /* Accent colors derived from the hue — shared across all themes */
-  --color-accent: hsl(var(--accent-hue), 90%, 64%);
-  --color-accent-hover: hsl(var(--accent-hue), 90%, 72%);
-  --color-accent-muted: hsla(var(--accent-hue), 90%, 64%, 0.15);
+  --accent-sat: var(--accent-saturation, 90%);
+  --accent-lit: var(--accent-lightness, 64%);
+  --color-accent: hsl(var(--accent-hue), var(--accent-sat), var(--accent-lit));
+  --color-accent-hover: hsl(var(--accent-hue), var(--accent-sat), calc(var(--accent-lit) + 8%));
+  --color-accent-muted: hsla(var(--accent-hue), var(--accent-sat), var(--accent-lit), 0.15);
 
   /* Semantic colors — consistent across themes */
   --color-danger: #ef4444;
@@ -53,7 +54,30 @@
 }
 
 /* ============================================================
-   THEME: DARK (default)
+   THEME: DEFAULT (Original)
+   The original PerspX dark-blue aesthetics.
+   ============================================================ */
+[data-theme="default"] {
+  --color-bg: #0f0f1a;
+  --color-surface: rgba(20, 20, 30, 0.95);
+  --color-surface-hover: rgba(35, 35, 50, 0.95);
+  --color-surface-active: rgba(50, 50, 65, 0.98);
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-hover: rgba(255, 255, 255, 0.2);
+
+  --color-text: #e0e0e0;
+  --color-text-muted: #aaa;
+  --color-text-dim: #666;
+
+  --backdrop-blur: 12px;
+  --shadow-panel: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   THEME: DARK
    Deep charcoal with glassmorphism. Matches design-checklist.md.
    ============================================================ */
 [data-theme="dark"] {
@@ -93,9 +117,11 @@
   --color-text-dim: #9090a8;
 
   /* Slightly lighter accent for readability on light bg */
-  --color-accent: hsl(var(--accent-hue), 85%, 50%);
-  --color-accent-hover: hsl(var(--accent-hue), 85%, 42%);
-  --color-accent-muted: hsla(var(--accent-hue), 85%, 50%, 0.12);
+  --accent-sat: var(--accent-saturation, 85%);
+  --accent-lit: var(--accent-lightness, 50%);
+  --color-accent: hsl(var(--accent-hue), var(--accent-sat), var(--accent-lit));
+  --color-accent-hover: hsl(var(--accent-hue), var(--accent-sat), calc(var(--accent-lit) - 8%));
+  --color-accent-muted: hsla(var(--accent-hue), var(--accent-sat), var(--accent-lit), 0.12);
 
   --backdrop-blur: 16px;
   --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.08);
@@ -127,26 +153,92 @@
 }
 
 /* ============================================================
-   THEME: TRANSPARENT (Heavy Glassmorphism)
-   Translucent panels, strong backdrop blur, viewport shows through.
+   THEME: GREY
+   Neutral, professional middle grey tone.
    ============================================================ */
-[data-theme="transparent"] {
-  --color-bg: rgba(10, 10, 18, 0.6);
-  --color-surface: rgba(15, 15, 25, 0.55);
-  --color-surface-hover: rgba(25, 25, 40, 0.65);
-  --color-surface-active: rgba(35, 35, 50, 0.75);
+[data-theme="grey"] {
+  --color-bg: #27272a;
+  --color-surface: rgba(63, 63, 70, 0.92);
+  --color-surface-hover: rgba(82, 82, 91, 0.95);
+  --color-surface-active: rgba(113, 113, 122, 0.98);
 
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-hover: rgba(255, 255, 255, 0.2);
+  --color-border: rgba(255, 255, 255, 0.15);
+  --color-border-hover: rgba(255, 255, 255, 0.25);
 
-  --color-text: #e8e8f0;
-  --color-text-muted: #9898b0;
-  --color-text-dim: #606078;
+  --color-text: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-text-dim: #71717a;
 
-  --backdrop-blur: 24px;
-  --shadow-panel: 0 8px 40px rgba(0, 0, 0, 0.3);
+  --backdrop-blur: 12px;
+  --shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.3);
 
   color-scheme: dark;
+}
+
+/* ============================================================
+   THEME: LIQUID GLASS
+   Highly translucent, sleek frosted glass with a subtle fluid background.
+   ============================================================ */
+[data-theme="liquid"] {
+  /* Fluid deep sea / tech gradient for the global body */
+  --global-bg: linear-gradient(135deg, #050b14 0%, #0a192f 50%, #0d1b2a 100%);
+  
+  /* Fallback solid/translucent color for UI elements that use --color-bg */
+  --color-bg: rgba(10, 25, 47, 0.5);
+  
+  /* Extremely sheer glass with high blur (85% transparent = 0.15 opacity) */
+  --color-surface: rgba(255, 255, 255, 0.15);
+  --color-surface-hover: rgba(255, 255, 255, 0.25);
+  --color-surface-active: rgba(255, 255, 255, 0.35);
+
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-hover: rgba(255, 255, 255, 0.3);
+
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-text-dim: #475569;
+
+  --backdrop-blur: 32px;
+  --shadow-panel: 0 8px 40px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   THEME: CHROMATIC
+   Light theme with a fluid holographic background and sheer glass.
+   ============================================================ */
+[data-theme="chromatic"] {
+  /* Holographic fluid background */
+  --global-bg: url('/chromatic.png') center/cover no-repeat;
+  
+  /* Very sheer light glass with high blur */
+  --color-surface: rgba(255, 255, 255, 0.25);
+  --color-surface-hover: rgba(255, 255, 255, 0.35);
+  --color-surface-active: rgba(255, 255, 255, 0.45);
+
+  --color-border: rgba(255, 255, 255, 0.3);
+  --color-border-hover: rgba(255, 255, 255, 0.5);
+
+  /* Light theme text styling for contrast */
+  --color-text: #1e293b;
+  --color-text-muted: #475569;
+  --color-text-dim: #64748b;
+
+  /* Accent presets can be customized by the slider */
+  --accent-sat: var(--accent-saturation, 85%);
+  --accent-lit: var(--accent-lightness, 45%);
+  --color-accent: hsl(var(--accent-hue), var(--accent-sat), var(--accent-lit));
+  --color-accent-hover: hsl(var(--accent-hue), var(--accent-sat), calc(var(--accent-lit) - 7%));
+  --color-accent-muted: hsla(var(--accent-hue), var(--accent-sat), var(--accent-lit), 0.15);
+
+  /* Fallback solid color for elements using --color-bg */
+  --color-bg: rgba(255, 255, 255, 0.6);
+
+  --backdrop-blur: 24px;
+  --shadow-panel: 0 8px 32px rgba(31, 38, 135, 0.1);
+
+  color-scheme: light;
 }
 
 /* ============================================================
@@ -167,7 +259,7 @@
     height: 100%;
     overflow: hidden;
     font-family: "Inter", system-ui, -apple-system, sans-serif;
-    background: var(--color-bg);
+    background: var(--global-bg, var(--color-bg));
     color: var(--color-text);
   }
 

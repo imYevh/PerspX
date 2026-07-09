@@ -240,7 +240,7 @@
   .prop-title {
     font-size: 10px;
     font-weight: 700;
-    color: #666;
+    color: var(--color-text-dim);
     text-transform: uppercase;
     letter-spacing: 0.7px;
     margin-bottom: 6px;
@@ -259,7 +259,7 @@
 
   .sub-label {
     font-size: 10px;
-    color: #888;
+    color: var(--color-text-muted);
   }
 
   .mode-toggle {
@@ -270,19 +270,19 @@
   .mode-btn {
     flex: 1;
     padding: 6px 4px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 5px;
-    color: #888;
+    color: var(--color-text-muted);
     font-size: 11px;
     cursor: pointer;
     transition: all 0.15s;
   }
 
   .mode-btn.active {
-    background: rgba(74, 158, 255, 0.15);
-    border-color: rgba(74, 158, 255, 0.4);
-    color: #4a9eff;
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   .preset-grid {
@@ -293,19 +293,19 @@
 
   .preset-btn {
     padding: 5px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
     border-radius: 4px;
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 11px;
     cursor: pointer;
     transition: all 0.12s;
   }
 
   .preset-btn:hover {
-    background: rgba(74, 158, 255, 0.1);
-    border-color: rgba(74, 158, 255, 0.3);
-    color: #ccc;
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    color: var(--color-text);
   }
 
   .value-row {
@@ -317,14 +317,14 @@
   .control-value {
     font-size: 11px;
     font-weight: 500;
-    color: #ccc;
+    color: var(--color-text);
     font-variant-numeric: tabular-nums;
   }
 
   .icon-btn {
     background: none;
     border: none;
-    color: #888;
+    color: var(--color-text-muted);
     cursor: pointer;
     padding: 2px;
     border-radius: 4px;
@@ -336,19 +336,19 @@
   }
 
   .icon-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #eee;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .icon-btn.locked {
-    color: #ff6b6b;
+    color: var(--color-danger);
   }
 
   .slider {
     -webkit-appearance: none;
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-border);
     border-radius: 2px;
     outline: none;
     margin-top: 4px;
@@ -360,7 +360,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #4a9eff;
+    background: var(--color-accent);
     cursor: pointer;
     transition: transform 0.1s;
   }
@@ -373,7 +373,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #4a9eff;
+    background: var(--color-accent);
     cursor: pointer;
     border: none;
     transition: transform 0.1s;
@@ -385,9 +385,9 @@
 
   .action-btn {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #aaa;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
     font-size: 11px;
     font-weight: 500;
     padding: 6px 8px;
@@ -401,8 +401,8 @@
   }
 
   .action-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #eee;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .emoji {

@@ -23,13 +23,14 @@
 
 <style>
   .panel {
-    background: rgba(20, 20, 30, 0.92);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
+    border-bottom: 1px solid var(--color-border);
     overflow: hidden;
     font-size: 13px;
     width: 100%;
+  }
+
+  .panel:last-child {
+    border-bottom: none;
   }
 
   .panel-header {
@@ -37,8 +38,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    border-bottom: 1px solid var(--color-border);
     cursor: pointer;
     user-select: none;
     width: 100%;
@@ -48,7 +49,7 @@
   }
 
   .panel-header:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: var(--color-surface-hover);
   }
 
   .panel-title {
@@ -56,11 +57,11 @@
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #ccc;
+    color: var(--color-text);
   }
 
   .panel-chevron {
-    color: #666;
+    color: var(--color-text-muted);
     font-size: 10px;
   }
 

@@ -19,6 +19,7 @@
     if (obj && meta) {
       obj.visible = !obj.visible;
       meta.visible = obj.visible;
+      sceneStore.update(s => s);
     }
   }
 
@@ -49,10 +50,11 @@
         <span class="scene-name">{meta.name}</span>
         <button
           class="vis-btn"
+          class:hidden={meta.visible === false}
           title="Toggle visibility"
           onclick={(e) => toggleVisibility(id, e)}
         >
-          {meta.visible ? '👁' : '👁‍🗨'}
+          👁
         </button>
         <button
           class="vis-btn"
@@ -98,9 +100,9 @@
   }
 
   .scene-item.selected {
-    background: rgba(74, 158, 255, 0.15);
-    border-color: rgba(74, 158, 255, 0.35);
-    color: #e0e0e0;
+    background: var(--color-surface-active);
+    border-color: var(--color-accent);
+    color: var(--color-text);
   }
 
   .scene-icon {
@@ -124,6 +126,10 @@
     font-size: 12px;
     padding: 0 2px;
     transition: opacity 0.15s;
+  }
+
+  .vis-btn.hidden {
+    opacity: 0.3;
   }
 
   .vis-btn:hover {

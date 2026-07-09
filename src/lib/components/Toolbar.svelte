@@ -11,6 +11,7 @@
   import Dropdown from './ui/Dropdown.svelte';
   import type { DropdownItem } from './ui/Dropdown.svelte';
   import ConfirmDialog from './ui/ConfirmDialog.svelte';
+  import SettingsDialog from './ui/SettingsDialog.svelte';
 
   interface Props {
     objectManager: ObjectManager | undefined;
@@ -27,6 +28,8 @@
     danger?: boolean;
     onConfirm: () => void;
   } | null>(null);
+
+  let showSettings = $state(false);
 
   const mainMenu: DropdownItem[] = [
     { id: 'reset', label: 'Reset Scene', icon: '🎥' },
@@ -73,6 +76,8 @@
       saveScene();
     } else if (id === 'load') {
       loadScene();
+    } else if (id === 'settings') {
+      showSettings = true;
     } else {
       alert(`Feature "${id}" coming soon!`);
     }
@@ -190,7 +195,11 @@
         try {
           const content = ev.target?.result as string;
           const snapshot = JSON.parse(content);
-          applySceneSnapshot(snapshot, sceneManager, objectManager, lightManager, updateCameraStore, (window as any).cameraController);
+          const skipped = applySceneSnapshot(snapshot, sceneManager, objectManager, lightManager, updateCameraStore, (window as any).cameraController);
+          if (skipped.length > 0) {
+            const names = skipped.map(n => `• ${n}`).join('\n');
+            alert(`Scene loaded.\n\n${skipped.length} model(s) could not be restored from the save file — please re-import them manually:\n\n${names}`);
+          }
         } catch (err) {
           console.error("Failed to load scene", err);
           alert("Failed to load scene file. It may be corrupted or invalid.");
@@ -261,6 +270,8 @@
     { id: 'cross', label: 'Cross', icon: $uiStore.overlays.cross ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'solid', label: 'Solid', icon: $uiStore.overlays.solid ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'xyz', label: 'XYZ', icon: $uiStore.overlays.xyz ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'divider-tex', label: '', divider: true },
+    { id: 'textured', label: 'Textured (Models)', icon: $uiStore.overlays.textured ? '✓' : ' ', keepOpenOnClick: true },
   ] as DropdownItem[]);
 
   function handleOverlaySelect(id: string) {
@@ -398,11 +409,10 @@
       class:active={$cameraStore.guidelines !== 'disabled'}
       onclick={() => {
         const next = {
-          'disabled': 'nearest',
-          'nearest': 'full',
+          'disabled': 'full',
           'full': 'disabled'
         };
-        updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'nearest' | 'full' });
+        updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'full' });
       }}
       title="Vertical Guidelines: {$cameraStore.guidelines}"
     >
@@ -431,6 +441,10 @@
   />
 {/if}
 
+{#if showSettings}
+  <SettingsDialog onClose={() => showSettings = false} />
+{/if}
+
 <style>
   .toolbar {
     display: flex;
@@ -438,9 +452,8 @@
     gap: 4px;
     padding: 0 12px;
     height: 44px;
-    background: rgba(15, 15, 25, 0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
     z-index: 100; /* Higher than Sidebar (50) and SubToolbar (20) */
   }
@@ -481,7 +494,7 @@
   .toolbar-sep {
     width: 1px;
     height: 24px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-border);
     margin: 0 4px;
   }
 
@@ -503,7 +516,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 12px;
     cursor: pointer;
     transition: all 0.15s;
@@ -512,8 +525,13 @@
   }
 
   .tool-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #e0e0e0;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .tool-btn.active {
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
   }
   
   .tool-btn.locked {

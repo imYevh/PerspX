@@ -75,7 +75,7 @@
   </button>
 
   {#if isOpen}
-    <div class="dropdown-menu glass">
+    <div class="dropdown-menu">
       {#each items as item}
         {#if item.divider}
           <div class="dropdown-divider"></div>
@@ -117,7 +117,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
-    color: #aaa;
+    color: var(--color-text-muted);
     font-size: 12px;
     cursor: pointer;
     transition: all 0.15s;
@@ -126,13 +126,13 @@
   }
 
   .tool-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #e0e0e0;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .tool-btn.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--color-surface-active);
+    color: var(--color-text);
   }
 
   .tool-icon {
@@ -144,6 +144,11 @@
     top: calc(100% + 4px);
     left: 0;
     min-width: 180px;
+    background: var(--color-surface-hover);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-panel);
     border-radius: 8px;
     padding: 4px;
     display: flex;
@@ -160,7 +165,7 @@
     }
     to {
       opacity: 1;
-      transform: scale(1) translateY(0);
+      transform: none;
     }
   }
 
@@ -172,7 +177,7 @@
     background: transparent;
     border: none;
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--color-text);
     font-size: 12px;
     cursor: pointer;
     transition: all 0.1s;
@@ -181,16 +186,16 @@
   }
 
   .dropdown-item:hover:not(.disabled) {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-hover);
   }
   
   .dropdown-item.danger:hover:not(.disabled) {
     background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
+    color: var(--color-danger);
   }
 
   .dropdown-item.disabled {
-    color: #666;
+    color: var(--color-text-dim);
     cursor: not-allowed;
   }
 
@@ -207,13 +212,13 @@
   }
 
   .item-shortcut {
-    color: #666;
+    color: var(--color-text-dim);
     font-size: 10px;
   }
 
   .dropdown-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-border);
     margin: 4px 0;
   }
 </style>

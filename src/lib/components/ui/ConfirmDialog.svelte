@@ -57,14 +57,16 @@
   }
 
   .dialog {
-    background: rgba(20, 20, 30, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-surface);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 24px;
     width: 90%;
     max-width: 400px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-    color: #e0e0e0;
+    box-shadow: var(--shadow-panel);
+    color: var(--color-text);
   }
 
   .title {
@@ -76,7 +78,7 @@
   .message {
     margin: 0 0 24px 0;
     font-size: 14px;
-    color: #aaa;
+    color: var(--color-text-muted);
     line-height: 1.5;
   }
 
@@ -97,30 +99,30 @@
   }
 
   .cancel-btn {
-    background: rgba(255, 255, 255, 0.05);
-    color: #ccc;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
   }
 
   .cancel-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .confirm-btn {
-    background: #4a9eff;
+    background: var(--color-accent);
     color: white;
   }
 
   .confirm-btn:hover {
-    background: #3b82f6;
+    background: var(--color-accent-hover);
   }
 
   .confirm-btn.danger {
-    background: #ff4a4a;
+    background: var(--color-danger);
   }
 
   .confirm-btn.danger:hover {
-    background: #e63939;
+    background: #dc2626; /* Slightly darker danger hover */
   }
 </style>
