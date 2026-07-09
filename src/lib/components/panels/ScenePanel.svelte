@@ -90,13 +90,14 @@
     width: 100%;
     background: transparent;
     border: 1px solid transparent;
-    color: #ccc;
+    color: var(--color-text-muted);
     font-size: 13px;
     user-select: none;
   }
 
   .scene-item:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   .scene-item.selected {
