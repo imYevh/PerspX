@@ -739,13 +739,12 @@
     width: 220px;
     height: 100%;
     max-height: 100%;
+    min-height: 0;
     box-sizing: border-box;
     flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
+    display: block;
     padding: 8px;
     padding-bottom: 24px;
-    gap: 0;
     overflow-y: auto;
     background: var(--color-surface);
     border-color: var(--color-border);
