@@ -45,9 +45,7 @@
         title="{$uiStore.breakpoint === 'mobile' ? mode.label : `${mode.label} (${mode.shortcut})`}"
       >
         <span class="tool-icon">{mode.icon}</span>
-        {#if $uiStore.breakpoint !== 'mobile'}
-          <span class="tool-label">{mode.label}</span>
-        {/if}
+        <span class="tool-label">{mode.label}</span>
       </button>
     {/each}
   </div>
@@ -62,9 +60,7 @@
       title="Toggle Snapping"
     >
       <span class="tool-icon">🧲</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Snap</span>
-      {/if}
+      <span class="tool-label">Snap</span>
     </button>
   </div>
 
@@ -78,9 +74,7 @@
       title="Camera: Free / Snap to Object"
     >
       <span class="tool-icon">🎥</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
-      {/if}
+      <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
     </button>
   </div>
 </div>
@@ -88,7 +82,7 @@
 <style>
   .sub-toolbar {
     position: absolute;
-    top: 60px; /* Below top toolbar (44px) + some padding */
+    top: 16px; /* Positioned relative to viewport-wrapper */
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -103,12 +97,14 @@
     box-shadow: var(--shadow-panel);
     z-index: 20;
     transition: all 0.2s ease;
+    max-width: calc(100% - 24px); /* Adaptive width: never overflow parent container */
+    box-sizing: border-box;
   }
 
   /* Make it slightly smaller on mobile */
   @media (max-width: 767px) {
     .sub-toolbar {
-      top: 52px;
+      top: 12px;
       padding: 4px 8px;
       gap: 4px;
     }
@@ -138,6 +134,23 @@
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
+  }
+
+  .tool-label {
+    display: inline-block;
+  }
+
+  /* Hide labels on tablet/smaller desktop screen widths to stay compact and prevent panel overlaps */
+  @media (max-width: 1024px) {
+    .tool-label {
+      display: none;
+    }
+    .tool-btn {
+      padding: 6px 10px;
+    }
+    .sub-toolbar {
+      gap: 4px;
+    }
   }
 
   /* Compact padding for icons only on mobile */

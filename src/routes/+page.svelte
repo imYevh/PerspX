@@ -653,10 +653,6 @@
 
 <div class="app">
   <Toolbar {objectManager} {sceneManager} {lightManager} {renderer} />
-  
-  {#if $uiStore.panelsVisible}
-    <SubToolbar {transformSystem} />
-  {/if}
 
   <div class="workspace">
     <!-- Left Panel -->
@@ -678,6 +674,9 @@
 
     <!-- Viewport -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
+      {#if $uiStore.panelsVisible}
+        <SubToolbar {transformSystem} />
+      {/if}
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
     </div>
@@ -730,6 +729,8 @@
   .workspace {
     display: flex;
     flex: 1;
+    height: 0;
+    min-height: 0;
     overflow: hidden;
     position: relative;
   }
