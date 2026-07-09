@@ -141,86 +141,60 @@
     <div class="cam-section">
       <div class="prop-header">
         <div class="prop-title">Fisheye</div>
-        {#if $cameraStore.fisheye}
-          <div class="value-row">
-            <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(1)}</span>
-            <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0 })} title="Reset Fisheye">⟲</button>
-            <button class="icon-btn" onclick={() => updateCameraStore({ fisheye: false, fisheyeIntensity: 0 })} title="Remove Fisheye">✕</button>
-          </div>
-        {/if}
+        <div class="value-row">
+          <span class="control-value">{$cameraStore.fisheyeIntensity.toFixed(1)}</span>
+          <button class="icon-btn" onclick={() => updateCameraStore({ fisheyeIntensity: 0 })} title="Reset Fisheye">⟲</button>
+        </div>
       </div>
-      {#if !$cameraStore.fisheye}
-        <button class="action-btn" onclick={() => updateCameraStore({ fisheye: true })}>
-          <span class="emoji">🐟</span> Add Fisheye
-        </button>
-      {:else}
-        <input type="range" min="-50" max="50" step="0.1" 
-               value={$cameraStore.fisheyeIntensity} 
-               oninput={(e) => updateCameraStore({ fisheyeIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
-               class="slider" />
-      {/if}
+      <input type="range" min="-50" max="50" step="0.1" 
+             value={$cameraStore.fisheyeIntensity} 
+             oninput={(e) => updateCameraStore({ fisheyeIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+             class="slider" />
     </div>
 
     <div class="cam-section">
       <div class="prop-header">
         <div class="prop-title">Chromatic Aberration</div>
-        {#if $cameraStore.chromaticAberration}
-          <div class="value-row">
-            <span class="control-value">{$cameraStore.chromaticAberrationIntensity.toFixed(2)}</span>
-            <button class="icon-btn" onclick={() => updateCameraStore({ chromaticAberrationIntensity: 0 })} title="Reset">⟲</button>
-            <button class="icon-btn" onclick={() => updateCameraStore({ chromaticAberration: false, chromaticAberrationIntensity: 0 })} title="Remove">✕</button>
-          </div>
-        {/if}
+        <div class="value-row">
+          <span class="control-value">{$cameraStore.chromaticAberrationIntensity.toFixed(2)}</span>
+          <button class="icon-btn" onclick={() => updateCameraStore({ chromaticAberrationIntensity: 0 })} title="Reset">⟲</button>
+        </div>
       </div>
-      {#if !$cameraStore.chromaticAberration}
-        <button class="action-btn" onclick={() => updateCameraStore({ chromaticAberration: true })}>
-          <span class="emoji">🌈</span> Add Aberration
-        </button>
-      {:else}
-        <input type="range" min="-1" max="1" step="0.01" 
-               value={$cameraStore.chromaticAberrationIntensity} 
-               oninput={(e) => updateCameraStore({ chromaticAberrationIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
-               class="slider" />
-      {/if}
+      <input type="range" min="-1" max="1" step="0.01" 
+             value={$cameraStore.chromaticAberrationIntensity} 
+             oninput={(e) => updateCameraStore({ chromaticAberrationIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+             class="slider" />
     </div>
 
 
     <div class="cam-section">
       <div class="prop-header">
         <div class="prop-title">Tilt-Shift</div>
-        {#if $cameraStore.tiltShift}
-          <div class="value-row">
-            <button class="icon-btn" onclick={() => updateCameraStore({ tiltShift: false })} title="Remove">✕</button>
-          </div>
-        {/if}
+        <div class="value-row">
+          <button class="icon-btn" onclick={() => updateCameraStore({ tiltShiftPosition: 0.5, tiltShiftWidth: 0.2, tiltShiftIntensity: 0 })} title="Reset">⟲</button>
+        </div>
       </div>
-      {#if !$cameraStore.tiltShift}
-        <button class="action-btn" onclick={() => updateCameraStore({ tiltShift: true })}>
-          <span class="emoji">🏙️</span> Add Tilt-Shift
-        </button>
-      {:else}
-        <div class="sub-prop">
-          <span class="sub-label">Position: {$cameraStore.tiltShiftPosition.toFixed(2)}</span>
-          <input type="range" min="0" max="1" step="0.01" 
-                 value={$cameraStore.tiltShiftPosition} 
-                 oninput={(e) => updateCameraStore({ tiltShiftPosition: parseFloat((e.target as HTMLInputElement).value) })} 
-                 class="slider" />
-        </div>
-        <div class="sub-prop">
-          <span class="sub-label">Width: {$cameraStore.tiltShiftWidth.toFixed(2)}</span>
-          <input type="range" min="0" max="1" step="0.01" 
-                 value={$cameraStore.tiltShiftWidth} 
-                 oninput={(e) => updateCameraStore({ tiltShiftWidth: parseFloat((e.target as HTMLInputElement).value) })} 
-                 class="slider" />
-        </div>
-        <div class="sub-prop">
-          <span class="sub-label">Intensity: {$cameraStore.tiltShiftIntensity.toFixed(2)}</span>
-          <input type="range" min="0" max="1" step="0.01" 
-                 value={$cameraStore.tiltShiftIntensity} 
-                 oninput={(e) => updateCameraStore({ tiltShiftIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
-                 class="slider" />
-        </div>
-      {/if}
+      <div class="sub-prop">
+        <span class="sub-label">Position: {$cameraStore.tiltShiftPosition.toFixed(2)}</span>
+        <input type="range" min="0" max="1" step="0.01" 
+               value={$cameraStore.tiltShiftPosition} 
+               oninput={(e) => updateCameraStore({ tiltShiftPosition: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      </div>
+      <div class="sub-prop">
+        <span class="sub-label">Width: {$cameraStore.tiltShiftWidth.toFixed(2)}</span>
+        <input type="range" min="0" max="1" step="0.01" 
+               value={$cameraStore.tiltShiftWidth} 
+               oninput={(e) => updateCameraStore({ tiltShiftWidth: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      </div>
+      <div class="sub-prop">
+        <span class="sub-label">Intensity: {$cameraStore.tiltShiftIntensity.toFixed(2)}</span>
+        <input type="range" min="0" max="1" step="0.01" 
+               value={$cameraStore.tiltShiftIntensity} 
+               oninput={(e) => updateCameraStore({ tiltShiftIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
+               class="slider" />
+      </div>
     </div>
 
 </Panel>
