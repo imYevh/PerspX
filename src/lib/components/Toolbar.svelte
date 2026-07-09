@@ -127,11 +127,6 @@
       snapEnabled: false
     }));
 
-    import('$lib/stores/theme.svelte').then(({ setTheme, setAccentHue }) => {
-      setTheme('dark');
-      setAccentHue(217);
-    });
-
     import('$lib/objects/primitives').then(({ resetColorCycle }) => {
       resetColorCycle();
     });
