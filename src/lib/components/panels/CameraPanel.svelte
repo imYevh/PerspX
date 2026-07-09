@@ -113,7 +113,7 @@
       </div>
       {#if $cameraStore.zolly}
         <div class="prop-header">
-          <div class="prop-title" style="color: #4a9eff;">Zolly Angle</div>
+          <div class="prop-title" style="color: var(--color-accent);">Zolly Angle</div>
           <div class="value-row">
             <span class="control-value">{$cameraStore.fov.toFixed(0)}°</span>
             <button class="icon-btn" onclick={() => updateCameraStore({ zolly: true, fov: 50 })} title="Reset">⟲</button>
