@@ -274,17 +274,17 @@
   .hue-slider {
     width: 100%;
     -webkit-appearance: none;
-    height: 6px;
+    height: 4px;
     background: linear-gradient(to right, #ffffff 0%, #ff0000 10%, #ffff00 23.33%, #00ff00 36.66%, #00ffff 50%, #0000ff 63.33%, #ff00ff 76.66%, #ff0000 90%, #000000 100%);
-    border-radius: 3px;
+    border-radius: 2px;
     outline: none;
   }
 
   .hue-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: white;
     cursor: pointer;
