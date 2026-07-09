@@ -63,7 +63,7 @@ export class RenderLoop {
       const overlayColor = overlayTexNode.sample(fisheyeUV);
 
       // 4. Blur Amount Calculation
-      let blurAmount: any = float(0.0);
+      let blurAmount: ReturnType<typeof float> = float(0.0);
 
       // Tilt-Shift blur amount
       const yDist = abs(sub(fisheyeUV.y, this.tiltShiftPositionUniform));

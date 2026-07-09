@@ -12,6 +12,8 @@ export interface SnapshotObject {
   itemType?: string;
   intensity?: number;
   color?: string;
+  /** For models: the original filename at time of import (not re-loadable from JSON). */
+  originalFileName?: string;
 }
 
 export interface SceneSnapshot {
@@ -31,6 +33,8 @@ export function serializeScene(sceneManager: SceneManager, cameraState?: CameraS
     itemType: object.userData.itemType,
     intensity: 'intensity' in object ? (object as any).intensity : undefined,
     color: 'color' in object ? (object as any).color.getHexString() : undefined,
+    // Models store their original filename so users know which file to re-import
+    originalFileName: meta.type === 'model' ? (object.userData.originalFileName as string | undefined) : undefined,
   }));
   
   let cameraPosition: [number, number, number] | undefined;
@@ -50,6 +54,10 @@ export function serializeScene(sceneManager: SceneManager, cameraState?: CameraS
   };
 }
 
+/**
+ * Apply a scene snapshot. Returns an array of skipped model filenames
+ * (models cannot be restored from JSON — the user must re-import them).
+ */
 export function applySceneSnapshot(
   snapshot: SceneSnapshot,
   sceneManager: SceneManager,
@@ -57,13 +65,21 @@ export function applySceneSnapshot(
   lightManager: LightManager,
   updateCameraStore?: (updates: Partial<CameraState>) => void,
   cameraController?: any
-): void {
+): string[] {
   sceneManager.clearAll();
+
+  const skippedModels: string[] = [];
 
   for (const snapObj of snapshot.objects) {
     let id: string | null = null;
-    
-    if (snapObj.meta.type === 'primitive' && snapObj.itemType) {
+
+    if (snapObj.meta.type === 'model') {
+      // Models cannot be restored from JSON — geometry is not embedded.
+      const label = snapObj.originalFileName ?? snapObj.meta.name;
+      skippedModels.push(label);
+      console.warn(`[PerspX] Skipping model "${label}" — re-import the file to restore it.`);
+      continue;
+    } else if (snapObj.meta.type === 'primitive' && snapObj.itemType) {
       id = objectManager.addPrimitive(snapObj.itemType as any, snapObj.meta.id, snapObj.meta);
     } else if (snapObj.meta.type === 'light' && snapObj.itemType) {
       id = lightManager.addLight({
@@ -89,7 +105,7 @@ export function applySceneSnapshot(
     }
   }
 
-  // Restore selection
+  // Restore selection (filter out any model IDs that were skipped)
   if (snapshot.selectedIds.length > 0) {
     sceneManager.selectMultiple(snapshot.selectedIds, false);
   }
@@ -98,7 +114,7 @@ export function applySceneSnapshot(
   if (snapshot.camera && updateCameraStore) {
     updateCameraStore(snapshot.camera);
   }
-  
+
   // Restore camera position
   if (snapshot.cameraPosition && snapshot.cameraTarget && cameraController) {
     const pos = new Vector3().fromArray(snapshot.cameraPosition);
@@ -106,6 +122,8 @@ export function applySceneSnapshot(
     cameraController.applyState(pos, target);
     cameraController.update();
   }
+
+  return skippedModels;
 }
 
 export function serializeObjects(sceneManager: SceneManager, ids: string[]): SnapshotObject[] {
@@ -141,8 +159,7 @@ export function pasteObjects(
     
     // We create a fresh meta without the old ID to let the managers assign a new UUID.
     // We also append "(Copy)" to the name.
-    const newMeta = { ...snapObj.meta };
-    delete (newMeta as any).id;
+    const { id: _discarded, ...newMeta } = snapObj.meta as any;
     newMeta.name = `${newMeta.name} (Copy)`;
 
     if (newMeta.type === 'primitive' && snapObj.itemType) {

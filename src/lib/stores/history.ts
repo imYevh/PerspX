@@ -14,6 +14,8 @@ export const historyStore = writable<HistoryState>({
   future: []
 });
 
+const MAX_HISTORY = 50;
+
 let isRestoring = false;
 export function isHistoryRestoring() {
   return isRestoring;
@@ -38,7 +40,7 @@ export function commitHistory(sceneManager: SceneManager, replaceLast = false) {
       };
     }
     return {
-      past: [...s.past, snapshot],
+      past: [...s.past, snapshot].slice(-MAX_HISTORY),
       future: []
     };
   });
@@ -57,8 +59,11 @@ export function undo(sceneManager: SceneManager, objectManager: ObjectManager, l
   }));
 
   isRestoring = true;
-  applySceneSnapshot(previousSnapshot, sceneManager, objectManager, lightManager);
-  isRestoring = false;
+  try {
+    applySceneSnapshot(previousSnapshot, sceneManager, objectManager, lightManager);
+  } finally {
+    isRestoring = false;
+  }
 }
 
 export function redo(sceneManager: SceneManager, objectManager: ObjectManager, lightManager: LightManager) {
@@ -73,6 +78,9 @@ export function redo(sceneManager: SceneManager, objectManager: ObjectManager, l
   }));
 
   isRestoring = true;
-  applySceneSnapshot(nextSnapshot, sceneManager, objectManager, lightManager);
-  isRestoring = false;
+  try {
+    applySceneSnapshot(nextSnapshot, sceneManager, objectManager, lightManager);
+  } finally {
+    isRestoring = false;
+  }
 }

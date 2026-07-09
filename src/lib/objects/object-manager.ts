@@ -1,5 +1,6 @@
 import type { SceneManager } from '$lib/core/scene';
 import { createPrimitive, PRIMITIVES, type PrimitiveType } from './primitives';
+import { loadModelFromFile, type ModelLoadResult } from './model-loader';
 
 export class ObjectManager {
   constructor(private sceneManager: SceneManager) {}
@@ -8,14 +9,37 @@ export class ObjectManager {
     const mesh = createPrimitive(type);
     mesh.userData.itemType = type;
 
-    // Offset position so objects don't stack on top of each other, unless restoring
-    if (!explicitId) {
-      const count = this.sceneManager.getObjectsByType('primitive').length;
-      mesh.position.x = (count % 5) * 2 - 4;
-      mesh.position.z = Math.floor(count / 5) * 2 - 4;
-    }
+    // By default, mesh spawns at 0, 0, 0.
 
     return this.sceneManager.addObject(mesh, 'primitive', PRIMITIVES[type].label, explicitId, explicitMeta);
+  }
+
+  /**
+   * Import a 3D model file (.glb, .gltf, .obj, .fbx) into the scene.
+   *
+   * Returns `{ id, hasPerformanceWarning }` on success, or
+   * `{ error, message }` on failure. Never throws.
+   */
+  async addModel(file: File): Promise<
+    | { ok: true; id: string; hasPerformanceWarning: boolean }
+    | { ok: false; error: string; message: string }
+  > {
+    const result: ModelLoadResult = await loadModelFromFile(file);
+
+    if (!result.ok) {
+      return result;
+    }
+
+    const { group, name, hasPerformanceWarning } = result;
+
+    // Store original filename so serialization can reference it
+    group.userData.itemType = 'model';
+    group.userData.originalFileName = file.name;
+
+    // By default, group spawns at 0, 0, 0.
+
+    const id = this.sceneManager.addObject(group, 'model', name);
+    return { ok: true, id, hasPerformanceWarning };
   }
 
   removeObject(id: string): void {

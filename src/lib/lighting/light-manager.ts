@@ -9,6 +9,13 @@ import {
   PointLightHelper,
   SpotLightHelper,
   Object3D,
+  Line,
+  LineBasicMaterial,
+  LineDashedMaterial,
+  Mesh,
+  MeshBasicMaterial,
+  LineSegments,
+  WireframeGeometry
 } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 
@@ -48,20 +55,19 @@ export class LightManager {
     });
   }
 
-  applyPreset(presetName: string): void {
+  async applyPreset(presetName: string): Promise<void> {
     // Need to dynamically import to avoid circular dependency issues if any,
     // but better yet, we can just import it at the top. Let's assume we import LIGHTING_PRESETS.
-    import('./light-presets').then(({ LIGHTING_PRESETS }) => {
-      const existingLights = this.sceneManager.getObjectsByType('light');
-      for (const { id } of existingLights) {
-         this.removeLight(id);
-      }
-      const preset = LIGHTING_PRESETS[presetName];
-      if (!preset) return;
-      for (const config of preset.lights) {
-        this.addLight(config);
-      }
-    });
+    const { LIGHTING_PRESETS } = await import('./light-presets');
+    const existingLights = this.sceneManager.getObjectsByType('light');
+    for (const { id } of existingLights) {
+       this.removeLight(id);
+    }
+    const preset = LIGHTING_PRESETS[presetName];
+    if (!preset) return;
+    for (const config of preset.lights) {
+      this.addLight(config);
+    }
   }
 
   addLight(config: LightConfig): string {
@@ -212,9 +218,74 @@ export class LightManager {
   }
 
   updateHelpers(): void {
-    for (const helper of this.helpers.values()) {
+    for (const [id, helper] of this.helpers.entries()) {
       if ('update' in helper && typeof (helper as any).update === 'function') {
         (helper as any).update();
+      }
+
+      const light = this.sceneManager.getObject(id);
+      if (light) {
+        helper.traverse((child) => {
+          if ((child as any).isLine && child.name !== 'dashedHelper') {
+            const line = child as Line;
+            if (!light.visible) {
+              if (!(line.material instanceof LineDashedMaterial)) {
+                const color = (line.material as LineBasicMaterial).color;
+                line.material = new LineDashedMaterial({
+                  color: color,
+                  dashSize: 0.2,
+                  gapSize: 0.2,
+                  opacity: 0.4,
+                  transparent: true
+                });
+                line.computeLineDistances();
+              } else {
+                // Keep color in sync
+                (line.material as LineDashedMaterial).color.set((helper as any).color || light.color);
+              }
+            } else {
+              if (line.material instanceof LineDashedMaterial) {
+                const color = line.material.color;
+                line.material = new LineBasicMaterial({
+                  color: color
+                });
+              }
+            }
+          }
+          
+          if ((child as any).isMesh) {
+            const mesh = child as Mesh;
+            if (mesh.material instanceof MeshBasicMaterial) {
+              if (!light.visible) {
+                let dashedLine = mesh.children.find(c => c.name === 'dashedHelper') as LineSegments;
+                if (!dashedLine) {
+                  const geometry = new WireframeGeometry(mesh.geometry);
+                  const material = new LineDashedMaterial({
+                    color: mesh.material.color.clone(),
+                    dashSize: 0.2,
+                    gapSize: 0.2,
+                    opacity: 0.4,
+                    transparent: true
+                  });
+                  dashedLine = new LineSegments(geometry, material);
+                  dashedLine.name = 'dashedHelper';
+                  dashedLine.computeLineDistances();
+                  mesh.add(dashedLine);
+                }
+                // Sync color in case it changed
+                (dashedLine.material as LineDashedMaterial).color.copy(mesh.material.color);
+                
+                mesh.material.visible = false;
+                dashedLine.visible = true;
+                dashedLine.updateMatrixWorld(true);
+              } else {
+                mesh.material.visible = true;
+                const dashedLine = mesh.children.find(c => c.name === 'dashedHelper');
+                if (dashedLine) dashedLine.visible = false;
+              }
+            }
+          }
+        });
       }
     }
   }

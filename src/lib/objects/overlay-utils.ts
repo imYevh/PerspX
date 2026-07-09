@@ -58,10 +58,16 @@ export function generateIntersectionLines(geometry: BufferGeometry, planes: Plan
     }
   };
 
-  const vertexCount = indices ? indices.count : positionAttribute.count;
+  let start = 0;
+  let count = indices ? indices.count : positionAttribute.count;
+  if (geometry.drawRange && geometry.drawRange.count !== Infinity) {
+    start = geometry.drawRange.start;
+    count = geometry.drawRange.count;
+  }
+  const end = start + count;
   
   for (const plane of planes) {
-    for (let i = 0; i < vertexCount; i += 3) {
+    for (let i = start; i < end; i += 3) {
       if (indices) {
         a.fromBufferAttribute(positionAttribute, indices.getX(i));
         b.fromBufferAttribute(positionAttribute, indices.getX(i + 1));

@@ -27,7 +27,7 @@ export class SceneManager {
   private selectedIds: Set<string> = new Set();
   private listeners: Map<SceneEventType, SceneEventCallback[]> = new Map();
   private raycaster = new Raycaster();
-  private nameCounters: Map<string, number> = new Map();
+
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -72,13 +72,16 @@ export class SceneManager {
     const wasSelected = this.selectedIds.has(id);
     this.selectedIds.delete(id);
 
-    // Dispose geometry and materials
-    if ("geometry" in object) (object as any).geometry?.dispose();
-    if ("material" in object) {
-      const mat = (object as any).material;
-      if (Array.isArray(mat)) mat.forEach((m: any) => m.dispose());
-      else mat?.dispose();
-    }
+    // Deep dispose: traverse all descendants and clean up geometry + materials.
+    // This is essential for 3D models (Groups with many child Meshes/LineSegments).
+    object.traverse((child: any) => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        const mat = child.material;
+        if (Array.isArray(mat)) mat.forEach((m: any) => m.dispose());
+        else mat.dispose();
+      }
+    });
 
     this.emit("object-removed", { id });
     if (wasSelected) {
@@ -198,6 +201,9 @@ export class SceneManager {
   // --- Naming ---
 
   private generateUniqueName(baseName: string): string {
+    // We walk the entire metadata map every time. This is O(n),
+    // but for typical scene sizes (<1000 objects) this is fine.
+    // It gracefully handles renumbering if earlier copies are deleted.
     let suffix = 1;
     let name = `${baseName} ${suffix}`;
     const existingNames = new Set(Array.from(this.metadata.values()).map(m => m.name));

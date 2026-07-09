@@ -11,7 +11,7 @@ export interface MarqueeState {
 
 export interface DragState {
   active: boolean;
-  type: 'primitive' | 'light' | null;
+  type: 'primitive' | 'light' | 'model' | null;
   item: string | null;
 }
 
@@ -37,6 +37,7 @@ export interface UIState {
     cross: boolean;
     solid: boolean;
     xyz: boolean;
+    textured: boolean;
   };
 }
 
@@ -72,6 +73,7 @@ export const uiStore = writable<UIState>({
     cross: false,
     solid: false,
     xyz: false,
+    textured: false,
   }
 });
 

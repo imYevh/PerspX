@@ -17,19 +17,11 @@ import {
 export class VanishingPointHelper {
   public readonly group: Group;
   private lines: Line[] = [];
-  private material: LineBasicMaterial;
 
   constructor(color: number = 0xffaa00, opacity: number = 0.4) {
     this.group = new Group();
     this.group.name = '_PerspX_vanishing';
 
-    this.material = new LineBasicMaterial({
-      color,
-      transparent: true,
-      opacity,
-      depthTest: false,
-    });
-    
     // Initialize lines once
     const colors = [0xff4444, 0x44ff44, 0x4444ff];
     for (let i = 0; i < 3; i++) {
@@ -56,8 +48,7 @@ export class VanishingPointHelper {
    */
   updateForBox(
     objectPosition: Vector3,
-    objectSize: Vector3,
-    camera: PerspectiveCamera
+    objectSize: Vector3
   ): void {
     // The 3 principal directions (world-aligned)
     const directions = [
@@ -91,6 +82,11 @@ export class VanishingPointHelper {
 
   dispose(): void {
     this.clear();
-    this.material.dispose();
+    for (const line of this.lines) {
+      line.geometry.dispose();
+      (line.material as LineBasicMaterial).dispose();
+      this.group.remove(line);
+    }
+    this.lines = [];
   }
 }

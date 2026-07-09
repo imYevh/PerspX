@@ -14,7 +14,7 @@ export interface CameraState {
   tiltShiftPosition: number;
   tiltShiftWidth: number;
   tiltShiftIntensity: number;
-  guidelines: 'disabled' | 'nearest' | 'full';
+  guidelines: 'disabled' | 'full';
   lockPan: boolean;
   lockOrbit: boolean;
   orbitMode: 'free' | 'snap';

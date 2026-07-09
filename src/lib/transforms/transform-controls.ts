@@ -210,7 +210,7 @@ export class TransformSystem {
       case 'KeyA':
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
-          const allIds = this.sceneManager.objects
+          const allIds = this.sceneManager.getAllObjects()
             .filter(o => !o.meta.locked)
             .map(o => o.id);
           this.sceneManager.selectMultiple(allIds, false);
