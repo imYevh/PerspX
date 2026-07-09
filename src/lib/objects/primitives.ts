@@ -197,6 +197,11 @@ export function createPrimitive(
     const xyzGeo = generateIntersectionLines(geometry, xyzPlanes);
     assignXYZColors(xyzGeo);
     xyzEdges = new LineSegments(xyzGeo, new LineBasicMaterial({ vertexColors: true }));
+  } else if (type === 'cylinder') {
+    const xyzPlanes = getHalfPlanes(bbox).filter(p => Math.abs(p.normal.y) < 0.5); // Only X and Z planes
+    const xyzGeo = generateIntersectionLines(geometry, xyzPlanes);
+    assignXYZColors(xyzGeo);
+    xyzEdges = new LineSegments(xyzGeo, new LineBasicMaterial({ vertexColors: true }));
   } else {
     // Other primitives use colored default edges for XYZ
     const edgesGeo = new EdgesGeometry(geometry);
@@ -208,20 +213,68 @@ export function createPrimitive(
   group.add(xyzEdges);
 
   // 3. Halfs
-  const halfPlanes = getHalfPlanes(bbox);
-  const halfGeo = generateIntersectionLines(geometry, halfPlanes);
-  const halfLines = new LineSegments(halfGeo, new LineBasicMaterial({ color: 0x4a9eff })); // Blue
+  let halfLines: Object3D;
+  if (type === 'cylinder') {
+    halfLines = new Group();
+    const radius = params?.radius ?? 0.5;
+    const height = params?.height ?? 1;
+    const halfPlanes = getHalfPlanes(bbox).filter(p => Math.abs(p.normal.y) > 0.5); // Only Y plane
+    const halfGeo = generateIntersectionLines(geometry, halfPlanes);
+    const blueMat = new LineBasicMaterial({ color: 0x4a9eff });
+    halfLines.add(new LineSegments(halfGeo, blueMat));
+    
+    // Cap concentric circles
+    const capGeo = new EdgesGeometry(new CircleGeometry(radius / 2, 32));
+    const topCap = new LineSegments(capGeo, blueMat);
+    topCap.rotation.x = -Math.PI / 2;
+    topCap.position.y = height / 2;
+    const bottomCap = new LineSegments(capGeo, blueMat);
+    bottomCap.rotation.x = Math.PI / 2;
+    bottomCap.position.y = -height / 2;
+    halfLines.add(topCap, bottomCap);
+  } else {
+    const halfPlanes = getHalfPlanes(bbox);
+    const halfGeo = generateIntersectionLines(geometry, halfPlanes);
+    halfLines = new LineSegments(halfGeo, new LineBasicMaterial({ color: 0x4a9eff })); // Blue
+  }
   halfLines.userData.isHalfLines = true;
   halfLines.visible = false;
   group.add(halfLines);
 
   // 4. Thirds
+  let thirdLines: Object3D;
   let thirdPlanes = getThirdPlanes(bbox);
   if (type === 'sphere') {
     thirdPlanes = thirdPlanes.filter(p => Math.abs(p.normal.y) > 0.5);
+    const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
+    thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b }));
+  } else if (type === 'cylinder') {
+    thirdLines = new Group();
+    const radius = params?.radius ?? 0.5;
+    const height = params?.height ?? 1;
+    thirdPlanes = thirdPlanes.filter(p => Math.abs(p.normal.y) > 0.5); // Only Y planes
+    const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
+    const redMat = new LineBasicMaterial({ color: 0xff6b6b });
+    thirdLines.add(new LineSegments(thirdGeo, redMat));
+
+    // Cap concentric circles
+    const capGeo1 = new EdgesGeometry(new CircleGeometry(radius / 3, 32));
+    const capGeo2 = new EdgesGeometry(new CircleGeometry((radius * 2) / 3, 32));
+    const topCap1 = new LineSegments(capGeo1, redMat);
+    const topCap2 = new LineSegments(capGeo2, redMat);
+    topCap1.rotation.x = topCap2.rotation.x = -Math.PI / 2;
+    topCap1.position.y = topCap2.position.y = height / 2;
+    
+    const bottomCap1 = new LineSegments(capGeo1, redMat);
+    const bottomCap2 = new LineSegments(capGeo2, redMat);
+    bottomCap1.rotation.x = bottomCap2.rotation.x = Math.PI / 2;
+    bottomCap1.position.y = bottomCap2.position.y = -height / 2;
+    
+    thirdLines.add(topCap1, topCap2, bottomCap1, bottomCap2);
+  } else {
+    const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
+    thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b })); // Red
   }
-  const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
-  const thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b })); // Red
   thirdLines.userData.isThirdLines = true;
   thirdLines.visible = false;
   group.add(thirdLines);
