@@ -529,6 +529,7 @@
       };
 
       loop = new RenderLoop(_renderer.instance, _renderer.scene, _cameraController.camera);
+      loop.handleResize(_renderer.width, _renderer.height);
       
       // Move helpers to the overlay scene in loop to keep them free from chromatic aberration
       _renderer.scene.remove(grid);
@@ -622,6 +623,9 @@
       const onRendererResize = () => {
         if (!_renderer || !_cameraController) return;
         _cameraController.handleResize(_renderer.getAspect());
+        if (loop) {
+          loop.handleResize(_renderer.width, _renderer.height);
+        }
       };
       
       // Initialize breakpoint

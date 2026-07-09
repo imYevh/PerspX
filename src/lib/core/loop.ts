@@ -187,4 +187,10 @@ export class RenderLoop {
       this.overlayPass.camera = camera;
     }
   }
+
+  handleResize(width: number, height: number): void {
+    if (this.postProcessing) {
+      this.postProcessing.setSize(width, height);
+    }
+  }
 }

@@ -11,8 +11,8 @@ export class Renderer {
   public readonly instance: WebGPURenderer;
   public readonly scene: Scene;
   private resizeObserver: ResizeObserver;
-  private width = window.innerWidth;
-  private height = window.innerHeight;
+  public width = window.innerWidth;
+  public height = window.innerHeight;
 
   constructor(options: RendererOptions) {
     this.instance = new WebGPURenderer({
