@@ -168,24 +168,53 @@ export function createPrimitive(
 
   // 1. Default Edges
   let defaultEdges: Object3D;
-  if (type === 'sphere') {
+  const isSmooth = type === 'sphere' || type === 'capsule' || type === 'torus';
+  if (isSmooth) {
     defaultEdges = new Group();
-    const radius = params?.radius ?? 0.5;
-    const dotGeo = new CircleGeometry(radius * 0.04, 16);
     const dotMat = new MeshBasicMaterial({ color: 0x000000, side: DoubleSide });
     
-    const topDot = new Mesh(dotGeo, dotMat);
-    topDot.position.y = radius;
-    topDot.rotation.x = -Math.PI / 2;
-    
-    const bottomDot = new Mesh(dotGeo, dotMat);
-    bottomDot.position.y = -radius;
-    bottomDot.rotation.x = Math.PI / 2;
-    
-    defaultEdges.add(topDot, bottomDot);
-  } else if (type === 'cylinder' || type === 'cone') {
+    if (type === 'sphere') {
+      const radius = params?.radius ?? 0.5;
+      const dotGeo = new CircleGeometry(radius * 0.04, 16);
+      const topDot = new Mesh(dotGeo, dotMat);
+      topDot.position.y = radius;
+      topDot.rotation.x = -Math.PI / 2;
+      const bottomDot = new Mesh(dotGeo, dotMat);
+      bottomDot.position.y = -radius;
+      bottomDot.rotation.x = Math.PI / 2;
+      defaultEdges.add(topDot, bottomDot);
+    } else if (type === 'capsule') {
+      const radius = params?.radius ?? 0.3;
+      const length = params?.height ?? params?.length ?? 1; // handle param aliases
+      const dotGeo = new CircleGeometry(radius * 0.04, 16);
+      const topDot = new Mesh(dotGeo, dotMat);
+      topDot.position.y = length / 2 + radius;
+      topDot.rotation.x = -Math.PI / 2;
+      const bottomDot = new Mesh(dotGeo, dotMat);
+      bottomDot.position.y = -(length / 2 + radius);
+      bottomDot.rotation.x = Math.PI / 2;
+      defaultEdges.add(topDot, bottomDot);
+    } else if (type === 'torus') {
+      const radius = params?.radius ?? 0.5;
+      const tube = params?.tube ?? 0.2;
+      const dotGeo = new CircleGeometry(tube * 0.04, 16);
+      const topDot = new Mesh(dotGeo, dotMat);
+      topDot.position.y = radius + tube;
+      topDot.rotation.x = -Math.PI / 2;
+      const bottomDot = new Mesh(dotGeo, dotMat);
+      bottomDot.position.y = -(radius + tube);
+      bottomDot.rotation.x = Math.PI / 2;
+      const leftDot = new Mesh(dotGeo, dotMat);
+      leftDot.position.x = -(radius + tube);
+      leftDot.rotation.y = -Math.PI / 2;
+      const rightDot = new Mesh(dotGeo, dotMat);
+      rightDot.position.x = radius + tube;
+      rightDot.rotation.y = Math.PI / 2;
+      defaultEdges.add(topDot, bottomDot, leftDot, rightDot);
+    }
+  } else if (type === 'cylinder' || type === 'cone' || type === 'plane') {
     defaultEdges = new Group();
-    const edgesGeo = new EdgesGeometry(geometry, 30); // 30 deg threshold hides vertical seam
+    const edgesGeo = new EdgesGeometry(geometry, 30); // 30 deg threshold hides vertical seams
     defaultEdges.add(new LineSegments(edgesGeo, new LineBasicMaterial({ color: 0xffffff })));
     
     if (type === 'cone') {
@@ -207,7 +236,7 @@ export function createPrimitive(
 
   // 2. XYZ Edges
   let xyzEdges: Object3D;
-  if (type === 'sphere') {
+  if (isSmooth || type === 'plane') {
     const xyzPlanes = getHalfPlanes(bbox);
     const xyzGeo = generateIntersectionLines(geometry, xyzPlanes);
     assignXYZColors(xyzGeo);
@@ -263,8 +292,8 @@ export function createPrimitive(
   // 4. Thirds
   let thirdLines: Object3D;
   let thirdPlanes = getThirdPlanes(bbox);
-  if (type === 'sphere') {
-    thirdPlanes = thirdPlanes.filter(p => Math.abs(p.normal.y) > 0.5);
+  if (type === 'sphere' || type === 'capsule' || type === 'torus') {
+    thirdPlanes = thirdPlanes.filter(p => Math.abs(p.normal.y) > 0.5); // Only Y planes
     const thirdGeo = generateIntersectionLines(geometry, thirdPlanes);
     thirdLines = new LineSegments(thirdGeo, new LineBasicMaterial({ color: 0xff6b6b }));
   } else if (type === 'cylinder' || type === 'cone') {
