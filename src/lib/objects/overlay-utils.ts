@@ -23,30 +23,35 @@ export function generateIntersectionLines(geometry: BufferGeometry, planes: Plan
     const d1 = plane.distanceToPoint(p1);
     const d2 = plane.distanceToPoint(p2);
 
-    // If all points are on the same side, no intersection
-    if ((d0 > 0 && d1 > 0 && d2 > 0) || (d0 < 0 && d1 < 0 && d2 < 0)) return;
+    const eps = 1e-5;
+    const s0 = d0 > eps ? 1 : (d0 < -eps ? -1 : 0);
+    const s1 = d1 > eps ? 1 : (d1 < -eps ? -1 : 0);
+    const s2 = d2 > eps ? 1 : (d2 < -eps ? -1 : 0);
+
+    // If whole triangle is on the plane, ignore
+    if (s0 === 0 && s1 === 0 && s2 === 0) return;
+
+    // If all points are on the same side (or touching)
+    if ((s0 >= 0 && s1 >= 0 && s2 >= 0) || (s0 <= 0 && s1 <= 0 && s2 <= 0)) {
+      if (s0 === 0 && s1 === 0) {
+        lineVertices.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+      } else if (s1 === 0 && s2 === 0) {
+        lineVertices.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+      } else if (s2 === 0 && s0 === 0) {
+        lineVertices.push(p2.x, p2.y, p2.z, p0.x, p0.y, p0.z);
+      }
+      return;
+    }
 
     const points: Vector3[] = [];
+    if (s0 === 0) points.push(p0.clone());
+    if (s1 === 0) points.push(p1.clone());
+    if (s2 === 0) points.push(p2.clone());
 
-    // Check edge 0-1
-    if (d0 * d1 < 0) {
-      const t = d0 / (d0 - d1);
-      points.push(new Vector3().lerpVectors(p0, p1, t));
-    }
-    // Check edge 1-2
-    if (d1 * d2 < 0) {
-      const t = d1 / (d1 - d2);
-      points.push(new Vector3().lerpVectors(p1, p2, t));
-    }
-    // Check edge 2-0
-    if (d2 * d0 < 0) {
-      const t = d2 / (d2 - d0);
-      points.push(new Vector3().lerpVectors(p2, p0, t));
-    }
+    if (s0 * s1 < 0) points.push(new Vector3().lerpVectors(p0, p1, d0 / (d0 - d1)));
+    if (s1 * s2 < 0) points.push(new Vector3().lerpVectors(p1, p2, d1 / (d1 - d2)));
+    if (s2 * s0 < 0) points.push(new Vector3().lerpVectors(p2, p0, d2 / (d2 - d0)));
 
-    // A plane intersecting a triangle will yield exactly 2 points (a line segment)
-    // In rare cases (plane passes exactly through a vertex and an edge), it might yield 2 identical points or more, 
-    // but typically 2 distinct points.
     if (points.length === 2) {
       lineVertices.push(points[0].x, points[0].y, points[0].z);
       lineVertices.push(points[1].x, points[1].y, points[1].z);
