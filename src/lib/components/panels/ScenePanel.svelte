@@ -50,7 +50,7 @@
         <span class="scene-name">{meta.name}</span>
         <button
           class="vis-btn"
-          class:hidden={meta.visible === false}
+          class:dimmed={meta.visible === false}
           title="Toggle visibility"
           onclick={(e) => toggleVisibility(id, e)}
         >
@@ -128,7 +128,7 @@
     transition: opacity 0.15s;
   }
 
-  .vis-btn.hidden {
+  .vis-btn.dimmed {
     opacity: 0.3;
   }
 
