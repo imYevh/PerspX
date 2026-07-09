@@ -67,5 +67,6 @@
 
   .panel-content {
     padding: 8px;
+    scrollbar-gutter: stable;
   }
 </style>

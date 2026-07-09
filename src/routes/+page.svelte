@@ -747,30 +747,10 @@
     padding-bottom: 24px;
     overflow-y: auto;
     scrollbar-gutter: stable; /* Keeps width stable when scrollbar toggles */
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border) transparent;
     background: var(--color-surface);
     border-color: var(--color-border);
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
-  }
-
-  /* Custom scrollbar styling for webkit */
-  .sidebar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .sidebar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .sidebar::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 3px;
-  }
-
-  .sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--color-text-dim);
   }
 
   .left-sidebar {
