@@ -233,7 +233,7 @@
   --color-accent-muted: hsla(var(--accent-hue), var(--accent-sat), var(--accent-lit), 0.15);
 
   /* Fallback solid color for elements using --color-bg */
-  --color-bg: rgba(255, 255, 255, 0.6);
+  --color-bg: #f8fafc;
 
   --backdrop-blur: 24px;
   --shadow-panel: 0 8px 32px rgba(31, 38, 135, 0.1);
