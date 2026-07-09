@@ -171,7 +171,7 @@ export function createPrimitive(
   const isSmooth = type === 'sphere' || type === 'capsule' || type === 'torus';
   if (isSmooth) {
     defaultEdges = new Group();
-    const dotMat = new MeshBasicMaterial({ color: 0x000000, side: DoubleSide });
+    const dotMat = new MeshBasicMaterial({ color: 0xffffff, side: DoubleSide });
     
     if (type === 'sphere') {
       const radius = params?.radius ?? 0.5;
@@ -221,7 +221,7 @@ export function createPrimitive(
       const radius = params?.radius ?? 0.5;
       const height = params?.height ?? 1;
       const dotGeo = new CircleGeometry(radius * 0.04, 16);
-      const dotMat = new MeshBasicMaterial({ color: 0x000000, side: DoubleSide });
+      const dotMat = new MeshBasicMaterial({ color: 0xffffff, side: DoubleSide });
       const topDot = new Mesh(dotGeo, dotMat);
       topDot.position.y = height / 2;
       topDot.rotation.x = -Math.PI / 2;
