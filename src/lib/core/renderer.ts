@@ -18,10 +18,15 @@ export class Renderer {
     this.instance = new WebGPURenderer({
       canvas: options.canvas,
       antialias: options.antialias ?? true,
+      alpha: true,
     });
 
     this.instance.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap at 2x for perf
-    this.instance.setClearColor(new Color(options.backgroundColor ?? 0x1a1a2e));
+    if (options.backgroundColor !== undefined) {
+      this.instance.setClearColor(new Color(options.backgroundColor), 1);
+    } else {
+      this.instance.setClearColor(new Color(0x000000), 0); // Transparent by default
+    }
     this.instance.shadowMap.enabled = true;
 
     this.scene = new Scene();

@@ -792,6 +792,8 @@
     flex: 1;
     position: relative;
     overflow: hidden;
+    background: var(--color-bg);
+    transition: background 0.3s ease;
   }
 
   #viewport {
