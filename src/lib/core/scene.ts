@@ -31,6 +31,9 @@ export class SceneManager {
 
   constructor(scene: Scene) {
     this.scene = scene;
+    if (this.raycaster.params.Line) {
+      this.raycaster.params.Line.threshold = 0.05; // Make line selection much more precise
+    }
   }
 
   // --- Object Lifecycle ---
