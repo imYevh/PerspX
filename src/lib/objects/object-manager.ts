@@ -9,7 +9,8 @@ export class ObjectManager {
     const mesh = createPrimitive(type);
     mesh.userData.itemType = type;
 
-    // By default, mesh spawns at 0, 0, 0.
+    // Spawn 0.5 higher so object sits on grid
+    mesh.position.y = 0.5;
 
     return this.sceneManager.addObject(mesh, 'primitive', PRIMITIVES[type].label, explicitId, explicitMeta);
   }
@@ -36,7 +37,8 @@ export class ObjectManager {
     group.userData.itemType = 'model';
     group.userData.originalFileName = file.name;
 
-    // By default, group spawns at 0, 0, 0.
+    // Spawn 0.5 higher so model sits on grid
+    group.position.y = 0.5;
 
     const id = this.sceneManager.addObject(group, 'model', name);
     return { ok: true, id, hasPerformanceWarning };
