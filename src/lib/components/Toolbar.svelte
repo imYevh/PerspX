@@ -308,6 +308,7 @@
       onSelect={handleViewSelect} 
       title="View Options" 
     />
+    <div class="toolbar-sep"></div>
     <Dropdown 
       icon="🧊" 
       label="Overlays" 
