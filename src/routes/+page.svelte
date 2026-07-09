@@ -15,6 +15,7 @@
   import { uiStore } from '$lib/stores/ui';
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
+  import { applyRenderMode } from '$lib/objects/model-loader';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -146,7 +147,7 @@
   });
 
   $effect(() => {
-    let renderer: Renderer;
+    let _renderer: Renderer;
     let loop: RenderLoop;
     let _sceneManager: SceneManager;
     let _cameraController: CameraController;
@@ -156,13 +157,16 @@
     let cleanupResize = () => {};
     let cleanupKeys = () => {};
 
+    let _guidelinesFull: any;
+    let _lastSnapObjId: string | null = null;
+
     async function init() {
       if (!canvas) return;
 
-      renderer = new Renderer({ canvas });
-      await renderer.init();
+      _renderer = new Renderer({ canvas });
+      await _renderer.init();
 
-      _sceneManager = new SceneManager(renderer.scene);
+      _sceneManager = new SceneManager(_renderer.scene);
       bindSceneManager(_sceneManager);
       sceneManager = _sceneManager;
 
@@ -176,16 +180,38 @@
         try {
           const objs = _sceneManager.getAllObjects();
           for (const { object } of objs) {
-            if (object.userData.itemType) {
-              object.children.forEach((child: any) => {
-                if (child.userData.isDefaultEdges) child.visible = overlays.edges && !overlays.xyz;
-                if (child.userData.isXYZEdges) child.visible = overlays.xyz;
-                if (child.userData.isHalfLines) child.visible = overlays.half;
-                if (child.userData.isThirdLines) child.visible = overlays.third;
-                if (child.userData.isCrossLines) child.visible = overlays.cross;
-                
-                if (child.userData.isBaseMesh) {
+            if (!object.userData.itemType) continue;
+
+            object.children.forEach((child: any) => {
+              // ── Overlay line visibility ──────────────────────────────────
+              if (child.userData.isDefaultEdges) child.visible = overlays.edges && !overlays.xyz;
+              if (child.userData.isXYZEdges)     child.visible = overlays.xyz;
+              if (child.userData.isHalfLines)    child.visible = overlays.half;
+              if (child.userData.isThirdLines)   child.visible = overlays.third;
+              if (child.userData.isCrossLines)   child.visible = overlays.cross;
+
+              // ── Base mesh / fill ─────────────────────────────────────────
+              if (child.userData.isBaseMesh) {
+
+                // --- IMPORTED MODEL (isBaseMesh child is a Group) ----------
+                if (child.isGroup) {
+                  const mode = overlays.textured ? 'textured' : 'primitive';
+                  applyRenderMode(child, mode, overlays.solid);
+
+                  // Edge colour: black on solid-white, white otherwise
+                  object.children.forEach((sib: any) => {
+                    if (sib.userData.isDefaultEdges && sib.material?.color) {
+                      sib.material.color.setHex(
+                        overlays.solid && !overlays.textured ? 0x000000 : 0xffffff
+                      );
+                    }
+                  });
+
+                // --- PRIMITIVE (isBaseMesh child is a Mesh) ----------------
+                } else {
                   const mat = child.material;
+                  if (!mat) return;
+
                   if (overlays.solid) {
                     mat.transparent = false;
                     mat.opacity = 1.0;
@@ -198,43 +224,44 @@
                     mat.color.setHex(child.userData.baseColor);
                   }
                   mat.needsUpdate = true;
+
+                  // Edge colour: black on solid-white, white otherwise
+                  object.children.forEach((sib: any) => {
+                    if (sib.userData.isDefaultEdges && sib.material?.color) {
+                      sib.material.color.setHex(overlays.solid ? 0x000000 : 0xffffff);
+                    }
+                  });
                 }
-              });
-              
-              object.children.forEach((child: any) => {
-                if (child.userData.isDefaultEdges) {
-                  if (child.material && child.material.color) {
-                    child.material.color.setHex(overlays.solid ? 0x000000 : 0xffffff);
-                  }
-                }
-              });
-            }
+              }
+            });
           }
         } catch (err) {
-          console.error("Error in updateOverlays:", err);
+          console.error('Error in updateOverlays:', err);
         }
       };
+
 
       _sceneManager.on('object-added', (data) => {
         console.log(`Added: ${data.meta.name} (${data.id})`);
         updateOverlays(currentOverlays);
-        commitHistory(_sceneManager);
       });
-
-      // @ts-ignore
-      window.sceneManager = _sceneManager;
-      // @ts-ignore
-      window.objectManager = objectManager;
+      if (import.meta.env.DEV) {
+        // @ts-ignore
+        window.sceneManager = _sceneManager;
+        // @ts-ignore
+        window.objectManager = objectManager;
+      }
 
       _cameraController = new CameraController({
         canvas,
-        aspect: renderer.getAspect(),
+        aspect: _renderer.getAspect(),
         initialPosition: new Vector3(5, 4, 5)
       });
       cameraController = _cameraController;
-
-      // @ts-ignore
-      window.cameraController = _cameraController;
+      if (import.meta.env.DEV) {
+        // @ts-ignore
+        window.cameraController = _cameraController;
+      }
 
       // Use the appropriate camera from controller
       _transformSystem = new TransformSystem(_cameraController.perspCamera, canvas, _sceneManager, _cameraController);
@@ -250,26 +277,22 @@
       // Add lights
       const _lightManager = new LightManager(_sceneManager);
       lightManager = _lightManager;
-      _lightManager.applyPreset('studio');
+      await _lightManager.applyPreset('studio');
 
       // Add helpers
       const grid = createInfiniteGrid();
       const guidelinesFull = createVerticalGuidelines();
-      const guidelinesNearest = createVerticalGuidelines({ size: 12, height: 100, divisions: 12, color: 0x666688 });
       
       guidelinesFull.visible = $cameraStore.guidelines === 'full';
-      guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
       
-      renderer.scene.add(grid);
-      renderer.scene.add(guidelinesFull);
-      renderer.scene.add(guidelinesNearest);
+      _renderer.scene.add(grid);
+      _renderer.scene.add(guidelinesFull);
       
       // Store reference to guidelines so we can toggle and move them
-      (window as any).__guidelinesFull = guidelinesFull;
-      (window as any).__guidelinesNearest = guidelinesNearest;
+      _guidelinesFull = guidelinesFull;
       
       vanishingHelper = new VanishingPointHelper();
-      renderer.scene.add(vanishingHelper.group);
+      _renderer.scene.add(vanishingHelper.group);
 
       // Sync UI store visibility toggles
       const unsubscribeUI = uiStore.subscribe(s => {
@@ -301,11 +324,8 @@
         // Reset helpers
         uiStore.update(s => ({ ...s, gridVisible: true, vanishingVisible: false }));
         vanishingHelper.clear();
-        if ((window as any).__guidelinesFull) {
-          (window as any).__guidelinesFull.visible = false;
-        }
-        if ((window as any).__guidelinesNearest) {
-          (window as any).__guidelinesNearest.visible = false;
+        if (_guidelinesFull) {
+          _guidelinesFull.visible = false;
         }
         
         // Reset every camera effect and setting to default values
@@ -340,8 +360,7 @@
         // 1. Hide UI helpers
         const wasGridVisible = grid.visible;
         const wasVanishingVisible = vanishingHelper.group.visible;
-        const wasFullLinesVisible = (window as any).__guidelinesFull?.visible;
-        const wasNearestLinesVisible = (window as any).__guidelinesNearest?.visible;
+        const wasFullLinesVisible = _guidelinesFull?.visible;
         const wasGuidelinesState = $cameraStore.guidelines;
         
         // Disable Transform Controls temporarily
@@ -349,8 +368,7 @@
         
         grid.visible = false;
         vanishingHelper.group.visible = false;
-        if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = false;
-        if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = false;
+        if (_guidelinesFull) _guidelinesFull.visible = false;
         updateCameraStore({ guidelines: 'disabled' });
         
         // Hide bounding box helpers
@@ -370,7 +388,7 @@
         loop.renderOnce();
 
         // 3. Get Data URL
-        const dataUrl = renderer.instance.domElement.toDataURL('image/png');
+        const dataUrl = _renderer.instance.domElement.toDataURL('image/png');
 
         // 4. Download file
         try {
@@ -402,8 +420,7 @@
         // 5. Restore UI helpers
         grid.visible = wasGridVisible;
         vanishingHelper.group.visible = wasVanishingVisible;
-        if ((window as any).__guidelinesFull) (window as any).__guidelinesFull.visible = wasFullLinesVisible;
-        if ((window as any).__guidelinesNearest) (window as any).__guidelinesNearest.visible = wasNearestLinesVisible;
+        if (_guidelinesFull) _guidelinesFull.visible = wasFullLinesVisible;
         updateCameraStore({ guidelines: wasGuidelinesState });
         
         // Re-attach transform control if an object was selected
@@ -511,17 +528,15 @@
         window.removeEventListener('keydown', onKeyDownGlobal);
       };
 
-      loop = new RenderLoop(renderer.instance, renderer.scene, _cameraController.camera);
+      loop = new RenderLoop(_renderer.instance, _renderer.scene, _cameraController.camera);
       
       // Move helpers to the overlay scene in loop to keep them free from chromatic aberration
-      renderer.scene.remove(grid);
-      renderer.scene.remove(guidelinesFull);
-      renderer.scene.remove(guidelinesNearest);
-      renderer.scene.remove(vanishingHelper.group);
+      _renderer.scene.remove(grid);
+      _renderer.scene.remove(guidelinesFull);
+      _renderer.scene.remove(vanishingHelper.group);
       
       loop.overlayScene.add(grid);
       loop.overlayScene.add(guidelinesFull);
-      loop.overlayScene.add(guidelinesNearest);
       loop.overlayScene.add(vanishingHelper.group);
 
       loop.onUpdate((_dt) => {
@@ -551,7 +566,7 @@
               const worldPos = new Vector3();
               obj.getWorldPosition(worldPos);
               
-              if ((window as any).__lastSnapObjId !== currentObjId) {
+              if (_lastSnapObjId !== currentObjId) {
                 // New object selected. Keep camera position static, but rotate to focus on it.
                 _cameraController.applyState(_cameraController.perspCamera.position, worldPos);
               } else {
@@ -559,13 +574,13 @@
                 _cameraController.target.copy(worldPos);
               }
               
-              (window as any).__lastSnapObjId = currentObjId;
+              _lastSnapObjId = currentObjId;
             }
           } else {
-            (window as any).__lastSnapObjId = null;
+            _lastSnapObjId = null;
           }
         } else {
-          (window as any).__lastSnapObjId = null;
+          _lastSnapObjId = null;
         }
 
         _cameraController.update();
@@ -579,18 +594,8 @@
         loop.setChromaticAberration($cameraStore.chromaticAberration, $cameraStore.chromaticAberrationIntensity);
         loop.setTiltShift($cameraStore.tiltShift, $cameraStore.tiltShiftPosition, $cameraStore.tiltShiftWidth, $cameraStore.tiltShiftIntensity);
 
-        if ((window as any).__guidelinesFull) {
-          (window as any).__guidelinesFull.visible = $cameraStore.guidelines === 'full';
-        }
-        if ((window as any).__guidelinesNearest) {
-          (window as any).__guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
-          if ($cameraStore.guidelines === 'nearest') {
-            (window as any).__guidelinesNearest.position.set(
-              Math.round(_cameraController.target.x),
-              0, // Fix Y at ground level so they don't slide up and down
-              Math.round(_cameraController.target.z)
-            );
-          }
+        if (_guidelinesFull) {
+          _guidelinesFull.visible = $cameraStore.guidelines === 'full';
         }
 
         if (vanishingHelper.group.visible) {
@@ -598,7 +603,7 @@
           if (selectedIds.length === 1) {
             const obj = _sceneManager.getObject(selectedIds[0]);
             if (obj) {
-              vanishingHelper.updateForBox(obj.position, new Vector3(1, 1, 1), _cameraController.perspCamera);
+              vanishingHelper.updateForBox(obj.position, new Vector3(1, 1, 1));
             }
           } else {
             vanishingHelper.clear();
@@ -612,16 +617,22 @@
         if ($uiStore.breakpoint !== bp) {
           uiStore.update(s => ({ ...s, breakpoint: bp }));
         }
-        
-        if (!renderer) return;
-        cameraController?.handleResize(renderer.getAspect());
+      };
+      
+      const onRendererResize = () => {
+        if (!_renderer || !_cameraController) return;
+        _cameraController.handleResize(_renderer.getAspect());
       };
       
       // Initialize breakpoint
       handleResize();
       
       window.addEventListener('resize', handleResize);
-      cleanupResize = () => window.removeEventListener('resize', handleResize);
+      window.addEventListener('renderer-resize', onRendererResize);
+      cleanupResize = () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('renderer-resize', onRendererResize);
+      };
     }
 
     init().catch(console.error);
@@ -630,7 +641,7 @@
       cleanupResize();
       cleanupKeys();
       if (loop) loop.stop();
-      if (renderer) renderer.dispose();
+      if (_renderer) _renderer.dispose();
       if (_sceneManager) _sceneManager.clearAll();
       if (_cameraController) _cameraController.dispose();
       if (_transformSystem) _transformSystem.dispose();
@@ -640,7 +651,7 @@
   });
 </script>
 
-<div class="app" data-theme="dark">
+<div class="app">
   <Toolbar {objectManager} {sceneManager} {lightManager} {renderer} />
   
   {#if $uiStore.panelsVisible}
@@ -702,8 +713,6 @@
   }
 
   :global(body) {
-    background: #0f0f1a;
-    color: #e0e0e0;
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     overflow: hidden;
     height: 100vh;
@@ -726,31 +735,28 @@
   }
 
   .sidebar {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    z-index: 50;
-    height: 100%;
     width: 220px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     padding: 8px;
+    padding-bottom: 24px;
     gap: 0;
     overflow-y: auto;
-    background: rgba(12, 12, 22, 0.85);
-    border-color: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(12px);
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
   }
 
   .left-sidebar {
     left: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    border-right: 1px solid var(--color-border);
   }
 
   .right-sidebar {
     right: 0;
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 1px solid var(--color-border);
   }
 
   .panel-gap {
@@ -771,3 +777,5 @@
     touch-action: none;
   }
 </style>
+
+

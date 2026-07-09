@@ -10,6 +10,9 @@ export interface RendererOptions {
 export class Renderer {
   public readonly instance: WebGPURenderer;
   public readonly scene: Scene;
+  private resizeObserver: ResizeObserver;
+  private width = window.innerWidth;
+  private height = window.innerHeight;
 
   constructor(options: RendererOptions) {
     this.instance = new WebGPURenderer({
@@ -23,14 +26,34 @@ export class Renderer {
 
     this.scene = new Scene();
 
-    this.handleResize();
-    window.addEventListener("resize", () => this.handleResize());
+    this.resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentBoxSize) {
+          this.handleResize(entry.contentRect.width, entry.contentRect.height);
+        }
+      }
+    });
+
+    if (options.canvas.parentElement) {
+      this.resizeObserver.observe(options.canvas.parentElement);
+      const rect = options.canvas.parentElement.getBoundingClientRect();
+      this.handleResize(rect.width, rect.height);
+    } else {
+      this.handleResize(window.innerWidth, window.innerHeight);
+    }
   }
 
-  handleResize(): void {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    this.instance.setSize(width, height);
+  handleResize(width: number, height: number): void {
+    if (width === 0 || height === 0) return;
+    this.width = width;
+    this.height = height;
+    this.instance.setSize(width, height, false);
+    // Let CSS handle the canvas dimensions, just update the internal resolution
+    this.instance.domElement.style.width = '100%';
+    this.instance.domElement.style.height = '100%';
+    
+    // Dispatch a custom event to notify camera controllers
+    window.dispatchEvent(new CustomEvent('renderer-resize'));
   }
 
   async init(): Promise<void> {
@@ -38,11 +61,11 @@ export class Renderer {
   }
 
   getAspect(): number {
-    return window.innerWidth / window.innerHeight;
+    return this.width / this.height;
   }
 
   dispose(): void {
-    window.removeEventListener("resize", () => this.handleResize());
+    this.resizeObserver.disconnect();
     this.instance.dispose();
   }
 }
