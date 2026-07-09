@@ -54,7 +54,7 @@
           title="Toggle visibility"
           onclick={(e) => toggleVisibility(id, e)}
         >
-          👁
+          {meta.visible !== false ? '👁' : '👁‍🗨'}
         </button>
         <button
           class="vis-btn"

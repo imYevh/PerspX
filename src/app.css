@@ -213,12 +213,12 @@
   --global-bg: url('/chromatic.png') center/cover no-repeat;
   
   /* Very sheer light glass with high blur */
-  --color-surface: rgba(255, 255, 255, 0.25);
-  --color-surface-hover: rgba(255, 255, 255, 0.35);
-  --color-surface-active: rgba(255, 255, 255, 0.45);
+  --color-surface: rgba(255, 255, 255, 0.65);
+  --color-surface-hover: rgba(255, 255, 255, 0.75);
+  --color-surface-active: rgba(255, 255, 255, 0.85);
 
-  --color-border: rgba(255, 255, 255, 0.3);
-  --color-border-hover: rgba(255, 255, 255, 0.5);
+  --color-border: rgba(255, 255, 255, 0.5);
+  --color-border-hover: rgba(255, 255, 255, 0.8);
 
   /* Light theme text styling for contrast */
   --color-text: #1e293b;
