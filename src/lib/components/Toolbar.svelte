@@ -253,6 +253,26 @@
       }));
     }
   }
+
+  const overlaysMenu = $derived([
+    { id: 'edges', label: 'Edges', icon: $uiStore.overlays.edges ? '✓' : ' ' },
+    { id: 'half', label: 'Half', icon: $uiStore.overlays.half ? '✓' : ' ' },
+    { id: 'third', label: 'Third', icon: $uiStore.overlays.third ? '✓' : ' ' },
+    { id: 'cross', label: 'Cross', icon: $uiStore.overlays.cross ? '✓' : ' ' },
+    { id: 'solid', label: 'Solid', icon: $uiStore.overlays.solid ? '✓' : ' ' },
+    { id: 'xyz', label: 'XYZ', icon: $uiStore.overlays.xyz ? '✓' : ' ' },
+  ] as DropdownItem[]);
+
+  function handleOverlaySelect(id: string) {
+    const key = id as keyof typeof $uiStore.overlays;
+    uiStore.update((s) => ({
+      ...s,
+      overlays: {
+        ...s.overlays,
+        [key]: !s.overlays[key]
+      }
+    }));
+  }
 </script>
 
 <header class="toolbar">
@@ -281,6 +301,15 @@
       items={viewMenu} 
       onSelect={handleViewSelect} 
       title="View Options" 
+    />
+    <Dropdown 
+      icon="🧊" 
+      label="Overlays" 
+      items={overlaysMenu} 
+      onSelect={handleOverlaySelect} 
+      title="Primitive Overlays" 
+      hideLabelOnMobile={true}
+      isMobile={$uiStore.breakpoint === 'mobile'}
     />
     <div class="toolbar-sep"></div>
     {#if $uiStore.breakpoint !== 'desktop'}

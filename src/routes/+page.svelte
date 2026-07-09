@@ -25,7 +25,6 @@
   import BottomSheet from '$lib/components/BottomSheet.svelte';
   import SubToolbar from '$lib/components/SubToolbar.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
-  import PrimitiveOverlays from '$lib/components/PrimitiveOverlays.svelte';
   import { getBreakpoint } from '$lib/stores/ui';
 
   let canvas: HTMLCanvasElement;
@@ -670,7 +669,6 @@
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
-      <PrimitiveOverlays />
     </div>
 
     <!-- Right Panel -->
