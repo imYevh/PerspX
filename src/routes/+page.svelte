@@ -255,7 +255,7 @@
       // Add helpers
       const grid = createInfiniteGrid();
       const guidelinesFull = createVerticalGuidelines();
-      const guidelinesNearest = createVerticalGuidelines({ size: 12, divisions: 12, color: 0x666688 });
+      const guidelinesNearest = createVerticalGuidelines({ size: 12, height: 100, divisions: 12, color: 0x666688 });
       
       guidelinesFull.visible = $cameraStore.guidelines === 'full';
       guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
@@ -586,9 +586,9 @@
           (window as any).__guidelinesNearest.visible = $cameraStore.guidelines === 'nearest';
           if ($cameraStore.guidelines === 'nearest') {
             (window as any).__guidelinesNearest.position.set(
-              _cameraController.target.x,
-              _cameraController.target.y,
-              _cameraController.target.z
+              Math.round(_cameraController.target.x),
+              0, // Fix Y at ground level so they don't slide up and down
+              Math.round(_cameraController.target.z)
             );
           }
         }

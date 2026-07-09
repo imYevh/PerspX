@@ -39,10 +39,12 @@ export function createInfiniteGrid(options?: {
 
 export function createVerticalGuidelines(options?: {
   size?: number;
+  height?: number;
   divisions?: number;
   color?: number;
 }): Group {
   const size = options?.size ?? 100;
+  const height = options?.height ?? size;
   const divisions = options?.divisions ?? 10;
   const color = options?.color ?? 0x555566;
 
@@ -51,7 +53,6 @@ export function createVerticalGuidelines(options?: {
   
   const step = size / divisions;
   const halfSize = size / 2;
-  const height = size;
   
   const vertices = [];
   
