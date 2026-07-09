@@ -736,6 +736,9 @@
 
   .sidebar {
     width: 220px;
+    height: 100%;
+    max-height: 100%;
+    box-sizing: border-box;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
