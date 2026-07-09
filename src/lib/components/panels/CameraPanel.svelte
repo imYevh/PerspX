@@ -382,4 +382,14 @@
   .emoji {
     font-size: 12px;
   }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    user-select: none;
+    color: var(--color-text-muted);
+  }
 </style>

@@ -122,18 +122,20 @@
     background: none;
     border: none;
     cursor: pointer;
-    opacity: 0.5;
+    opacity: 0.8;
+    color: var(--color-text-muted);
     font-size: 12px;
     padding: 0 2px;
-    transition: opacity 0.15s;
+    transition: all 0.15s;
   }
 
   .vis-btn.dimmed {
-    opacity: 0.3;
+    opacity: 0.15;
   }
 
   .vis-btn:hover {
     opacity: 1;
+    color: var(--color-text);
   }
 
   .empty-hint {
