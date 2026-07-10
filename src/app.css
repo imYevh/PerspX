@@ -11,6 +11,7 @@
   --color-surface: var(--color-surface);
   --color-surface-hover: var(--color-surface-hover);
   --color-surface-active: var(--color-surface-active);
+  --color-dropdown-bg: var(--color-dropdown-bg);
 
   /* Borders */
   --color-border: var(--color-border);
@@ -190,6 +191,7 @@
   --color-surface: rgba(255, 255, 255, 0.15);
   --color-surface-hover: rgba(255, 255, 255, 0.25);
   --color-surface-active: rgba(255, 255, 255, 0.35);
+  --color-dropdown-bg: rgba(10, 22, 41, 0.88);
 
   --color-border: rgba(255, 255, 255, 0.12);
   --color-border-hover: rgba(255, 255, 255, 0.3);
@@ -216,6 +218,7 @@
   --color-surface: rgba(255, 255, 255, 0.65);
   --color-surface-hover: rgba(255, 255, 255, 0.75);
   --color-surface-active: rgba(255, 255, 255, 0.85);
+  --color-dropdown-bg: rgba(255, 255, 255, 0.88);
 
   --color-border: rgba(255, 255, 255, 0.5);
   --color-border-hover: rgba(255, 255, 255, 0.8);
@@ -373,3 +376,67 @@
     box-shadow: var(--shadow-panel);
   }
 }
+
+/* ============================================================
+   RESPONSIVE — Breakpoint-aware variables
+   ============================================================ */
+
+/* Tablet (768–1024px) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  :root {
+    --toolbar-height: 40px;
+    --panel-font-size: 12px;
+  }
+}
+
+/* Mobile (<768px) */
+@media (max-width: 767px) {
+  :root {
+    --toolbar-height: 36px;
+    --panel-font-size: 12px;
+  }
+}
+
+/* Touch / coarse pointer — increase all interactive targets to 44px min */
+@media (pointer: coarse) {
+  button, [role="button"] {
+    min-height: 44px;
+  }
+
+  input[type="range"] {
+    height: 6px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ============================================================
+   COMPACT MODE — Global layout rules
+   ============================================================ */
+
+/* In compact mode the sidebars are controlled by Svelte conditionals,
+   but this provides an extra safety net for any leaked elements */
+[data-app-mode="compact"] .sub-toolbar {
+  display: none !important;
+}
+
+/* Toolbar scrolls horizontally rather than overflowing on small screens */
+@media (max-width: 480px) {
+  /* Ensure toolbar stays single-line */
+  header.toolbar {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  header.toolbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+

@@ -18,6 +18,11 @@ export class InputSystem {
   private isPointerDown = false;
   private transformSystem?: TransformSystem;
 
+  // Track double tap for touch selection
+  private lastTapTime = 0;
+  private lastTapPos = { x: 0, y: 0 };
+  private isDoubleTapHold = false;
+
   constructor(canvas: HTMLCanvasElement, camera: Camera, sceneManager: SceneManager) {
     this.canvas = canvas;
     this.camera = camera;
@@ -42,6 +47,24 @@ export class InputSystem {
     this.isPointerDown = true;
     this.pointerDownPos = { x: e.clientX, y: e.clientY };
     this.isDragging = false;
+    this.isDoubleTapHold = false;
+
+    // Detect double-tap-and-hold for selection (especially for touch)
+    const now = Date.now();
+    const dt = now - this.lastTapTime;
+    const dx = e.clientX - this.lastTapPos.x;
+    const dy = e.clientY - this.lastTapPos.y;
+    const distSq = dx * dx + dy * dy;
+
+    if (dt < 400 && distSq < 400) {
+      // It's a double tap down! Select immediately.
+      this.isDoubleTapHold = true;
+      this.performSelection(e, e.shiftKey);
+      this.lastTapTime = 0; // reset
+    } else {
+      this.lastTapTime = now;
+      this.lastTapPos = { x: e.clientX, y: e.clientY };
+    }
   };
 
   private onPointerMove = (e: PointerEvent): void => {
@@ -84,8 +107,9 @@ export class InputSystem {
       this.isMarquee = false;
       uiStore.update(s => ({ ...s, marquee: { ...s.marquee, active: false } }));
       this.performBoxSelection(e, e.shiftKey);
-    } else if (!this.isDragging) {
-      // If it was just a click, do normal selection
+    } else if (!this.isDragging && !this.isDoubleTapHold && e.pointerType !== 'touch') {
+      // For mouse, single click still selects.
+      // For touch, we rely on the double-tap-and-hold triggered in pointerdown.
       this.performSelection(e, e.shiftKey);
     }
   };

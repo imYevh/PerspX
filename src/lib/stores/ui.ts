@@ -39,6 +39,7 @@ export interface UIState {
     xyz: boolean;
     textured: boolean;
   };
+  orientation: 'portrait' | 'landscape';
 }
 
 export const uiStore = writable<UIState>({
@@ -74,11 +75,17 @@ export const uiStore = writable<UIState>({
     solid: false,
     xyz: false,
     textured: false,
-  }
+  },
+  orientation: 'landscape'
 });
 
-export function getBreakpoint(width: number): 'desktop' | 'tablet' | 'mobile' {
-  if (width < 768) return 'mobile';
+export function getBreakpoint(width: number, height: number): 'desktop' | 'tablet' | 'mobile' {
+  // Mobile landscape: width > height, but height is very small (e.g. < 500)
+  if (width < 768 || (width > height && height < 500)) return 'mobile';
   if (width < 1024) return 'tablet';
   return 'desktop';
+}
+
+export function getOrientation(width: number, height: number): 'portrait' | 'landscape' {
+  return width > height ? 'landscape' : 'portrait';
 }

@@ -11,10 +11,10 @@
   let { transformSystem }: Props = $props();
 
   const modes: { key: TransformMode; label: string; icon: string; shortcut: string }[] = [
-    { key: 'select', label: 'Select', icon: '⬚', shortcut: 'Esc' },
-    { key: 'translate', label: 'Move', icon: '↔', shortcut: 'G' },
-    { key: 'rotate', label: 'Rotate', icon: '↻', shortcut: 'R' },
-    { key: 'scale', label: 'Scale', icon: '⤢', shortcut: 'S' },
+    { key: 'select', label: 'Select', icon: '', shortcut: 'Esc' },
+    { key: 'translate', label: 'Move', icon: '', shortcut: 'G' },
+    { key: 'rotate', label: 'Rotate', icon: '', shortcut: 'R' },
+    { key: 'scale', label: 'Scale', icon: '', shortcut: 'S' },
   ];
 
   function setMode(mode: TransformMode) {
@@ -59,7 +59,7 @@
       onclick={toggleSnapping}
       title="Toggle Snapping"
     >
-      <span class="tool-icon">🧲</span>
+      <span class="tool-icon"></span>
       <span class="tool-label">Snap</span>
     </button>
   </div>
@@ -73,7 +73,7 @@
       onclick={() => updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'free' ? 'snap' : 'free' })}
       title="Camera: Free / Snap to Object"
     >
-      <span class="tool-icon">🎥</span>
+      <span class="tool-icon"></span>
       <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
     </button>
   </div>
@@ -179,5 +179,17 @@
 
   .tool-icon {
     font-size: 15px;
+  }
+
+  /* Touch-friendly targets */
+  @media (pointer: coarse) {
+    .tool-btn {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    .sub-toolbar {
+      padding: 4px 10px;
+    }
   }
 </style>

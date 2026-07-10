@@ -73,6 +73,7 @@ export class TransformSystem {
   // --- Attach / Detach ---
 
   attachToObject(id: string): void {
+    if (!this.controls.enabled) return;
     const obj = this.sceneManager.getObject(id);
     const meta = this.sceneManager.getMeta(id);
     if (!obj || !meta || meta.locked) return;
@@ -82,6 +83,7 @@ export class TransformSystem {
   }
 
   attachToMultiple(ids: string[]): void {
+    if (!this.controls.enabled) return;
     const validIds = ids.filter(id => {
       const meta = this.sceneManager.getMeta(id);
       return meta && !meta.locked;
@@ -131,10 +133,10 @@ export class TransformSystem {
     this._currentMode = mode;
     if (mode === 'select') {
       this.controls.enabled = false;
-      this.controls.visible = false;
+      (this.controls as any).visible = false;
     } else {
       this.controls.enabled = true;
-      this.controls.visible = true;
+      (this.controls as any).visible = true;
       this.controls.setMode(mode);
     }
   }

@@ -89,7 +89,7 @@
   const maxMB = MODEL_MAX_FILE_SIZE / 1024 / 1024;
 </script>
 
-<Panel title="📚 Library">
+<Panel title="Library">
   <div class="library-section-title">Primitives</div>
   <div class="library-grid">
     {#each primitives as p}
@@ -108,6 +108,7 @@
         onclick={() => addPrimitive(p.type)}
         title="Add {p.label}"
       >
+        <span class="lib-icon">{p.icon}</span>
         <span class="lib-label">{p.label}</span>
       </button>
     {/each}
@@ -124,6 +125,7 @@
       }}
       ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
       onclick={() => addLight('point')} title="Add Point Light">
+      <span class="lib-icon"></span>
       <span class="lib-label">Point</span>
     </button>
     <button class="lib-item" draggable="true"
@@ -135,6 +137,7 @@
       }}
       ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
       onclick={() => addLight('directional')} title="Add Directional Light">
+      <span class="lib-icon"></span>
       <span class="lib-label">Directional</span>
     </button>
     <button class="lib-item" draggable="true"
@@ -146,6 +149,7 @@
       }}
       ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
       onclick={() => addLight('spot')} title="Add Spot Light">
+      <span class="lib-icon"></span>
       <span class="lib-label">Spot</span>
     </button>
   </div>
@@ -155,21 +159,21 @@
 
   {#if modelError}
     <div class="model-status model-status--error" role="alert">
-      <span class="model-status-icon">⚠️</span>
+      <span class="model-status-icon"></span>
       <span class="model-status-text">{modelError}</span>
       <button class="model-status-close" onclick={() => { modelError = null; }}>✕</button>
     </div>
   {/if}
   {#if modelWarning}
     <div class="model-status model-status--warning" role="status">
-      <span class="model-status-icon">⚡</span>
+      <span class="model-status-icon"></span>
       <span class="model-status-text">{modelWarning}</span>
       <button class="model-status-close" onclick={() => { modelWarning = null; }}>✕</button>
     </div>
   {/if}
   {#if modelSuccessName && !modelError}
     <div class="model-status model-status--success" role="status">
-      <span class="model-status-icon">✓</span>
+      <span class="model-status-icon"></span>
       <span class="model-status-text">"{modelSuccessName}" added to scene.</span>
     </div>
   {/if}
@@ -185,6 +189,7 @@
       <span class="spinner" aria-hidden="true"></span>
       <span>Importing…</span>
     {:else}
+      <span class="lib-icon"></span>
       <span>Import Model</span>
     {/if}
   </button>

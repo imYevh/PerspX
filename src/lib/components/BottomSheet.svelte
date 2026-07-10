@@ -3,6 +3,7 @@
   import LibraryPanel from './panels/LibraryPanel.svelte';
   import PropertiesPanel from './panels/PropertiesPanel.svelte';
   import CameraPanel from './panels/CameraPanel.svelte';
+  import { appModeStore } from '$lib/stores/appMode.svelte';
   
   import type { SceneManager } from '$lib/core/scene';
   import type { ObjectManager } from '$lib/objects/object-manager';
@@ -17,56 +18,90 @@
   }
   let { sceneManager, objectManager, cameraController, lightManager }: Props = $props();
 
-  let activeTab = $state<'scene' | 'library' | 'properties' | 'camera'>('properties');
-  
+  // In compact mode, only scene/library tabs are available
+  type TabKey = 'scene' | 'library' | 'properties' | 'camera';
+  let activeTab = $state<TabKey>('properties');
+
   let currentHeight = $state(250);
   let isDragging = $state(false);
   let startY = $state(0);
   let startHeight = $state(0);
-  const minHeight = 60;
+  const minHeight = 44;
 
+  // Touch drag
   function handleTouchStart(e: TouchEvent) {
     isDragging = true;
     startY = e.touches[0].clientY;
     startHeight = currentHeight;
   }
 
+  function getMaxHeight() {
+    const isLandscape = window.innerWidth > window.innerHeight;
+    return isLandscape ? window.innerHeight * 0.6 : window.innerHeight * 0.8;
+  }
+
   function handleTouchMove(e: TouchEvent) {
     if (!isDragging) return;
     const dy = startY - e.touches[0].clientY;
-    const maxHeight = window.innerHeight * 0.8;
-    currentHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + dy));
+    currentHeight = Math.max(minHeight, Math.min(getMaxHeight(), startHeight + dy));
   }
 
   function handleTouchEnd() {
     if (!isDragging) return;
     isDragging = false;
-    const maxHeight = window.innerHeight * 0.8;
-    
-    // Snap
+    snapHeight();
+  }
+
+  // Mouse drag (for desktop users resizing the sheet)
+  function handleMouseDown(e: MouseEvent) {
+    isDragging = true;
+    startY = e.clientY;
+    startHeight = currentHeight;
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (!isDragging) return;
+    const dy = startY - e.clientY;
+    currentHeight = Math.max(minHeight, Math.min(getMaxHeight(), startHeight + dy));
+  }
+
+  function handleMouseUp() {
+    if (!isDragging) return;
+    isDragging = false;
+    snapHeight();
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+  }
+
+  function snapHeight() {
+    const maxH = getMaxHeight();
     if (currentHeight < 100) {
       currentHeight = minHeight;
-    } else if (currentHeight > maxHeight * 0.6) {
-      currentHeight = maxHeight;
+    } else if (currentHeight > maxH * 0.75) {
+      currentHeight = maxH;
     } else {
-      currentHeight = 350; // Mid snap
+      currentHeight = Math.min(350, maxH); // Mid snap, capped by maxH
     }
   }
+
+  // Tabs behavior is now identical across modes
 </script>
 
 <svelte:window ontouchmove={handleTouchMove} ontouchend={handleTouchEnd} />
 
 <div class="bottom-sheet glass" style="height: {currentHeight}px; transition: {isDragging ? 'none' : 'height 0.2s ease'}">
   <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div class="handle-area" ontouchstart={handleTouchStart}>
+  <div class="handle-area" ontouchstart={handleTouchStart} onmousedown={handleMouseDown}>
     <div class="handle-bar"></div>
   </div>
 
   <div class="tabs">
-    <button class="tab" class:active={activeTab === 'scene'} onclick={() => activeTab = 'scene'}>🎬 Scene</button>
-    <button class="tab" class:active={activeTab === 'library'} onclick={() => activeTab = 'library'}>📦 Library</button>
-    <button class="tab" class:active={activeTab === 'properties'} onclick={() => activeTab = 'properties'}>⚙️ Props</button>
-    <button class="tab" class:active={activeTab === 'camera'} onclick={() => activeTab = 'camera'}>📷 Cam</button>
+    <button class="tab" class:active={activeTab === 'scene'} onclick={() => activeTab = 'scene'}>Scene</button>
+    <button class="tab" class:active={activeTab === 'library'} onclick={() => activeTab = 'library'}>Library</button>
+    <button class="tab" class:active={activeTab === 'properties'} onclick={() => activeTab = 'properties'}>Props</button>
+    <button class="tab" class:active={activeTab === 'camera'} onclick={() => activeTab = 'camera'}>Cam</button>
   </div>
 
   <div class="content" style="display: {currentHeight <= minHeight ? 'none' : 'block'}">
@@ -92,11 +127,15 @@
     z-index: 100;
     display: flex;
     flex-direction: column;
-    /* Use strong glass effect */
-    background: rgba(15, 15, 25, 0.85);
+    /* Use strong glass effect that respects theme surface color */
+    background: color-mix(in srgb, var(--color-surface) 85%, transparent);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    /* Safe area for devices with home indicators and notches in landscape */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 
   .handle-area {
@@ -105,6 +144,9 @@
     justify-content: center;
     touch-action: none;
     cursor: grab;
+    /* Touch target */
+    min-height: 24px;
+    align-items: center;
   }
   
   .handle-area:active {
@@ -133,6 +175,7 @@
   .tab {
     flex: 1;
     min-width: max-content;
+    min-height: 44px; /* Touch-friendly */
     padding: 8px 12px;
     font-size: 12px;
     background: rgba(255, 255, 255, 0.05);

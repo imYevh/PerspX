@@ -1,11 +1,17 @@
 import type { SceneManager } from '$lib/core/scene';
 import { createPrimitive, PRIMITIVES, type PrimitiveType } from './primitives';
 import { loadModelFromFile, type ModelLoadResult } from './model-loader';
+import { isCompactMode } from '$lib/stores/appMode.svelte';
 
 export class ObjectManager {
   constructor(private sceneManager: SceneManager) {}
 
   addPrimitive(type: PrimitiveType, explicitId?: string, explicitMeta?: any): string {
+    // Compact mode: replace the existing object instead of blocking
+    if (isCompactMode()) {
+      this.removeAllNonLightObjects();
+    }
+
     const mesh = createPrimitive(type);
     mesh.userData.itemType = type;
 
@@ -25,6 +31,11 @@ export class ObjectManager {
     | { ok: true; id: string; hasPerformanceWarning: boolean }
     | { ok: false; error: string; message: string }
   > {
+    // Compact mode: replace the existing object instead of blocking
+    if (isCompactMode()) {
+      this.removeAllNonLightObjects();
+    }
+
     const result: ModelLoadResult = await loadModelFromFile(file);
 
     if (!result.ok) {
@@ -46,5 +57,19 @@ export class ObjectManager {
 
   removeObject(id: string): void {
     this.sceneManager.removeObject(id);
+  }
+
+  /**
+   * Remove all non-light objects from the scene.
+   * Used by compact mode to clear the slot before adding a new object.
+   */
+  private removeAllNonLightObjects(): void {
+    const toRemove = this.sceneManager
+      .getAllObjects()
+      .filter(({ meta }) => meta.type !== 'light')
+      .map(({ id }) => id);
+    for (const id of toRemove) {
+      this.sceneManager.removeObject(id);
+    }
   }
 }

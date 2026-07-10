@@ -89,4 +89,14 @@
   .panel-content::-webkit-scrollbar-thumb:hover {
     background: var(--color-text-dim);
   }
+
+  /* ── Touch-friendly sizing for mobile devices ── */
+  @media (pointer: coarse) {
+    .panel-header {
+      min-height: 44px;
+    }
+    .panel-title {
+      font-size: 13px;
+    }
+  }
 </style>

@@ -41,8 +41,19 @@ export class Renderer {
 
     if (options.canvas.parentElement) {
       this.resizeObserver.observe(options.canvas.parentElement);
-      const rect = options.canvas.parentElement.getBoundingClientRect();
-      this.handleResize(rect.width, rect.height);
+      // getBoundingClientRect() is 0 before first browser layout pass,
+      // so defer the initial size read to the next animation frame.
+      requestAnimationFrame(() => {
+        const parent = options.canvas.parentElement;
+        if (!parent) return;
+        const rect = parent.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          this.handleResize(rect.width, rect.height);
+        } else {
+          // Fallback: use window dimensions minus toolbar height heuristic
+          this.handleResize(window.innerWidth, window.innerHeight);
+        }
+      });
     } else {
       this.handleResize(window.innerWidth, window.innerHeight);
     }
@@ -59,6 +70,15 @@ export class Renderer {
     
     // Dispatch a custom event to notify camera controllers
     window.dispatchEvent(new CustomEvent('renderer-resize'));
+  }
+
+  setCompactMode(enabled: boolean): void {
+    const maxPixelRatio = enabled ? 1.5 : 2;
+    this.instance.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio));
+    if (enabled) {
+      // Lower shadow map quality/features for compact mode could go here if needed,
+      // but is largely handled by the light preset.
+    }
   }
 
   async init(): Promise<void> {

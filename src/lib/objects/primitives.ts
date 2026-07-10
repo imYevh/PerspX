@@ -74,7 +74,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   cube: {
     type: 'cube',
     label: 'Cube',
-    icon: '🟦',
+    icon: '',
     defaultParams: { width: 1, height: 1, depth: 1 },
     createGeometry: (p) =>
       new BoxGeometry(p?.width ?? 1, p?.height ?? 1, p?.depth ?? 1),
@@ -82,7 +82,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   sphere: {
     type: 'sphere',
     label: 'Sphere',
-    icon: '🔵',
+    icon: '',
     defaultParams: { radius: 0.5, widthSegments: 32, heightSegments: 16 },
     createGeometry: (p) =>
       new SphereGeometry(p?.radius ?? 0.5, p?.widthSegments ?? 32, p?.heightSegments ?? 16),
@@ -90,7 +90,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   cylinder: {
     type: 'cylinder',
     label: 'Cylinder',
-    icon: '🛢️',
+    icon: '',
     defaultParams: { radiusTop: 0.5, radiusBottom: 0.5, height: 1, segments: 32 },
     createGeometry: (p) =>
       new CylinderGeometry(p?.radiusTop ?? 0.5, p?.radiusBottom ?? 0.5, p?.height ?? 1, p?.segments ?? 32),
@@ -98,7 +98,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   cone: {
     type: 'cone',
     label: 'Cone',
-    icon: '🔺',
+    icon: '',
     defaultParams: { radius: 0.5, height: 1, segments: 32 },
     createGeometry: (p) =>
       new ConeGeometry(p?.radius ?? 0.5, p?.height ?? 1, p?.segments ?? 32),
@@ -106,7 +106,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   torus: {
     type: 'torus',
     label: 'Torus',
-    icon: '⭕',
+    icon: '',
     defaultParams: { radius: 0.5, tube: 0.2, radialSegments: 16, tubularSegments: 48 },
     createGeometry: (p) =>
       new TorusGeometry(p?.radius ?? 0.5, p?.tube ?? 0.2, p?.radialSegments ?? 16, p?.tubularSegments ?? 48),
@@ -114,7 +114,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   plane: {
     type: 'plane',
     label: 'Plane',
-    icon: '⬜',
+    icon: '',
     defaultParams: { width: 2, height: 2 },
     createGeometry: (p) =>
       new PlaneGeometry(p?.width ?? 2, p?.height ?? 2),
@@ -122,7 +122,7 @@ export const PRIMITIVES: Record<PrimitiveType, PrimitiveDefinition> = {
   capsule: {
     type: 'capsule',
     label: 'Capsule',
-    icon: '💊',
+    icon: '',
     defaultParams: { radius: 0.3, length: 1, capSegments: 10, radialSegments: 16 },
     createGeometry: (p) =>
       new CapsuleGeometry(p?.radius ?? 0.3, p?.length ?? 1, p?.capSegments ?? 10, p?.radialSegments ?? 16),

@@ -82,7 +82,7 @@
 
   function resetPosition() {
     const obj = sceneManager?.getObject(selectedId!);
-    if (obj) obj.position.set(0, 0, 0);
+    if (obj) obj.position.set(0, 0.5, 0);
   }
 
   function resetRotation() {
@@ -123,10 +123,10 @@
   }
 </script>
 
-<Panel title="⚙️ Properties">
+<Panel title="Properties">
   {#if selectedCount > 1}
     <div class="prop-section">
-      <div class="prop-title">📦 Multiple Selection</div>
+      <div class="prop-title">Multiple Selection</div>
       <div class="prop-row" style="margin-bottom: 12px; color: #aaa;">
         <span>{selectedCount} items selected</span>
       </div>
@@ -183,7 +183,7 @@
           Scale
           <button class="reset-btn" onclick={resetScale} title="Reset Scale">⟲</button>
           <button class="link-btn {uniformScale ? 'active' : ''}" onclick={() => uniformScale = !uniformScale} title="Uniform Scale">
-            {uniformScale ? '🔗' : '🔓'}
+            {uniformScale ? 'L' : 'U'}
           </button>
 
         </label>

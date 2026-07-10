@@ -7,6 +7,7 @@
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import { undo, redo, initHistory } from '$lib/stores/history';
   import { serializeScene, applySceneSnapshot } from '$lib/utils/serialization';
+  import { appModeStore } from '$lib/stores/appMode.svelte';
   
   import Dropdown from './ui/Dropdown.svelte';
   import type { DropdownItem } from './ui/Dropdown.svelte';
@@ -32,23 +33,23 @@
   let showSettings = $state(false);
 
   const mainMenu: DropdownItem[] = [
-    { id: 'reset', label: 'Reset Scene', icon: '🎥' },
-    { id: 'clear', label: 'Clear Scene', icon: '✨' },
-    { id: 'save', label: 'Save Scene', icon: '💾' },
-    { id: 'load', label: 'Load Scene', icon: '📁' },
+    { id: 'reset', label: 'Reset Scene', icon: '' },
+    { id: 'clear', label: 'Clear Scene', icon: '' },
+    { id: 'save', label: 'Save Scene', icon: '' },
+    { id: 'load', label: 'Load Scene', icon: '' },
     { id: 'divider1', label: '', divider: true },
-    { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: '⌨️' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: '' },
+    { id: 'settings', label: 'Settings', icon: '' },
     { id: 'divider2', label: '', divider: true },
-    { id: 'about', label: 'About PerspX', icon: 'ℹ️' },
+    { id: 'about', label: 'About PerspX', icon: '' },
   ];
 
   const lightingMenu: DropdownItem[] = [
-    { id: 'studio', label: 'Studio', icon: '💡' },
-    { id: 'outdoor', label: 'Outdoor', icon: '☀️' },
-    { id: 'dramatic', label: 'Dramatic', icon: '🎭' },
-    { id: 'flat', label: 'Flat', icon: '⬜' },
-    { id: 'warm', label: 'Warm Interior', icon: '🔥' },
+    { id: 'studio', label: 'Studio', icon: '' },
+    { id: 'outdoor', label: 'Outdoor', icon: '' },
+    { id: 'dramatic', label: 'Dramatic', icon: '' },
+    { id: 'flat', label: 'Flat', icon: '' },
+    { id: 'warm', label: 'Warm Interior', icon: '' },
   ];
 
   function handleMenuSelect(id: string) {
@@ -115,7 +116,7 @@
       tiltShiftPosition: 0.5,
       tiltShiftWidth: 0.2,
       tiltShiftIntensity: 0.5,
-      guidelines: false,
+      guidelines: 'disabled',
       lockPan: false,
       lockOrbit: false,
       orbitMode: 'free'
@@ -226,7 +227,7 @@
     { id: 'properties', label: 'Properties (Right)', icon: !$uiStore.propertiesCollapsed ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'camera', label: 'Camera Effects (Right)', icon: !$uiStore.cameraCollapsed ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'divider2', label: '', divider: true },
-    { id: 'default', label: 'Restore Default', icon: '🔄' },
+    { id: 'default', label: 'Restore Default', icon: '' },
   ] as DropdownItem[]);
 
   function handleViewSelect(id: string) {
@@ -286,6 +287,9 @@
     {#if $uiStore.breakpoint !== 'mobile'}
       <div class="brand-logo-container">
         <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
+        {#if appModeStore.mode === 'compact'}
+          <span class="mode-badge">Compact</span>
+        {/if}
       </div>
     {/if}
     <Dropdown 
@@ -299,60 +303,59 @@
 
   <div class="toolbar-sep"></div>
 
-  <!-- Central actions -->
+  <!-- Central actions — some hidden in compact mode -->
   <div class="toolbar-group">
-    <Dropdown 
-      icon="" 
-      label="View" 
-      items={viewMenu} 
-      onSelect={handleViewSelect} 
-      title="View Options" 
-    />
-    <div class="toolbar-sep"></div>
-    <Dropdown 
-      icon="🧊" 
-      label="Overlays" 
-      items={overlaysMenu} 
-      onSelect={handleOverlaySelect} 
-      title="Primitive Overlays" 
-      hideLabelOnMobile={true}
-      isMobile={$uiStore.breakpoint === 'mobile'}
-    />
-    <div class="toolbar-sep"></div>
-    {#if $uiStore.breakpoint !== 'desktop'}
+    {#if appModeStore.mode === 'desktop'}
+      <Dropdown 
+        icon="" 
+        label="View" 
+        items={viewMenu} 
+        onSelect={handleViewSelect} 
+        title="View Options" 
+      />
+      <div class="toolbar-sep"></div>
+      <Dropdown 
+        icon="" 
+        label="Overlays" 
+        items={overlaysMenu} 
+        onSelect={handleOverlaySelect} 
+        title="Primitive Overlays" 
+        hideLabelOnMobile={true}
+        isMobile={$uiStore.breakpoint === 'mobile'}
+      />
+      <div class="toolbar-sep"></div>
+    {/if}
+    {#if $uiStore.breakpoint !== 'desktop' && appModeStore.mode === 'desktop'}
       <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
         <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
       </button>
       <div class="toolbar-sep"></div>
     {/if}
     <button class="tool-btn" class:locked={$cameraStore.lockOrbit} onclick={() => updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit })} title="Lock Orbit (Rotation)">
-      <span class="tool-icon">{$cameraStore.lockOrbit ? '🔒' : '🔓'}</span>
+      <span class="tool-icon">{$cameraStore.lockOrbit ? '' : ''}</span>
       {#if $uiStore.breakpoint !== 'mobile'}
         <span class="tool-label">Orbit</span>
       {/if}
     </button>
     <button class="tool-btn" class:locked={$cameraStore.lockPan} onclick={() => updateCameraStore({ lockPan: !$cameraStore.lockPan })} title="Lock Pan (Movement)">
-      <span class="tool-icon">{$cameraStore.lockPan ? '🔒' : '🔓'}</span>
+      <span class="tool-icon">{$cameraStore.lockPan ? '' : ''}</span>
       {#if $uiStore.breakpoint !== 'mobile'}
         <span class="tool-label">Pan</span>
       {/if}
     </button>
     <button class="tool-btn" title="Reset Camera Position" onclick={() => {
       if (sceneManager) {
-        // Find the camera controller from the main page and reset it.
-        // It's cleaner to emit an event or call a global function.
-        // For now, we dispatch a custom event on window since cameraController is in +page.svelte.
         window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
       }
     }}>
-      <span class="tool-icon">🎥</span>
+      <span class="tool-icon"></span>
       {#if $uiStore.breakpoint !== 'mobile'}
         <span class="tool-label">Reset Camera</span>
       {/if}
     </button>
     <div class="toolbar-sep"></div>
     <Dropdown 
-      icon="💡" 
+      icon="" 
       label="Lighting" 
       items={lightingMenu} 
       onSelect={handleLightSelect} 
@@ -376,50 +379,52 @@
   
   <div class="spacer"></div>
 
-  <!-- Utility actions -->
+  <!-- Utility actions — grid/vanishing/guidelines hidden in compact mode -->
   <div class="toolbar-group">
-    <button
-      class="tool-btn"
-      class:active={$uiStore.gridVisible}
-      onclick={() => uiStore.update(s => ({ ...s, gridVisible: !s.gridVisible }))}
-      title="Toggle Infinite Grid (1)"
-    >
-      <span class="tool-icon">▦</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Grid</span>
-      {/if}
-    </button>
-    <button
-      class="tool-btn"
-      class:active={$uiStore.vanishingVisible}
-      onclick={() => uiStore.update(s => ({ ...s, vanishingVisible: !s.vanishingVisible }))}
-      title="Toggle Vanishing Helper (2)"
-    >
-      <span class="tool-icon">⨂</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Vanishing</span>
-      {/if}
-    </button>
-    <button
-      class="tool-btn"
-      class:active={$cameraStore.guidelines !== 'disabled'}
-      onclick={() => {
-        const next = {
-          'disabled': 'full',
-          'full': 'disabled'
-        };
-        updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'full' });
-      }}
-      title="Vertical Guidelines: {$cameraStore.guidelines}"
-    >
-      <span class="tool-icon" style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Guidelines</span>
-      {/if}
-    </button>
-    <div class="toolbar-sep"></div>
+    {#if appModeStore.mode === 'desktop'}
+      <button
+        class="tool-btn"
+        class:active={$uiStore.gridVisible}
+        onclick={() => uiStore.update(s => ({ ...s, gridVisible: !s.gridVisible }))}
+        title="Toggle Infinite Grid (1)"
+      >
+        <span class="tool-icon">▦</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Grid</span>
+        {/if}
+      </button>
+      <button
+        class="tool-btn"
+        class:active={$uiStore.vanishingVisible}
+        onclick={() => uiStore.update(s => ({ ...s, vanishingVisible: !s.vanishingVisible }))}
+        title="Toggle Vanishing Helper (2)"
+      >
+        <span class="tool-icon">⨂</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Vanishing</span>
+        {/if}
+      </button>
+      <button
+        class="tool-btn"
+        class:active={$cameraStore.guidelines !== 'disabled'}
+        onclick={() => {
+          const next = {
+            'disabled': 'full',
+            'full': 'disabled'
+          };
+          updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'full' });
+        }}
+        title="Vertical Guidelines: {$cameraStore.guidelines}"
+      >
+        <span class="tool-icon" style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Guidelines</span>
+        {/if}
+      </button>
+      <div class="toolbar-sep"></div>
+    {/if}
     <button class="tool-btn" title="Take Screenshot" onclick={takeScreenshot}>
-      <span class="tool-icon">📷</span>
+      <span class="tool-icon"></span>
       {#if $uiStore.breakpoint !== 'mobile'}
         <span class="tool-label">Screenshot</span>
       {/if}
@@ -536,5 +541,35 @@
 
   .tool-icon {
     font-size: 14px;
+  }
+
+  /* ── Touch-friendly targets for coarse pointer devices ── */
+  @media (pointer: coarse) {
+    .tool-btn {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 6px 12px;
+    }
+
+    .toolbar {
+      height: 52px;
+    }
+
+    .toolbar-group {
+      height: 40px;
+    }
+  }
+
+  /* ── Compact mode badge ── */
+  .mode-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-accent-muted);
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
+    padding: 1px 5px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
   }
 </style>

@@ -27,6 +27,8 @@ export class RenderLoop {
   private tiltShiftIntensityUniform = uniform(0.5);
   public tiltShiftEnabled = false;
 
+  public compactMode = false;
+
   public overlayScene = new Scene();
 
   constructor(
@@ -63,7 +65,7 @@ export class RenderLoop {
       const overlayColor = overlayTexNode.sample(fisheyeUV);
 
       // 4. Blur Amount Calculation
-      let blurAmount: ReturnType<typeof float> = float(0.0);
+      let blurAmount: any = float(0.0);
 
       // Tilt-Shift blur amount
       const yDist = abs(sub(fisheyeUV.y, this.tiltShiftPositionUniform));
@@ -154,6 +156,20 @@ export class RenderLoop {
   };
 
   public renderOnce(): void {
+    if (this.compactMode) {
+      if (this.postProcessing.outputNode !== this.scenePass) {
+        this.postProcessing.outputNode = this.scenePass;
+        this.postProcessing.needsUpdate = true;
+      }
+      this.renderer.render(this.scene, this.camera);
+      
+      const oldAutoClear = this.renderer.autoClear;
+      this.renderer.autoClear = false;
+      this.renderer.render(this.overlayScene, this.camera);
+      this.renderer.autoClear = oldAutoClear;
+      return;
+    }
+
     const hasFisheye = this.fisheyeEnabled && this.fisheyeIntensityUniform.value !== 0;
     const hasCA = this.caEnabled && this.caIntensityUniform.value !== 0;
     const hasTiltShift = this.tiltShiftEnabled && this.tiltShiftIntensityUniform.value !== 0;
@@ -188,9 +204,12 @@ export class RenderLoop {
     }
   }
 
-  handleResize(width: number, height: number): void {
-    if (this.postProcessing) {
-      this.postProcessing.setSize(width, height);
-    }
+  setCompactMode(enabled: boolean): void {
+    this.compactMode = enabled;
+  }
+
+  handleResize(_width: number, _height: number): void {
+    // Pass render targets resize automatically when WebGPURenderer.setSize() is called.
+    // RenderPipeline (PostProcessing) has no setSize() method in three.js r183+.
   }
 }

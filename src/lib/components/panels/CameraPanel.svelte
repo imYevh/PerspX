@@ -62,7 +62,7 @@
   }
 </script>
 
-<Panel title="📷 Camera">
+<Panel title="Camera">
   <div class="cam-section">
     <div class="prop-title">Mode</div>
     <div class="mode-toggle">
@@ -70,14 +70,15 @@
         class="mode-btn"
         class:active={$cameraStore.mode === 'perspective'}
         onclick={() => setMode('perspective')}
-      >🔭 Perspective</button>
+      >Perspective</button>
       <button
         class="mode-btn"
         class:active={$cameraStore.mode === 'orthographic'}
         onclick={() => setMode('orthographic')}
-      >📐 Orthographic</button>
+      >Orthographic</button>
     </div>
   </div>
+
 
   <div class="cam-section">
     <div class="prop-title">Presets</div>
@@ -257,6 +258,32 @@
     background: var(--color-accent-muted);
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+
+  .snap-cam-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    color: var(--color-text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .snap-cam-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .snap-cam-btn.active {
+    background: color-mix(in srgb, #51cf66 12%, transparent);
+    border-color: #51cf66;
+    color: #51cf66;
   }
 
   .preset-grid {

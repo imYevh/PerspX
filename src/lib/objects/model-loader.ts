@@ -94,7 +94,7 @@ function mergeGeometries(root: Object3D): BufferGeometry | null {
         positions[i * 3 + 2] = posAttr.getZ(vi);
       }
     } else {
-      positions = new Float32Array(posAttr.array as ArrayBufferLike);
+      positions = new Float32Array((posAttr.array as any).buffer);
     }
 
     // Transform vertices to world space using child's world matrix

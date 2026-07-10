@@ -36,15 +36,16 @@ export const THEME_MODES: ThemeMode[] = ['default', 'dark', 'light', 'grey', 'bl
 
 export const ACCENT_PRESETS: AccentPreset[] = [
 	{ name: 'White', hue: 0, saturation: 0, lightness: 100 },
+	{ name: 'Red', hue: 0 },
+	{ name: 'Orange', hue: 25 },
+	{ name: 'Amber', hue: 45 },
+	{ name: 'Green', hue: 142 },
+	{ name: 'Teal', hue: 174 },
+	{ name: 'Cyan', hue: 190 },
 	{ name: 'Blue', hue: 217 },
 	{ name: 'Purple', hue: 270 },
-	{ name: 'Teal', hue: 174 },
-	{ name: 'Orange', hue: 25 },
 	{ name: 'Rose', hue: 345 },
-	{ name: 'Green', hue: 142 },
-	{ name: 'Amber', hue: 45 },
-	{ name: 'Cyan', hue: 190 },
-	{ name: 'Red', hue: 0 },
+	{ name: 'Black', hue: 0, saturation: 0, lightness: 15 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -59,6 +60,21 @@ let accentLightness = $state<number | null>(null);
 // ---------------------------------------------------------------------------
 // DOM Helpers
 // ---------------------------------------------------------------------------
+
+function updateAccentTextColor(lit: number | null, currentMode: ThemeMode): void {
+	if (typeof document === 'undefined') return;
+	let effectiveLit = lit;
+	if (effectiveLit === null) {
+		const isLight = currentMode === 'light';
+		const isChromatic = currentMode === 'chromatic';
+		effectiveLit = isChromatic ? 45 : (isLight ? 50 : 64);
+	}
+	if (effectiveLit > 70) {
+		document.documentElement.style.setProperty('--color-accent-text', '#111111');
+	} else {
+		document.documentElement.style.setProperty('--color-accent-text', '#ffffff');
+	}
+}
 
 function applyThemeToDOM(theme: ThemeMode): void {
 	if (typeof document === 'undefined') return;
@@ -142,6 +158,8 @@ export function initTheme(): void {
 			document.documentElement.style.setProperty('--accent-lightness', accentLightness + '%');
 		}
 	}
+
+	updateAccentTextColor(accentLightness, mode);
 }
 
 /** Set the base theme. */
@@ -149,18 +167,7 @@ export function setTheme(newMode: ThemeMode): void {
 	mode = newMode;
 	applyThemeToDOM(newMode);
 	saveTheme(newMode);
-
-	if (accentSaturation === 0) {
-		const isLight = newMode === 'light' || newMode === 'chromatic';
-		const targetLit = isLight ? 15 : 100;
-		accentLightness = targetLit;
-		if (typeof document !== 'undefined') {
-			document.documentElement.style.setProperty('--accent-lightness', targetLit + '%');
-		}
-		if (typeof localStorage !== 'undefined') {
-			localStorage.setItem('perspx-accent-lit', String(targetLit));
-		}
-	}
+	updateAccentTextColor(accentLightness, newMode);
 }
 
 /** Set the accent hue (0–360). */
@@ -179,6 +186,7 @@ export function setAccentHue(hue: number): void {
 		document.documentElement.style.removeProperty('--accent-saturation');
 		document.documentElement.style.removeProperty('--accent-lightness');
 	}
+	updateAccentTextColor(accentLightness, mode);
 }
 
 /** Set custom accent color variables */
@@ -203,6 +211,8 @@ export function setAccent(hue: number, saturation?: number, lightness?: number):
 			document.documentElement.style.removeProperty('--accent-lightness');
 		}
 	}
+
+	updateAccentTextColor(accentLightness, mode);
 
 	if (typeof localStorage !== 'undefined') {
 		if (saturation !== undefined) localStorage.setItem('perspx-accent-sat', String(saturation));

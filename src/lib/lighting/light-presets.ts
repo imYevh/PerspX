@@ -50,4 +50,18 @@ export const LIGHTING_PRESETS: Record<string, LightingPreset> = {
       { type: 'point', position: [-3, 4, 0], color: 0xff8822, intensity: 0.7 },
     ],
   },
+  compact: {
+    name: 'Compact Sun',
+    description: 'Single directional sun light — optimised for compact / mobile mode',
+    lights: [
+      { type: 'ambient', intensity: 0.25 },
+      {
+        type: 'directional',
+        position: [8, 12, 5],
+        intensity: 0.9,
+        castShadow: true,
+        shadowMapSize: 512,
+      },
+    ],
+  },
 };

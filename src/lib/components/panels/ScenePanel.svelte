@@ -30,14 +30,14 @@
 
   function getIcon(type: string): string {
     switch (type) {
-      case 'light': return '💡';
-      case 'model': return '📦';
-      default: return '🟦';
+      case 'light': return '';
+      case 'model': return '';
+      default: return '';
     }
   }
 </script>
 
-<Panel title="🎬 Scene" maxHeight="250px">
+<Panel title="Scene" maxHeight="250px">
   <div class="scene-list">
     {#each $sceneStore.objects as { id, meta }}
       <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
@@ -54,14 +54,14 @@
           title="Toggle visibility"
           onclick={(e) => toggleVisibility(id, e)}
         >
-          {meta.visible !== false ? '👁' : '👁‍🗨'}
+          {meta.visible !== false ? 'V' : '-'}
         </button>
         <button
           class="vis-btn"
           title="Delete object"
           onclick={(e) => deleteObject(id, e)}
         >
-          🗑️
+          X
         </button>
       </div>
     {/each}

@@ -12,10 +12,11 @@
   import { LightManager } from '$lib/lighting/light-manager';
   import { Vector3, Vector2, Raycaster, Plane, Object3D, MeshStandardMaterial, Mesh, SphereGeometry } from 'three';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
-  import { uiStore } from '$lib/stores/ui';
+  import { uiStore, getBreakpoint, getOrientation } from '$lib/stores/ui';
   import { initHistory, commitHistory, undo, redo } from '$lib/stores/history';
   import { createPrimitive } from '$lib/objects/primitives';
   import { applyRenderMode } from '$lib/objects/model-loader';
+  import { initAppMode, appModeStore } from '$lib/stores/appMode.svelte';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -25,8 +26,9 @@
   import LibraryPanel from '$lib/components/panels/LibraryPanel.svelte';
   import BottomSheet from '$lib/components/BottomSheet.svelte';
   import SubToolbar from '$lib/components/SubToolbar.svelte';
+  import CompactCameraBar from '$lib/components/CompactCameraBar.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
-  import { getBreakpoint } from '$lib/stores/ui';
+
 
   let canvas: HTMLCanvasElement;
   let renderer = $state<Renderer | undefined>();
@@ -38,6 +40,11 @@
   let inputSystem = $state<InputSystem | undefined>();
 
   let ghostObject: Object3D | null = null;
+
+  // Compact mode: track hidden objects to restore when switching back to desktop
+  let hiddenByCompactMode = new Set<string>();
+  // Compact mode: track last lighting preset for restore
+  let lastDesktopLightPreset = 'studio';
 
   function onDragOver(e: DragEvent) {
     e.preventDefault();
@@ -531,6 +538,14 @@
       loop = new RenderLoop(_renderer.instance, _renderer.scene, _cameraController.camera);
       loop.handleResize(_renderer.width, _renderer.height);
       
+      _renderer.setCompactMode(appModeStore.mode === 'compact');
+      loop.setCompactMode(appModeStore.mode === 'compact');
+      // Disable transform gizmo in compact mode (view-only)
+      if (appModeStore.mode === 'compact') {
+        _transformSystem.controls.enabled = false;
+        _transformSystem.detach();
+      }
+      
       // Move helpers to the overlay scene in loop to keep them free from chromatic aberration
       _renderer.scene.remove(grid);
       _renderer.scene.remove(guidelinesFull);
@@ -614,9 +629,10 @@
       loop.start();
 
       const handleResize = () => {
-        const bp = getBreakpoint(window.innerWidth);
-        if ($uiStore.breakpoint !== bp) {
-          uiStore.update(s => ({ ...s, breakpoint: bp }));
+        const bp = getBreakpoint(window.innerWidth, window.innerHeight);
+        const ori = getOrientation(window.innerWidth, window.innerHeight);
+        if ($uiStore.breakpoint !== bp || $uiStore.orientation !== ori) {
+          uiStore.update(s => ({ ...s, breakpoint: bp, orientation: ori }));
         }
       };
       
@@ -641,9 +657,82 @@
 
     init().catch(console.error);
 
+    // Initialize app mode
+    initAppMode();
+
+    // Handle application mode changes
+    const onModeChanged = async (e: any) => {
+      const { mode, previousMode } = e.detail;
+      // Use the reactive $state variables which are set by init()
+      if (!sceneManager || !lightManager) return;
+
+      if (mode === 'compact') {
+        // --- Switch TO compact ---
+        // 1. Save current lighting preset name (best effort)
+        lastDesktopLightPreset = 'studio';
+
+        // 2. Hide extra non-light objects (keep first one)
+        const nonLightObjs = sceneManager.getAllObjects().filter(({ meta }) => meta.type !== 'light');
+        hiddenByCompactMode.clear();
+        if (nonLightObjs.length > 1) {
+          for (let i = 1; i < nonLightObjs.length; i++) {
+            const { id, object } = nonLightObjs[i];
+            object.visible = false;
+            hiddenByCompactMode.add(id);
+          }
+        }
+
+        // 3. Apply compact sun lighting
+        await lightManager.applyPreset('compact');
+
+        // 4. Disable camera post-effects
+        if (_renderer) _renderer.setCompactMode(true);
+        if (loop) loop.setCompactMode(true);
+        updateCameraStore({
+          fisheye: false, fisheyeIntensity: 0,
+          chromaticAberration: false, chromaticAberrationIntensity: 0,
+          tiltShift: false, tiltShiftIntensity: 0,
+        });
+
+        // 5. Disable transform gizmo — compact is view-only
+        if (_transformSystem) {
+          _transformSystem.controls.enabled = false;
+          _transformSystem.detach();
+        }
+
+        // 6. Collapse right panel
+        uiStore.update(s => ({ ...s, rightPanelOpen: false }));
+
+      } else if (mode === 'desktop' && previousMode === 'compact') {
+        // --- Switch BACK to desktop ---
+        // 1. Restore hidden objects
+        for (const id of hiddenByCompactMode) {
+          const obj = sceneManager.getObject(id);
+          if (obj) obj.visible = true;
+        }
+        hiddenByCompactMode.clear();
+
+        // 2. Restore lighting preset
+        if (_renderer) _renderer.setCompactMode(false);
+        if (loop) loop.setCompactMode(false);
+        await lightManager.applyPreset(lastDesktopLightPreset);
+
+        // 3. Re-enable transform gizmo
+        if (_transformSystem) {
+          _transformSystem.controls.enabled = true;
+        }
+
+        // 4. Restore panel layout
+        uiStore.update(s => ({ ...s, rightPanelOpen: true }));
+      }
+    };
+
+    window.addEventListener('perspx-mode-changed', onModeChanged);
+
     return () => {
       cleanupResize();
       cleanupKeys();
+      window.removeEventListener('perspx-mode-changed', onModeChanged);
       if (loop) loop.stop();
       if (_renderer) _renderer.dispose();
       if (_sceneManager) _sceneManager.clearAll();
@@ -661,32 +750,43 @@
   <div class="workspace">
     <!-- Left Panel -->
     {#if $uiStore.panelsVisible && $uiStore.leftPanelOpen && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
-      {#if !$uiStore.sceneCollapsed || !$uiStore.libraryCollapsed}
+      {#if appModeStore.mode === 'desktop'}
+        {#if !$uiStore.sceneCollapsed || !$uiStore.libraryCollapsed}
+          <aside class="sidebar left-sidebar">
+            {#if !$uiStore.sceneCollapsed}
+              <ScenePanel {sceneManager} />
+            {/if}
+            {#if !$uiStore.sceneCollapsed && !$uiStore.libraryCollapsed}
+              <div class="panel-gap"></div>
+            {/if}
+            {#if !$uiStore.libraryCollapsed}
+              <LibraryPanel {objectManager} {lightManager} />
+            {/if}
+          </aside>
+        {/if}
+      {:else}
         <aside class="sidebar left-sidebar">
-          {#if !$uiStore.sceneCollapsed}
-            <ScenePanel {sceneManager} />
-          {/if}
-          {#if !$uiStore.sceneCollapsed && !$uiStore.libraryCollapsed}
-            <div class="panel-gap"></div>
-          {/if}
-          {#if !$uiStore.libraryCollapsed}
-            <LibraryPanel {objectManager} {lightManager} />
-          {/if}
+          <LibraryPanel {objectManager} {lightManager} />
         </aside>
       {/if}
     {/if}
 
     <!-- Viewport -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
-      {#if $uiStore.panelsVisible}
+      <!-- SubToolbar — hidden in compact mode -->
+      {#if $uiStore.panelsVisible && appModeStore.mode === 'desktop'}
         <SubToolbar {transformSystem} />
+      {/if}
+      {#if appModeStore.mode === 'compact' && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
+        <CompactCameraBar {cameraController} {sceneManager} />
       {/if}
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
+
     </div>
 
-    <!-- Right Panel -->
-    {#if $uiStore.panelsVisible && $uiStore.rightPanelOpen && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
+    <!-- Right Panel — hidden in compact mode -->
+    {#if $uiStore.panelsVisible && $uiStore.rightPanelOpen && appModeStore.mode === 'desktop' && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
       {#if !$uiStore.propertiesCollapsed || !$uiStore.cameraCollapsed}
         <aside class="sidebar right-sidebar">
           {#if !$uiStore.propertiesCollapsed}
@@ -718,16 +818,21 @@
   :global(body) {
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     overflow: hidden;
-    height: 100vh;
+    height: 100svh;
     width: 100vw;
   }
 
   .app {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100svh;
     width: 100vw;
     overflow: hidden;
+    /* Safe area insets for devices with notches/home bars */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 
   .workspace {
@@ -740,7 +845,8 @@
   }
 
   .sidebar {
-    width: 240px;
+    --sidebar-width: 240px;
+    width: var(--sidebar-width);
     height: 100%;
     max-height: 100%;
     min-height: 0;
@@ -757,6 +863,14 @@
     border-color: var(--color-border);
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    transition: width 0.2s ease;
+  }
+
+  /* Narrow sidebar on tablet */
+  @media (max-width: 1024px) and (min-width: 768px) {
+    .sidebar {
+      --sidebar-width: 200px;
+    }
   }
 
   /* Custom scrollbar styling for webkit */
@@ -806,6 +920,7 @@
     height: 100%;
     touch-action: none;
   }
+
 </style>
 
 

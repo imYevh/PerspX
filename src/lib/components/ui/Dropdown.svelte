@@ -47,18 +47,18 @@
     onSelect(item.id);
   }
 
-  function handleClickOutside(e: MouseEvent) {
+  function handleClickOutside(e: Event) {
     if (isOpen && dropdownRef && !dropdownRef.contains(e.target as Node)) {
       isOpen = false;
     }
   }
 
   onMount(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
   });
 
   onDestroy(() => {
-    document.removeEventListener('mousedown', handleClickOutside);
+    document.removeEventListener('pointerdown', handleClickOutside);
   });
 </script>
 
@@ -144,7 +144,7 @@
     top: calc(100% + 4px);
     left: 0;
     min-width: 180px;
-    background: var(--color-surface-hover);
+    background: var(--color-dropdown-bg, var(--color-surface-hover));
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
     border: 1px solid var(--color-border);

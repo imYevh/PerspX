@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
   import { themeStore, setTheme, setAccent, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
+  import { appModeStore, setAppMode, APP_MODES, APP_MODE_LABELS, APP_MODE_DESCRIPTIONS } from '$lib/stores/appMode.svelte';
 
   interface Props {
     onClose: () => void;
@@ -9,36 +10,57 @@
   let { onClose }: Props = $props();
 
   let isThemeDropdownOpen = $state(false);
+  let isModeDropdownOpen = $state(false);
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
   }
 
-  function selectTheme(mode: any) {
-    setTheme(mode);
+  function selectTheme(themeMode: any) {
+    setTheme(themeMode);
     isThemeDropdownOpen = false;
+  }
+
+  function selectMode(newMode: any) {
+    setAppMode(newMode);
+    isModeDropdownOpen = false;
   }
 
   let sliderValue = $derived(
     themeStore.accentSaturation === 0 
-      ? (themeStore.accentLightness > 50 
-          ? (themeStore.mode === 'light' || themeStore.mode === 'chromatic' ? 405 : -45)
-          : (themeStore.mode === 'light' || themeStore.mode === 'chromatic' ? -45 : 405))
+      ? ((themeStore.accentLightness ?? 50) > 50 ? -45 : 405)
       : themeStore.accentHue
   );
 
   function handleSliderInput(e: Event) {
     const target = e.target as HTMLInputElement;
     const val = Number(target.value);
-    const isLight = themeStore.mode === 'light' || themeStore.mode === 'chromatic';
     
-    if (val < 0) {
-      setAccent(0, 0, isLight ? 15 : 100);
-    } else if (val > 360) {
-      setAccent(0, 0, isLight ? 100 : 15);
+    if (val < 0 || val > 360) {
+      const isLight = themeStore.mode === 'light';
+      const isChromatic = themeStore.mode === 'chromatic';
+      const defaultLit = isChromatic ? 45 : (isLight ? 50 : 64);
+      const defaultSat = (isLight || isChromatic) ? 85 : 90;
+      
+      if (val < 0) {
+        const progress = Math.abs(val) / 45; // 0 to 1
+        const s = defaultSat - (defaultSat * progress);
+        const l = defaultLit + ((100 - defaultLit) * progress);
+        setAccent(0, Math.round(s), Math.round(l));
+      } else {
+        const progress = (val - 360) / 45; // 0 to 1
+        const s = defaultSat - (defaultSat * progress);
+        const l = defaultLit - ((defaultLit - 15) * progress);
+        setAccent(360, Math.round(s), Math.round(l));
+      }
     } else {
       setAccent(val, undefined, undefined);
     }
+  }
+
+  function closeAllDropdowns() {
+    isThemeDropdownOpen = false;
+    isModeDropdownOpen = false;
   }
 </script>
 
@@ -46,17 +68,41 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 <div class="overlay" onclick={onClose} transition:fade={{ duration: 150 }}>
-  <div class="dialog" onclick={(e) => { e.stopPropagation(); isThemeDropdownOpen = false; }} transition:fly={{ y: 20, duration: 200 }}>
+  <div class="dialog" onclick={(e) => { e.stopPropagation(); closeAllDropdowns(); }} transition:fly={{ y: 20, duration: 200 }}>
     <div class="header">
       <h3 class="title">Settings</h3>
       <button class="close-btn" onclick={onClose}>×</button>
     </div>
     
     <div class="content">
+      <!-- Application Mode -->
+      <div class="setting-group">
+        <label>Application Mode</label>
+        <div class="custom-select" onclick={(e) => e.stopPropagation()}>
+          <button class="select-btn" id="mode-select-btn" onclick={() => { isModeDropdownOpen = !isModeDropdownOpen; isThemeDropdownOpen = false; }}>
+            {APP_MODE_LABELS[appModeStore.mode]}
+            <span class="chevron">▼</span>
+          </button>
+          {#if isModeDropdownOpen}
+            <div class="select-menu" transition:fade={{ duration: 100 }}>
+              {#each APP_MODES as m}
+                <button class="select-item" class:active={appModeStore.mode === m} onclick={() => selectMode(m)}>
+                  <span class="mode-label">{APP_MODE_LABELS[m]}</span>
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </div>
+        <p class="setting-hint">{APP_MODE_DESCRIPTIONS[appModeStore.mode]}</p>
+      </div>
+
+      <div class="setting-divider"></div>
+
+      <!-- Base Theme -->
       <div class="setting-group">
         <label>Base Theme</label>
         <div class="custom-select" onclick={(e) => e.stopPropagation()}>
-          <button class="select-btn" onclick={() => isThemeDropdownOpen = !isThemeDropdownOpen}>
+          <button class="select-btn" onclick={() => { isThemeDropdownOpen = !isThemeDropdownOpen; isModeDropdownOpen = false; }}>
             {themeStore.mode.charAt(0).toUpperCase() + themeStore.mode.slice(1)}
             <span class="chevron">▼</span>
           </button>
@@ -78,10 +124,10 @@
           {#each ACCENT_PRESETS as preset}
             <button 
               class="preset-btn"
-              class:active={themeStore.accentHue === preset.hue && (preset.name === 'White' ? themeStore.accentSaturation === 0 : themeStore.accentSaturation !== 0)}
-              style="background: {preset.name === 'White' ? (themeStore.mode === 'light' || themeStore.mode === 'chromatic' ? '#151515' : '#ffffff') : `hsl(${preset.hue}, 80%, 60%)`};"
+              class:active={themeStore.accentHue === preset.hue && (preset.saturation !== undefined ? (themeStore.accentSaturation === preset.saturation && themeStore.accentLightness === preset.lightness) : themeStore.accentSaturation !== 0)}
+              style="background: {preset.saturation !== undefined ? `hsl(${preset.hue}, ${preset.saturation}%, ${preset.lightness}%)` : `hsl(${preset.hue}, 80%, 60%)`};"
               title={preset.name}
-              onclick={() => setAccent(preset.hue, preset.saturation, preset.name === 'White' ? (themeStore.mode === 'light' || themeStore.mode === 'chromatic' ? 15 : 100) : undefined)}
+              onclick={() => setAccent(preset.hue, preset.saturation, preset.lightness)}
             ></button>
           {/each}
         </div>
@@ -124,9 +170,10 @@
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
     border: 1px solid var(--color-border);
     border-radius: 12px;
-    padding: 24px;
-    width: 90%;
-    max-width: 400px;
+    padding: 20px;
+    width: calc(100% - 32px);
+    max-width: 380px;
+    box-sizing: border-box;
     box-shadow: var(--shadow-panel);
     color: var(--color-text);
   }
@@ -170,10 +217,23 @@
     gap: 8px;
   }
 
+  .setting-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 0 -4px;
+  }
+
   label {
     font-size: 13px;
     color: var(--color-text-muted);
     font-weight: 500;
+  }
+
+  .setting-hint {
+    font-size: 11px;
+    color: var(--color-text-dim);
+    margin: 0;
+    line-height: 1.4;
   }
 
   .custom-select {
@@ -210,12 +270,12 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: var(--color-surface-hover);
+    background: var(--color-dropdown-bg, var(--color-surface-hover));
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-panel);
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -231,6 +291,9 @@
     text-align: left;
     cursor: pointer;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .select-item:hover {
@@ -239,7 +302,11 @@
 
   .select-item.active {
     background: var(--color-accent);
-    color: white;
+    color: var(--color-accent-text, white);
+  }
+
+  .mode-label {
+    font-size: 14px;
   }
 
   .presets {

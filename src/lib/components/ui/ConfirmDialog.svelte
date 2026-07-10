@@ -111,7 +111,7 @@
 
   .confirm-btn {
     background: var(--color-accent);
-    color: white;
+    color: var(--color-accent-text, white);
   }
 
   .confirm-btn:hover {

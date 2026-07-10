@@ -30,6 +30,7 @@ export interface LightConfig {
   // Directional / Spot
   position?: [number, number, number];
   target?: [number, number, number];
+  shadowMapSize?: number;
   castShadow?: boolean;
   // Point / Spot
   distance?: number;
@@ -82,16 +83,18 @@ export class LightManager {
         const dirLight = new DirectionalLight(config.color ?? 0xffffff, config.intensity ?? 1.0);
         dirLight.position.set(...(config.position ?? [5, 10, 5]));
         if (config.castShadow ?? true) {
+          const shadowRes = config.shadowMapSize ?? 2048;
+          const shadowBounds = shadowRes <= 512 ? 10 : 20;
           dirLight.castShadow = true;
-          dirLight.shadow.mapSize.set(2048, 2048);
+          dirLight.shadow.mapSize.set(shadowRes, shadowRes);
           dirLight.shadow.bias = -0.0001;
           dirLight.shadow.normalBias = 0.02;
           dirLight.shadow.camera.near = 0.1;
           dirLight.shadow.camera.far = 100;
-          dirLight.shadow.camera.left = -20;
-          dirLight.shadow.camera.right = 20;
-          dirLight.shadow.camera.top = 20;
-          dirLight.shadow.camera.bottom = -20;
+          dirLight.shadow.camera.left = -shadowBounds;
+          dirLight.shadow.camera.right = shadowBounds;
+          dirLight.shadow.camera.top = shadowBounds;
+          dirLight.shadow.camera.bottom = -shadowBounds;
         }
         light = dirLight;
         break;
@@ -241,7 +244,7 @@ export class LightManager {
                 line.computeLineDistances();
               } else {
                 // Keep color in sync
-                (line.material as LineDashedMaterial).color.set((helper as any).color || light.color);
+                (line.material as LineDashedMaterial).color.set((helper as any).color || (light as any).color);
               }
             } else {
               if (line.material instanceof LineDashedMaterial) {
