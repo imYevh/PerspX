@@ -196,6 +196,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 8px;
+    padding-bottom: 24px;
     /* Hide scrollbar but keep functionality */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;

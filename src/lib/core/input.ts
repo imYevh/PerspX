@@ -17,11 +17,11 @@ export class InputSystem {
   private isMarquee = false;
   private isPointerDown = false;
   private transformSystem?: TransformSystem;
+  private cameraController?: any;
 
-  // Track double tap for touch selection
-  private lastTapTime = 0;
-  private lastTapPos = { x: 0, y: 0 };
-  private isDoubleTapHold = false;
+  // Track tap-and-hold for touch selection
+  private holdTimer: number | null = null;
+  private isTouchSelectionMode = false;
 
   constructor(canvas: HTMLCanvasElement, camera: Camera, sceneManager: SceneManager) {
     this.canvas = canvas;
@@ -38,6 +38,10 @@ export class InputSystem {
     this.transformSystem = ts;
   }
 
+  setCameraController(cc: any) {
+    this.cameraController = cc;
+  }
+
   private onPointerDown = (e: PointerEvent): void => {
     if (e.button !== 0) return;
 
@@ -47,23 +51,15 @@ export class InputSystem {
     this.isPointerDown = true;
     this.pointerDownPos = { x: e.clientX, y: e.clientY };
     this.isDragging = false;
-    this.isDoubleTapHold = false;
+    this.isTouchSelectionMode = false;
 
-    // Detect double-tap-and-hold for selection (especially for touch)
-    const now = Date.now();
-    const dt = now - this.lastTapTime;
-    const dx = e.clientX - this.lastTapPos.x;
-    const dy = e.clientY - this.lastTapPos.y;
-    const distSq = dx * dx + dy * dy;
-
-    if (dt < 400 && distSq < 400) {
-      // It's a double tap down! Select immediately.
-      this.isDoubleTapHold = true;
-      this.performSelection(e, e.shiftKey);
-      this.lastTapTime = 0; // reset
-    } else {
-      this.lastTapTime = now;
-      this.lastTapPos = { x: e.clientX, y: e.clientY };
+    if (e.pointerType === 'touch') {
+      this.holdTimer = window.setTimeout(() => {
+        this.isTouchSelectionMode = true;
+        if (this.cameraController) this.cameraController.lockOrbit = true;
+        // Optionally provide haptic feedback
+        if (navigator.vibrate) navigator.vibrate(50);
+      }, 500);
     }
   };
 
@@ -76,27 +72,45 @@ export class InputSystem {
     const dx = e.clientX - this.pointerDownPos.x;
     const dy = e.clientY - this.pointerDownPos.y;
     if (Math.sqrt(dx * dx + dy * dy) > 4) {
+      if (this.holdTimer !== null) {
+        window.clearTimeout(this.holdTimer);
+        this.holdTimer = null;
+      }
       this.isDragging = true;
       
       // Marquee selection box
       if (e.buttons === 1) { // Left mouse button is held down
-        this.isMarquee = true;
-        uiStore.update(s => ({
-          ...s,
-          marquee: {
-            active: true,
-            startX: this.pointerDownPos.x,
-            startY: this.pointerDownPos.y,
-            currentX: e.clientX,
-            currentY: e.clientY
-          }
-        }));
+        if (e.pointerType === 'touch' && !this.isTouchSelectionMode) {
+          // Don't trigger marquee if touch and didn't tap-and-hold
+        } else {
+          this.isMarquee = true;
+          uiStore.update(s => ({
+            ...s,
+            marquee: {
+              active: true,
+              startX: this.pointerDownPos.x,
+              startY: this.pointerDownPos.y,
+              currentX: e.clientX,
+              currentY: e.clientY
+            }
+          }));
+        }
       }
     }
   };
 
   private onPointerUp = (e: PointerEvent): void => {
     if (e.button !== 0) return;
+
+    if (this.holdTimer !== null) {
+      window.clearTimeout(this.holdTimer);
+      this.holdTimer = null;
+    }
+
+    if (this.cameraController) {
+      this.cameraController.lockOrbit = false;
+    }
+
     if (!this.isPointerDown) return;
     this.isPointerDown = false;
 
@@ -107,9 +121,12 @@ export class InputSystem {
       this.isMarquee = false;
       uiStore.update(s => ({ ...s, marquee: { ...s.marquee, active: false } }));
       this.performBoxSelection(e, e.shiftKey);
-    } else if (!this.isDragging && !this.isDoubleTapHold && e.pointerType !== 'touch') {
+    } else if (!this.isDragging && !this.isTouchSelectionMode && e.pointerType !== 'touch') {
       // For mouse, single click still selects.
-      // For touch, we rely on the double-tap-and-hold triggered in pointerdown.
+      // For touch, single tap will be handled if needed, but since we rely on tap-and-hold, we can select if not dragged.
+      this.performSelection(e, e.shiftKey);
+    } else if (!this.isDragging && e.pointerType === 'touch') {
+      // On touch, if not dragging, a single tap selects
       this.performSelection(e, e.shiftKey);
     }
   };

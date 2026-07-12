@@ -3,7 +3,6 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
-	"main": "main.js",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -11,23 +10,8 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"build:windows": "electron-builder --win",
+		"tauri": "tauri",
 		"build:android": "npx cap sync android && cd android && gradlew assembleDebug"
-	},
-	"build": {
-		"appId": "com.perspx.desktop",
-		"productName": "PerspX",
-		"directories": {
-			"output": "dist"
-		},
-		"win": {
-			"target": "portable"
-		},
-		"files": [
-			"build/**/*",
-			"main.js",
-			"package.json"
-		]
 	},
 	"devDependencies": {
 		"@capacitor/cli": "^8.4.1",
@@ -36,10 +20,10 @@
 		"@sveltejs/kit": "^2.63.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.0",
+		"@tauri-apps/api": "^2.11.1",
+		"@tauri-apps/cli": "^2.11.4",
 		"@types/three": "^0.185.0",
 		"concurrently": "^10.0.3",
-		"electron": "^43.1.0",
-		"electron-builder": "^26.15.3",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",

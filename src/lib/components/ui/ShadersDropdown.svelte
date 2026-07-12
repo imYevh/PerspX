@@ -1,0 +1,162 @@
+<script lang="ts">
+  import shadersIcon from '$lib/assets/shaders.svg?raw';
+  import Dropdown from './Dropdown.svelte';
+  import { uiStore } from '$lib/stores/ui';
+  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, setShaderParam, type ShaderType } from '$lib/stores/shader.svelte';
+
+  interface Props {
+    align?: 'left' | 'right' | 'center';
+  }
+  let { align = 'left' }: Props = $props();
+
+  function onShaderSelect(type: ShaderType) {
+    if (shaderStore.active === type) {
+      setShader('none');
+    } else {
+      setShader(type);
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('perspx-shader-changed', {
+        detail: {
+          type: shaderStore.active,
+          params: shaderStore.params[shaderStore.active] ?? {}
+        }
+      }));
+    }
+  }
+
+  function onShaderParamInput(key: string, value: number) {
+    setShaderParam(key, value);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('perspx-shader-params-changed', {
+        detail: { params: shaderStore.params[shaderStore.active] ?? {} }
+      }));
+    }
+  }
+</script>
+
+<Dropdown 
+  icon={shadersIcon} 
+  title="Procedural Shaders" 
+  hideLabelOnMobile={true}
+  isMobile={$uiStore.breakpoint === 'mobile'}
+  direction="down"
+  align={align}
+>
+  <div class="popover-content">
+    <div class="shader-grid">
+      {#each SHADER_ORDER as type}
+        {@const def = SHADER_DEFS[type]}
+        <button
+          class="shader-btn"
+          class:active={shaderStore.active === type}
+          onclick={() => onShaderSelect(type)}
+          title={def.description}
+        >
+          <span class="shader-icon">{def.icon}</span>
+          <span class="shader-label">{def.label}</span>
+        </button>
+      {/each}
+    </div>
+
+    {#if shaderStore.active !== 'none'}
+      {@const activeDef = SHADER_DEFS[shaderStore.active]}
+      {@const activeParams = shaderStore.params[shaderStore.active]}
+      <div class="shader-params">
+        {#each Object.entries(activeDef.params) as [key, paramDef]}
+          <div class="sub-prop">
+            <span class="sub-label">{paramDef.label}: {activeParams[key].toFixed(paramDef.step < 1 ? 2 : 0)}</span>
+            <input
+              type="range"
+              min={paramDef.min}
+              max={paramDef.max}
+              step={paramDef.step}
+              value={activeParams[key]}
+              oninput={(e) => onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value))}
+              class="slider"
+            />
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
+</Dropdown>
+
+<style>
+  .popover-content {
+    padding: 8px;
+    background: var(--color-surface);
+    border-radius: 8px;
+    width: max-content;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .shader-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    min-width: 220px;
+  }
+  @media (max-width: 400px) {
+    .shader-grid {
+      grid-template-columns: repeat(2, 1fr);
+      min-width: 160px;
+    }
+  }
+  .shader-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .shader-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+  }
+  .shader-btn.active {
+    background: var(--color-accent-muted);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  .shader-icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .shader-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .shader-params {
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+  }
+  .sub-prop {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sub-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+  .slider {
+    width: 100%;
+  }
+</style>

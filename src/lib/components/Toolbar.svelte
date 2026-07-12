@@ -8,7 +8,18 @@
   import { undo, redo, initHistory } from '$lib/stores/history';
   import { serializeScene, applySceneSnapshot } from '$lib/utils/serialization';
   import { appModeStore } from '$lib/stores/appMode.svelte';
+  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, type ShaderType } from '$lib/stores/shader.svelte';
   
+  import lockIcon from '$lib/assets/lock.svg?raw';
+  import orbitIcon from '$lib/assets/orbit.svg?raw';
+  import panIcon from '$lib/assets/pan.svg?raw';
+  import invisibleIcon from '$lib/assets/invisible.svg?raw';
+  import visibleIcon from '$lib/assets/visible.svg?raw';
+  import exportIcon from '$lib/assets/export.svg?raw';
+  import resetIcon from '$lib/assets/reset.svg?raw';
+  import undoRedoIcon from '$lib/assets/undo redo.svg?raw';
+  import lightingIcon from '$lib/assets/lighting.svg?raw';
+
   import Dropdown from './ui/Dropdown.svelte';
   import type { DropdownItem } from './ui/Dropdown.svelte';
   import ConfirmDialog from './ui/ConfirmDialog.svelte';
@@ -42,6 +53,8 @@
     { id: 'settings', label: 'Settings', icon: '' },
     { id: 'divider2', label: '', divider: true },
     { id: 'about', label: 'About PerspX', icon: '' },
+    { id: 'divider3', label: '', divider: true },
+    { id: 'exit', label: 'Exit', icon: '' },
   ];
 
   const lightingMenu: DropdownItem[] = [
@@ -79,6 +92,8 @@
       loadScene();
     } else if (id === 'settings') {
       showSettings = true;
+    } else if (id === 'exit') {
+      window.close();
     } else {
       alert(`Feature "${id}" coming soon!`);
     }
@@ -132,6 +147,10 @@
       resetColorCycle();
     });
 
+    import('$lib/stores/shader.svelte').then(({ resetShaders }) => {
+      resetShaders();
+    });
+
     window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
   }
 
@@ -151,6 +170,10 @@
       tiltShiftWidth: 0.2,
       tiltShiftIntensity: 0.5,
       guidelines: 'disabled'
+    });
+
+    import('$lib/stores/shader.svelte').then(({ resetShaders }) => {
+      resetShaders();
     });
   }
 
@@ -226,6 +249,7 @@
     { id: 'library', label: 'Library (Left)', icon: !$uiStore.libraryCollapsed ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'properties', label: 'Properties (Right)', icon: !$uiStore.propertiesCollapsed ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'camera', label: 'Camera Effects (Right)', icon: !$uiStore.cameraCollapsed ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'shader', label: 'Shaders (Right)', icon: !$uiStore.shaderCollapsed ? '✓' : ' ', keepOpenOnClick: true },
     { id: 'divider2', label: '', divider: true },
     { id: 'default', label: 'Restore Default', icon: '' },
   ] as DropdownItem[]);
@@ -245,6 +269,8 @@
       uiStore.update(s => ({ ...s, propertiesCollapsed: !s.propertiesCollapsed }));
     } else if (id === 'camera') {
       uiStore.update(s => ({ ...s, cameraCollapsed: !s.cameraCollapsed }));
+    } else if (id === 'shader') {
+      uiStore.update(s => ({ ...s, shaderCollapsed: !s.shaderCollapsed }));
     } else if (id === 'default') {
       uiStore.update(s => ({
         ...s,
@@ -254,33 +280,137 @@
         libraryCollapsed: false,
         propertiesCollapsed: false,
         cameraCollapsed: false,
+        shaderCollapsed: false,
         panelsVisible: true
       }));
     }
   }
-
-  const overlaysMenu = $derived([
-    { id: 'edges', label: 'Edges', icon: $uiStore.overlays.edges ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'half', label: 'Half', icon: $uiStore.overlays.half ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'third', label: 'Third', icon: $uiStore.overlays.third ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'cross', label: 'Cross', icon: $uiStore.overlays.cross ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'solid', label: 'Solid', icon: $uiStore.overlays.solid ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'xyz', label: 'XYZ', icon: $uiStore.overlays.xyz ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'divider-tex', label: '', divider: true },
-    { id: 'textured', label: 'Textured (Models)', icon: $uiStore.overlays.textured ? '✓' : ' ', keepOpenOnClick: true },
-  ] as DropdownItem[]);
-
-  function handleOverlaySelect(id: string) {
-    const key = id as keyof typeof $uiStore.overlays;
-    uiStore.update((s) => ({
-      ...s,
-      overlays: {
-        ...s.overlays,
-        [key]: !s.overlays[key]
-      }
-    }));
-  }
 </script>
+
+  {#snippet toolbarActions()}
+    <!-- Central actions — some hidden in compact mode -->
+    <div class="toolbar-group">
+      {#if appModeStore.mode === 'desktop'}
+        <Dropdown 
+          icon="" 
+          label="View" 
+          items={viewMenu} 
+          onSelect={handleViewSelect} 
+          title="View Options" 
+        />
+        <div class="toolbar-sep"></div>
+      {/if}
+      {#if $uiStore.breakpoint !== 'desktop' && appModeStore.mode === 'desktop'}
+        <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
+          <span class="tool-icon">{@html $uiStore.panelsVisible ? invisibleIcon : visibleIcon}</span>
+          <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
+        </button>
+        <div class="toolbar-sep"></div>
+      {/if}
+      <button class="tool-btn" class:locked={$cameraStore.lockOrbit} onclick={() => updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit })} title="Lock Orbit (Rotation)">
+        <span class="tool-icon">{@html $cameraStore.lockOrbit ? lockIcon : orbitIcon}</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Orbit</span>
+        {/if}
+      </button>
+      <button class="tool-btn" class:locked={$cameraStore.lockPan} onclick={() => updateCameraStore({ lockPan: !$cameraStore.lockPan })} title="Lock Pan (Movement)">
+        <span class="tool-icon">{@html $cameraStore.lockPan ? lockIcon : panIcon}</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Pan</span>
+        {/if}
+      </button>
+      <button class="tool-btn" title="Reset Camera Position" onclick={() => {
+        if (sceneManager) {
+          window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
+        }
+      }}>
+        <span class="tool-icon">{@html resetIcon}</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Reset Camera</span>
+        {/if}
+      </button>
+      <div class="toolbar-sep"></div>
+      <Dropdown 
+        icon={lightingIcon} 
+        label="Lighting" 
+        items={lightingMenu} 
+        onSelect={handleLightSelect} 
+        title="Lighting Presets" 
+        hideLabelOnMobile={true}
+        isMobile={$uiStore.breakpoint === 'mobile'}
+      />
+    </div>
+
+    <div class="toolbar-sep hide-on-mobile-dropdown"></div>
+
+    <!-- History controls -->
+    <div class="toolbar-group">
+      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
+        if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
+      }}>
+        <span class="tool-icon">{@html undoRedoIcon}</span>
+      </button>
+      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
+        if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
+      }}>
+        <span class="tool-icon" style="transform: scaleX(-1);">{@html undoRedoIcon}</span>
+      </button>
+    </div>
+    
+    <div class="spacer hide-on-mobile-dropdown"></div>
+
+    <!-- Utility actions — grid/vanishing/guidelines hidden in compact mode -->
+    <div class="toolbar-group">
+      {#if appModeStore.mode === 'desktop'}
+        <button
+          class="tool-btn"
+          class:active={$uiStore.gridVisible}
+          onclick={() => uiStore.update(s => ({ ...s, gridVisible: !s.gridVisible }))}
+          title="Toggle Infinite Grid (1)"
+        >
+          <span class="tool-icon">▦</span>
+          {#if $uiStore.breakpoint !== 'mobile'}
+            <span class="tool-label">Grid</span>
+          {/if}
+        </button>
+        <button
+          class="tool-btn"
+          class:active={$uiStore.vanishingVisible}
+          onclick={() => uiStore.update(s => ({ ...s, vanishingVisible: !s.vanishingVisible }))}
+          title="Toggle Vanishing Helper (2)"
+        >
+          <span class="tool-icon">⨂</span>
+          {#if $uiStore.breakpoint !== 'mobile'}
+            <span class="tool-label">Vanishing</span>
+          {/if}
+        </button>
+        <button
+          class="tool-btn"
+          class:active={$cameraStore.guidelines !== 'disabled'}
+          onclick={() => {
+            const next = {
+              'disabled': 'full',
+              'full': 'disabled'
+            };
+            updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'full' });
+          }}
+          title="Vertical Guidelines: {$cameraStore.guidelines}"
+        >
+          <span class="tool-icon" style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
+          {#if $uiStore.breakpoint !== 'mobile'}
+            <span class="tool-label">Guidelines</span>
+          {/if}
+        </button>
+        <div class="toolbar-sep"></div>
+      {/if}
+      <button class="tool-btn" title="Take Render" onclick={takeScreenshot}>
+        <span class="tool-icon">{@html exportIcon}</span>
+        {#if $uiStore.breakpoint !== 'mobile'}
+          <span class="tool-label">Render</span>
+        {/if}
+      </button>
+    </div>
+  {/snippet}
 
 <header class="toolbar">
   <div class="toolbar-brand">
@@ -303,133 +433,16 @@
 
   <div class="toolbar-sep"></div>
 
-  <!-- Central actions — some hidden in compact mode -->
-  <div class="toolbar-group">
-    {#if appModeStore.mode === 'desktop'}
-      <Dropdown 
-        icon="" 
-        label="View" 
-        items={viewMenu} 
-        onSelect={handleViewSelect} 
-        title="View Options" 
-      />
-      <div class="toolbar-sep"></div>
-      <Dropdown 
-        icon="" 
-        label="Overlays" 
-        items={overlaysMenu} 
-        onSelect={handleOverlaySelect} 
-        title="Primitive Overlays" 
-        hideLabelOnMobile={true}
-        isMobile={$uiStore.breakpoint === 'mobile'}
-      />
-      <div class="toolbar-sep"></div>
-    {/if}
-    {#if $uiStore.breakpoint !== 'desktop' && appModeStore.mode === 'desktop'}
-      <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
-        <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
-      </button>
-      <div class="toolbar-sep"></div>
-    {/if}
-    <button class="tool-btn" class:locked={$cameraStore.lockOrbit} onclick={() => updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit })} title="Lock Orbit (Rotation)">
-      <span class="tool-icon">{$cameraStore.lockOrbit ? '' : ''}</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Orbit</span>
-      {/if}
-    </button>
-    <button class="tool-btn" class:locked={$cameraStore.lockPan} onclick={() => updateCameraStore({ lockPan: !$cameraStore.lockPan })} title="Lock Pan (Movement)">
-      <span class="tool-icon">{$cameraStore.lockPan ? '' : ''}</span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Pan</span>
-      {/if}
-    </button>
-    <button class="tool-btn" title="Reset Camera Position" onclick={() => {
-      if (sceneManager) {
-        window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
-      }
-    }}>
-      <span class="tool-icon"></span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Reset Camera</span>
-      {/if}
-    </button>
-    <div class="toolbar-sep"></div>
-    <Dropdown 
-      icon="" 
-      label="Lighting" 
-      items={lightingMenu} 
-      onSelect={handleLightSelect} 
-      title="Lighting Presets" 
-      hideLabelOnMobile={true}
-      isMobile={$uiStore.breakpoint === 'mobile'}
-    />
-  </div>
-
-  <div class="toolbar-sep"></div>
-
-  <!-- History controls -->
-  <div class="toolbar-group">
-    <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
-      if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
-    }}>⟲</button>
-    <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
-      if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
-    }}>⟳</button>
-  </div>
-  
-  <div class="spacer"></div>
-
-  <!-- Utility actions — grid/vanishing/guidelines hidden in compact mode -->
-  <div class="toolbar-group">
-    {#if appModeStore.mode === 'desktop'}
-      <button
-        class="tool-btn"
-        class:active={$uiStore.gridVisible}
-        onclick={() => uiStore.update(s => ({ ...s, gridVisible: !s.gridVisible }))}
-        title="Toggle Infinite Grid (1)"
-      >
-        <span class="tool-icon">▦</span>
-        {#if $uiStore.breakpoint !== 'mobile'}
-          <span class="tool-label">Grid</span>
-        {/if}
-      </button>
-      <button
-        class="tool-btn"
-        class:active={$uiStore.vanishingVisible}
-        onclick={() => uiStore.update(s => ({ ...s, vanishingVisible: !s.vanishingVisible }))}
-        title="Toggle Vanishing Helper (2)"
-      >
-        <span class="tool-icon">⨂</span>
-        {#if $uiStore.breakpoint !== 'mobile'}
-          <span class="tool-label">Vanishing</span>
-        {/if}
-      </button>
-      <button
-        class="tool-btn"
-        class:active={$cameraStore.guidelines !== 'disabled'}
-        onclick={() => {
-          const next = {
-            'disabled': 'full',
-            'full': 'disabled'
-          };
-          updateCameraStore({ guidelines: next[$cameraStore.guidelines] as 'disabled' | 'full' });
-        }}
-        title="Vertical Guidelines: {$cameraStore.guidelines}"
-      >
-        <span class="tool-icon" style="font-weight: 800; transform: scaleX(1.2); letter-spacing: -2px;">|||</span>
-        {#if $uiStore.breakpoint !== 'mobile'}
-          <span class="tool-label">Guidelines</span>
-        {/if}
-      </button>
-      <div class="toolbar-sep"></div>
-    {/if}
-    <button class="tool-btn" title="Take Screenshot" onclick={takeScreenshot}>
-      <span class="tool-icon"></span>
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <span class="tool-label">Screenshot</span>
-      {/if}
-    </button>
-  </div>
+  {#if $uiStore.breakpoint === 'mobile'}
+    <div class="spacer"></div>
+    <Dropdown icon="⋯" label="Tools" title="More Tools" align="right">
+      <div class="mobile-expanded-toolbar">
+        {@render toolbarActions()}
+      </div>
+    </Dropdown>
+  {:else}
+    {@render toolbarActions()}
+  {/if}
 </header>
 
 {#if confirmDialog}
@@ -457,6 +470,7 @@
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
     z-index: 100; /* Higher than Sidebar (50) and SubToolbar (20) */
+    position: relative;
   }
 
   .toolbar-brand {
@@ -541,6 +555,15 @@
 
   .tool-icon {
     font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tool-icon :global(svg) {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
   }
 
   /* ── Touch-friendly targets for coarse pointer devices ── */
@@ -571,5 +594,21 @@
     padding: 1px 5px;
     letter-spacing: 0.3px;
     white-space: nowrap;
+  }
+
+  /* ── Mobile Expanded Toolbar ── */
+  .mobile-expanded-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    width: 260px;
+    align-items: center;
+  }
+  
+  @media (max-width: 767px) {
+    .hide-on-mobile-dropdown {
+      display: none;
+    }
   }
 </style>

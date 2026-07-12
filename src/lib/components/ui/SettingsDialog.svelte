@@ -2,6 +2,7 @@
   import { fade, fly } from 'svelte/transition';
   import { themeStore, setTheme, setAccent, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
   import { appModeStore, setAppMode, APP_MODES, APP_MODE_LABELS, APP_MODE_DESCRIPTIONS } from '$lib/stores/appMode.svelte';
+  import ConfirmDialog from './ConfirmDialog.svelte';
 
   interface Props {
     onClose: () => void;
@@ -11,6 +12,8 @@
 
   let isThemeDropdownOpen = $state(false);
   let isModeDropdownOpen = $state(false);
+  
+  let confirmDialog = $state<{ newMode: any } | null>(null);
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') onClose();
@@ -22,8 +25,23 @@
   }
 
   function selectMode(newMode: any) {
-    setAppMode(newMode);
+    if (newMode === appModeStore.mode) {
+      isModeDropdownOpen = false;
+      return;
+    }
+    confirmDialog = { newMode };
     isModeDropdownOpen = false;
+  }
+
+  function confirmModeSwitch() {
+    if (confirmDialog) {
+      setAppMode(confirmDialog.newMode);
+      confirmDialog = null;
+    }
+  }
+
+  function cancelModeSwitch() {
+    confirmDialog = null;
   }
 
   let sliderValue = $derived(
@@ -358,3 +376,13 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.5);
   }
 </style>
+
+{#if confirmDialog}
+  <ConfirmDialog
+    title="Switch Application Mode"
+    message="Are you sure you want to switch modes? This action will reset the scene and all added objects will be hidden or lost."
+    danger={true}
+    onConfirm={confirmModeSwitch}
+    onCancel={cancelModeSwitch}
+  />
+{/if}

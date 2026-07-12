@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import type { Snippet } from 'svelte';
 
   export interface DropdownItem {
     id: string;
@@ -16,10 +17,13 @@
     icon?: string;
     label?: string;
     title?: string;
-    items: DropdownItem[];
-    onSelect: (id: string) => void;
+    items?: DropdownItem[];
+    onSelect?: (id: string) => void;
     hideLabelOnMobile?: boolean;
     isMobile?: boolean;
+    direction?: 'down' | 'up';
+    align?: 'left' | 'right' | 'center';
+    children?: Snippet;
   }
 
   let { 
@@ -29,7 +33,10 @@
     items, 
     onSelect,
     hideLabelOnMobile = false,
-    isMobile = false
+    isMobile = false,
+    direction = 'down',
+    align = 'left',
+    children
   }: Props = $props();
 
   let isOpen = $state(false);
@@ -44,7 +51,7 @@
     if (!item.keepOpenOnClick) {
       isOpen = false;
     }
-    onSelect(item.id);
+    if (onSelect) onSelect(item.id);
   }
 
   function handleClickOutside(e: Event) {
@@ -65,7 +72,7 @@
 <div class="dropdown-wrapper" bind:this={dropdownRef}>
   <button class="tool-btn" {title} onclick={toggle} class:active={isOpen}>
     {#if icon}
-      <span class="tool-icon">{icon}</span>
+      <span class="tool-icon">{@html icon}</span>
     {/if}
     {#if label}
       {#if !(hideLabelOnMobile && isMobile)}
@@ -75,9 +82,15 @@
   </button>
 
   {#if isOpen}
-    <div class="dropdown-menu">
-      {#each items as item}
-        {#if item.divider}
+    <div class="dropdown-menu" 
+         class:direction-up={direction === 'up'}
+         class:align-right={align === 'right'}
+         class:align-center={align === 'center'}>
+      {#if children}
+        {@render children()}
+      {:else if items}
+        {#each items as item}
+          {#if item.divider}
           <div class="dropdown-divider"></div>
         {:else}
           <button 
@@ -89,7 +102,7 @@
           >
             <div class="item-main">
               {#if item.icon}
-                <span class="item-icon">{item.icon}</span>
+                <span class="item-icon">{@html item.icon}</span>
               {/if}
               <span class="item-label">{item.label}</span>
             </div>
@@ -99,6 +112,7 @@
           </button>
         {/if}
       {/each}
+      {/if}
     </div>
   {/if}
 </div>
@@ -137,6 +151,15 @@
 
   .tool-icon {
     font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tool-icon :global(svg) {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
   }
 
   .dropdown-menu {
@@ -158,10 +181,49 @@
     transform-origin: top left;
   }
 
+  .dropdown-menu.direction-up {
+    top: auto;
+    bottom: calc(100% + 4px);
+    transform-origin: bottom left;
+  }
+
+  .dropdown-menu.align-right {
+    left: auto;
+    right: 0;
+    transform-origin: top right;
+  }
+  .dropdown-menu.direction-up.align-right {
+    transform-origin: bottom right;
+  }
+
+  .dropdown-menu.align-center {
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: top center;
+  }
+  .dropdown-menu.direction-up.align-center {
+    transform-origin: bottom center;
+  }
+
+  .dropdown-menu.direction-up {
+    animation: fadeInUp 0.15s ease-out forwards;
+  }
+
   @keyframes fadeIn {
     from {
       opacity: 0;
       transform: scale(0.95) translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(5px);
     }
     to {
       opacity: 1;

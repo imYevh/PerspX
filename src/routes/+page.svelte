@@ -17,6 +17,7 @@
   import { createPrimitive } from '$lib/objects/primitives';
   import { applyRenderMode } from '$lib/objects/model-loader';
   import { initAppMode, appModeStore } from '$lib/stores/appMode.svelte';
+  import { initShader, shaderStore, resetShaders } from '$lib/stores/shader.svelte';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -153,6 +154,7 @@
     }
   });
 
+
   $effect(() => {
     let _renderer: Renderer;
     let loop: RenderLoop;
@@ -275,6 +277,7 @@
       transformSystem = _transformSystem;
       inputSystem = new InputSystem(canvas, _cameraController.perspCamera, _sceneManager);
       inputSystem.setTransformSystem(_transformSystem);
+      inputSystem.setCameraController(_cameraController);
 
       // Sync camera changes to store
       _transformSystem.controls.addEventListener('change', () => {
@@ -554,6 +557,11 @@
       loop.overlayScene.add(grid);
       loop.overlayScene.add(guidelinesFull);
       loop.overlayScene.add(vanishingHelper.group);
+      
+      // Keep light helpers out of camera effects by moving them to the overlay scene
+      if (_lightManager) {
+        _lightManager.setHelperScene(loop.overlayScene);
+      }
 
       loop.onUpdate((_dt) => {
         // Apply Store settings
@@ -628,6 +636,11 @@
       });
       loop.start();
 
+      // Restore saved shader (if any was persisted in localStorage)
+      if (shaderStore.active !== 'none') {
+        loop.setShader(shaderStore.active, shaderStore.params[shaderStore.active] ?? {});
+      }
+
       const handleResize = () => {
         const bp = getBreakpoint(window.innerWidth, window.innerHeight);
         const ori = getOrientation(window.innerWidth, window.innerHeight);
@@ -660,11 +673,43 @@
     // Initialize app mode
     initAppMode();
 
+    // Initialize shader system
+    initShader();
+
+    // Listen for shader change events from CameraPanel
+    const onShaderChanged = (e: any) => {
+      if (loop) {
+        loop.setShader(e.detail.type, e.detail.params);
+      }
+    };
+    const onShaderParamsChanged = (e: any) => {
+      if (loop) {
+        loop.updateShaderParams(e.detail.params);
+      }
+    };
+    window.addEventListener('perspx-shader-changed', onShaderChanged);
+    window.addEventListener('perspx-shader-params-changed', onShaderParamsChanged);
+
     // Handle application mode changes
     const onModeChanged = async (e: any) => {
       const { mode, previousMode } = e.detail;
       // Use the reactive $state variables which are set by init()
       if (!sceneManager || !lightManager) return;
+
+      // Reset shaders and overlays on any mode switch
+      resetShaders();
+      uiStore.update(s => ({
+        ...s,
+        overlays: {
+          edges: true,
+          half: false,
+          third: false,
+          cross: false,
+          solid: false,
+          xyz: false,
+          textured: false,
+        }
+      }));
 
       if (mode === 'compact') {
         // --- Switch TO compact ---
@@ -733,6 +778,8 @@
       cleanupResize();
       cleanupKeys();
       window.removeEventListener('perspx-mode-changed', onModeChanged);
+      window.removeEventListener('perspx-shader-changed', onShaderChanged);
+      window.removeEventListener('perspx-shader-params-changed', onShaderParamsChanged);
       if (loop) loop.stop();
       if (_renderer) _renderer.dispose();
       if (_sceneManager) _sceneManager.clearAll();

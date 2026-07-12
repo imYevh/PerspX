@@ -15,7 +15,8 @@ import {
   Mesh,
   MeshBasicMaterial,
   LineSegments,
-  WireframeGeometry
+  WireframeGeometry,
+  Scene
 } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 
@@ -46,6 +47,15 @@ export class LightManager {
   private sceneManager: SceneManager;
   private helpers: Map<string, Object3D> = new Map();
   private showHelpers = true;
+  private helperScene?: Scene;
+
+  setHelperScene(scene: Scene): void {
+    this.helperScene = scene;
+    for (const helper of this.helpers.values()) {
+      this.sceneManager.scene.remove(helper);
+      scene.add(helper);
+    }
+  }
 
   constructor(sceneManager: SceneManager) {
     this.sceneManager = sceneManager;
@@ -187,7 +197,8 @@ export class LightManager {
       helper.visible = this.showHelpers;
       helper.name = `_PerspX_light_helper_${id}`;
       helper.userData.PerspXId = id; // Attach ID so raycaster knows this is the light
-      this.sceneManager.scene.add(helper);
+      const targetScene = this.helperScene || this.sceneManager.scene;
+      targetScene.add(helper);
       this.helpers.set(id, helper);
     }
   }
@@ -195,7 +206,8 @@ export class LightManager {
   private removeHelper(id: string): void {
     const helper = this.helpers.get(id);
     if (helper) {
-      this.sceneManager.scene.remove(helper);
+      const targetScene = this.helperScene || this.sceneManager.scene;
+      targetScene.remove(helper);
       this.helpers.delete(id);
     }
   }

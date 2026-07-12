@@ -14,6 +14,17 @@
 
   const primitives = getPrimitiveList();
 
+  // ── Accordion state ────────────────────────────────────────────────────────
+  let accordions = $state({
+    primitives: true,
+    lights: false,
+    models: false
+  });
+
+  function toggleAccordion(section: keyof typeof accordions) {
+    accordions[section] = !accordions[section];
+  }
+
   // ── Model import state ─────────────────────────────────────────────────────
   let isLoadingModel = $state(false);
   let modelError = $state<string | null>(null);
@@ -90,126 +101,224 @@
 </script>
 
 <Panel title="Library">
-  <div class="library-section-title">Primitives</div>
-  <div class="library-grid">
-    {#each primitives as p}
-      <button
-        class="lib-item"
-        draggable="true"
-        ondragstart={(e) => {
-          e.dataTransfer?.setData('application/perspx-type', 'primitive');
-          e.dataTransfer?.setData('application/perspx-item', p.type);
-          const img = new Image();
-          img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-          e.dataTransfer?.setDragImage(img, 0, 0);
-          uiStore.update(s => ({ ...s, drag: { active: true, type: 'primitive', item: p.type } }));
-        }}
-        ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
-        onclick={() => addPrimitive(p.type)}
-        title="Add {p.label}"
-      >
-        <span class="lib-icon">{p.icon}</span>
-        <span class="lib-label">{p.label}</span>
-      </button>
-    {/each}
-  </div>
-
-  <div class="library-section-title">Lights</div>
-  <div class="library-grid">
-    <button class="lib-item" draggable="true"
-      ondragstart={(e) => {
-        e.dataTransfer?.setData('application/perspx-type', 'light');
-        e.dataTransfer?.setData('application/perspx-item', 'point');
-        const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
-        uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'point' } }));
-      }}
-      ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
-      onclick={() => addLight('point')} title="Add Point Light">
-      <span class="lib-icon"></span>
-      <span class="lib-label">Point</span>
-    </button>
-    <button class="lib-item" draggable="true"
-      ondragstart={(e) => {
-        e.dataTransfer?.setData('application/perspx-type', 'light');
-        e.dataTransfer?.setData('application/perspx-item', 'directional');
-        const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
-        uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'directional' } }));
-      }}
-      ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
-      onclick={() => addLight('directional')} title="Add Directional Light">
-      <span class="lib-icon"></span>
-      <span class="lib-label">Directional</span>
-    </button>
-    <button class="lib-item" draggable="true"
-      ondragstart={(e) => {
-        e.dataTransfer?.setData('application/perspx-type', 'light');
-        e.dataTransfer?.setData('application/perspx-item', 'spot');
-        const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
-        uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'spot' } }));
-      }}
-      ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
-      onclick={() => addLight('spot')} title="Add Spot Light">
-      <span class="lib-icon"></span>
-      <span class="lib-label">Spot</span>
-    </button>
-  </div>
-
-  <!-- ── 3D Models section ─────────────────────────────────────────── -->
-  <div class="library-section-title">3D Models</div>
-
-  {#if modelError}
-    <div class="model-status model-status--error" role="alert">
-      <span class="model-status-icon"></span>
-      <span class="model-status-text">{modelError}</span>
-      <button class="model-status-close" onclick={() => { modelError = null; }}>✕</button>
+  <!-- Primitives Section -->
+  <button class="accordion-header" class:open={accordions.primitives} onclick={() => toggleAccordion('primitives')}>
+    <div class="accordion-title-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-chevron"><path d="m9 18 6-6-6-6"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-icon"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
+      <span>Primitives</span>
     </div>
-  {/if}
-  {#if modelWarning}
-    <div class="model-status model-status--warning" role="status">
-      <span class="model-status-icon"></span>
-      <span class="model-status-text">{modelWarning}</span>
-      <button class="model-status-close" onclick={() => { modelWarning = null; }}>✕</button>
-    </div>
-  {/if}
-  {#if modelSuccessName && !modelError}
-    <div class="model-status model-status--success" role="status">
-      <span class="model-status-icon"></span>
-      <span class="model-status-text">"{modelSuccessName}" added to scene.</span>
-    </div>
-  {/if}
-
-  <button
-    class="import-model-btn"
-    class:loading={isLoadingModel}
-    disabled={isLoadingModel}
-    onclick={openFilePicker}
-    title="Import 3D model (.glb, .gltf, .obj, .fbx) — max {maxMB} MB"
-  >
-    {#if isLoadingModel}
-      <span class="spinner" aria-hidden="true"></span>
-      <span>Importing…</span>
-    {:else}
-      <span class="lib-icon"></span>
-      <span>Import Model</span>
-    {/if}
+    <span class="accordion-badge">[{primitives.length}]</span>
   </button>
-  <p class="model-hint">GLB · GLTF · OBJ · FBX · max {maxMB} MB</p>
-  <p class="model-hint">Click again to import another model.</p>
+  <div class="accordion-content" class:open={accordions.primitives}>
+    <div class="accordion-inner">
+      <div class="accordion-inner-padding">
+        <div class="library-grid">
+          {#each primitives as p}
+            <button
+              class="lib-item"
+              draggable="true"
+              ondragstart={(e) => {
+                e.dataTransfer?.setData('application/perspx-type', 'primitive');
+                e.dataTransfer?.setData('application/perspx-item', p.type);
+                const img = new Image();
+                img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                e.dataTransfer?.setDragImage(img, 0, 0);
+                uiStore.update(s => ({ ...s, drag: { active: true, type: 'primitive', item: p.type } }));
+              }}
+              ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
+              onclick={() => addPrimitive(p.type)}
+              title="Add {p.label}"
+            >
+              <span class="lib-icon">{p.icon}</span>
+              <span class="lib-label">{p.label}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lights Section -->
+  <button class="accordion-header" class:open={accordions.lights} onclick={() => toggleAccordion('lights')}>
+    <div class="accordion-title-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-chevron"><path d="m9 18 6-6-6-6"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-icon"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+      <span>Lights</span>
+    </div>
+    <span class="accordion-badge">[3]</span>
+  </button>
+  <div class="accordion-content" class:open={accordions.lights}>
+    <div class="accordion-inner">
+      <div class="accordion-inner-padding">
+        <div class="library-grid">
+          <button class="lib-item" draggable="true"
+            ondragstart={(e) => {
+              e.dataTransfer?.setData('application/perspx-type', 'light');
+              e.dataTransfer?.setData('application/perspx-item', 'point');
+              const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
+              uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'point' } }));
+            }}
+            ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
+            onclick={() => addLight('point')} title="Add Point Light">
+            <span class="lib-icon">💡</span>
+            <span class="lib-label">Point</span>
+          </button>
+          <button class="lib-item" draggable="true"
+            ondragstart={(e) => {
+              e.dataTransfer?.setData('application/perspx-type', 'light');
+              e.dataTransfer?.setData('application/perspx-item', 'directional');
+              const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
+              uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'directional' } }));
+            }}
+            ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
+            onclick={() => addLight('directional')} title="Add Directional Light">
+            <span class="lib-icon">☀️</span>
+            <span class="lib-label">Directional</span>
+          </button>
+          <button class="lib-item" draggable="true"
+            ondragstart={(e) => {
+              e.dataTransfer?.setData('application/perspx-type', 'light');
+              e.dataTransfer?.setData('application/perspx-item', 'spot');
+              const img = new Image(); img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; e.dataTransfer?.setDragImage(img, 0, 0);
+              uiStore.update(s => ({ ...s, drag: { active: true, type: 'light', item: 'spot' } }));
+            }}
+            ondragend={() => uiStore.update(s => ({ ...s, drag: { active: false, type: null, item: null } }))}
+            onclick={() => addLight('spot')} title="Add Spot Light">
+            <span class="lib-icon">🔦</span>
+            <span class="lib-label">Spot</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Models Section -->
+  <button class="accordion-header" class:open={accordions.models} onclick={() => toggleAccordion('models')}>
+    <div class="accordion-title-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-chevron"><path d="m9 18 6-6-6-6"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-icon"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      <span>3D Models</span>
+    </div>
+  </button>
+  <div class="accordion-content" class:open={accordions.models}>
+    <div class="accordion-inner">
+      <div class="accordion-inner-padding">
+        {#if modelError}
+          <div class="model-status model-status--error" role="alert">
+            <span class="model-status-icon"></span>
+            <span class="model-status-text">{modelError}</span>
+            <button class="model-status-close" onclick={() => { modelError = null; }}>✕</button>
+          </div>
+        {/if}
+        {#if modelWarning}
+          <div class="model-status model-status--warning" role="status">
+            <span class="model-status-icon"></span>
+            <span class="model-status-text">{modelWarning}</span>
+            <button class="model-status-close" onclick={() => { modelWarning = null; }}>✕</button>
+          </div>
+        {/if}
+        {#if modelSuccessName && !modelError}
+          <div class="model-status model-status--success" role="status">
+            <span class="model-status-icon"></span>
+            <span class="model-status-text">"{modelSuccessName}" added to scene.</span>
+          </div>
+        {/if}
+
+        <button
+          class="import-model-btn"
+          class:loading={isLoadingModel}
+          disabled={isLoadingModel}
+          onclick={openFilePicker}
+          title="Import 3D model (.glb, .gltf, .obj, .fbx) — max {maxMB} MB"
+        >
+          {#if isLoadingModel}
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Importing…</span>
+          {:else}
+            <span class="lib-icon"></span>
+            <span>Import Model</span>
+          {/if}
+        </button>
+        <p class="model-hint">GLB · GLTF · OBJ · FBX · max {maxMB} MB</p>
+        <p class="model-hint">Click again to import another model.</p>
+      </div>
+    </div>
+  </div>
 </Panel>
 
 <style>
-  .library-section-title {
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--color-text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    margin: 12px 0 6px 0;
-  }
-  .library-section-title:first-child {
+  /* ── Accordions ───────────────────────────────────────────────────────── */
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 8px 10px;
     margin-top: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--color-text-dim);
+    transition: all 0.15s;
+  }
+  .accordion-header:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+  .accordion-header.open {
+    color: var(--color-text);
   }
 
+  .accordion-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .accordion-chevron {
+    transition: transform 0.2s ease;
+    opacity: 0.6;
+  }
+  .accordion-header.open .accordion-chevron {
+    transform: rotate(90deg);
+  }
+  
+  .accordion-icon {
+    opacity: 0.8;
+  }
+
+  .accordion-badge {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--color-text-muted);
+  }
+
+  .accordion-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.2s ease-out;
+  }
+  .accordion-content.open {
+    grid-template-rows: 1fr;
+  }
+
+  .accordion-inner {
+    overflow: hidden;
+  }
+  
+  .accordion-inner-padding {
+    padding: 6px 0 8px 0;
+  }
+
+  /* ── Library Grid ─────────────────────────────────────────────────────── */
   .library-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

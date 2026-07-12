@@ -2,6 +2,9 @@
   import Panel from './Panel.svelte';
   import { sceneStore } from '$lib/stores/scene';
   import type { SceneManager } from '$lib/core/scene';
+  import visibleSvg from '$lib/assets/visible.svg?raw';
+  import invisibleSvg from '$lib/assets/invisible.svg?raw';
+  import trashSvg from '$lib/assets/trashbin.svg?raw';
 
   interface Props {
     sceneManager: SceneManager | undefined;
@@ -54,14 +57,18 @@
           title="Toggle visibility"
           onclick={(e) => toggleVisibility(id, e)}
         >
-          {meta.visible !== false ? 'V' : '-'}
+          {#if meta.visible !== false}
+            {@html visibleSvg}
+          {:else}
+            {@html invisibleSvg}
+          {/if}
         </button>
         <button
           class="vis-btn"
           title="Delete object"
           onclick={(e) => deleteObject(id, e)}
         >
-          X
+          {@html trashSvg}
         </button>
       </div>
     {/each}
@@ -125,9 +132,11 @@
     cursor: pointer;
     opacity: 0.8;
     color: var(--color-text-muted);
-    font-size: 12px;
-    padding: 0 2px;
+    padding: 0 4px;
     transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .vis-btn.dimmed {
@@ -137,6 +146,12 @@
   .vis-btn:hover {
     opacity: 1;
     color: var(--color-text);
+  }
+
+  .vis-btn :global(svg) {
+    width: 14px;
+    height: 14px;
+    display: block;
   }
 
   .empty-hint {

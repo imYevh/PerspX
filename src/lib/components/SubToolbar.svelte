@@ -4,6 +4,19 @@
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
   import type { TransformMode } from '$lib/transforms/transform-controls';
 
+  import selectIcon from '$lib/assets/select.svg?raw';
+  import moveIcon from '$lib/assets/move.svg?raw';
+  import rotateIcon from '$lib/assets/rotate.svg?raw';
+  import scaleIcon from '$lib/assets/scale.svg?raw';
+  import freeCamIcon from '$lib/assets/free cam.svg?raw';
+  import snapCamIcon from '$lib/assets/snap cam.svg?raw';
+  import snapToGridIcon from '$lib/assets/snap to grid.svg?raw';
+  import OverlaysDropdown from './ui/OverlaysDropdown.svelte';
+  import ShadersDropdown from './ui/ShadersDropdown.svelte';
+
+  import Dropdown from './ui/Dropdown.svelte';
+  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, setShaderParam, type ShaderType } from '$lib/stores/shader.svelte';
+
   interface Props {
     transformSystem: TransformSystem | undefined;
   }
@@ -11,10 +24,10 @@
   let { transformSystem }: Props = $props();
 
   const modes: { key: TransformMode; label: string; icon: string; shortcut: string }[] = [
-    { key: 'select', label: 'Select', icon: '', shortcut: 'Esc' },
-    { key: 'translate', label: 'Move', icon: '', shortcut: 'G' },
-    { key: 'rotate', label: 'Rotate', icon: '', shortcut: 'R' },
-    { key: 'scale', label: 'Scale', icon: '', shortcut: 'S' },
+    { key: 'select', label: 'Select', icon: selectIcon, shortcut: 'Esc' },
+    { key: 'translate', label: 'Move', icon: moveIcon, shortcut: 'G' },
+    { key: 'rotate', label: 'Rotate', icon: rotateIcon, shortcut: 'R' },
+    { key: 'scale', label: 'Scale', icon: scaleIcon, shortcut: 'S' },
   ];
 
   function setMode(mode: TransformMode) {
@@ -35,49 +48,73 @@
   }
 </script>
 
-<div class="sub-toolbar glass">
-  <div class="toolbar-group">
-    {#each modes as mode}
+  {#snippet subToolbarActions()}
+    <div class="toolbar-group">
+      {#each modes as mode}
+        <button
+          class="tool-btn"
+          class:active={$uiStore.transformMode === mode.key}
+          onclick={() => setMode(mode.key)}
+          title="{$uiStore.breakpoint === 'mobile' ? mode.label : `${mode.label} (${mode.shortcut})`}"
+        >
+          <span class="tool-icon">{@html mode.icon}</span>
+          <span class="tool-label">{mode.label}</span>
+        </button>
+      {/each}
+    </div>
+
+    <div class="toolbar-sep hide-on-mobile-dropdown"></div>
+
+    <div class="toolbar-group">
       <button
-        class="tool-btn"
-        class:active={$uiStore.transformMode === mode.key}
-        onclick={() => setMode(mode.key)}
-        title="{$uiStore.breakpoint === 'mobile' ? mode.label : `${mode.label} (${mode.shortcut})`}"
+        class="tool-btn snap-btn"
+        class:active={$uiStore.snapEnabled}
+        onclick={toggleSnapping}
+        title="Toggle Snapping"
       >
-        <span class="tool-icon">{mode.icon}</span>
-        <span class="tool-label">{mode.label}</span>
+        <span class="tool-icon">{@html snapToGridIcon}</span>
+        <span class="tool-label">Snap</span>
       </button>
-    {/each}
-  </div>
+    </div>
 
-  <div class="toolbar-sep"></div>
+    <div class="toolbar-sep hide-on-mobile-dropdown"></div>
 
-  <div class="toolbar-group">
-    <button
-      class="tool-btn snap-btn"
-      class:active={$uiStore.snapEnabled}
-      onclick={toggleSnapping}
-      title="Toggle Snapping"
-    >
-      <span class="tool-icon"></span>
-      <span class="tool-label">Snap</span>
-    </button>
-  </div>
+    <div class="toolbar-group">
+      <button
+        class="tool-btn camera-snap-btn"
+        class:active={$cameraStore.orbitMode === 'snap'}
+        onclick={() => updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'free' ? 'snap' : 'free' })}
+        title="Camera: Free / Snap to Object"
+      >
+        <span class="tool-icon">{@html $cameraStore.orbitMode === 'free' ? freeCamIcon : snapCamIcon}</span>
+        <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
+      </button>
+    </div>
 
-  <div class="toolbar-sep"></div>
+    <div class="toolbar-sep hide-on-mobile-dropdown"></div>
 
-  <div class="toolbar-group">
-    <button
-      class="tool-btn camera-snap-btn"
-      class:active={$cameraStore.orbitMode === 'snap'}
-      onclick={() => updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'free' ? 'snap' : 'free' })}
-      title="Camera: Free / Snap to Object"
-    >
-      <span class="tool-icon"></span>
-      <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
-    </button>
-  </div>
-</div>
+    <div class="toolbar-group">
+      <OverlaysDropdown align={$uiStore.breakpoint === 'mobile' ? 'center' : 'right'} />
+      <ShadersDropdown align={$uiStore.breakpoint === 'mobile' ? 'center' : 'right'} />
+    </div>
+  {/snippet}
+
+  {#if $uiStore.breakpoint === 'mobile'}
+    <div class="sub-toolbar-mobile glass">
+      <Dropdown 
+        icon={modes.find(m => m.key === $uiStore.transformMode)?.icon || selectIcon} 
+        label="Tools" 
+        align="center">
+        <div class="mobile-expanded-toolbar">
+          {@render subToolbarActions()}
+        </div>
+      </Dropdown>
+    </div>
+  {:else}
+    <div class="sub-toolbar glass">
+      {@render subToolbarActions()}
+    </div>
+  {/if}
 
 <style>
   .sub-toolbar {
@@ -107,6 +144,38 @@
       top: 12px;
       padding: 4px 8px;
       gap: 4px;
+    }
+  }
+
+  .sub-toolbar-mobile {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 12px;
+    background: var(--color-surface);
+    backdrop-filter: blur(var(--backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--backdrop-blur));
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-panel);
+    z-index: 20;
+    transition: all 0.2s ease;
+    padding: 4px;
+  }
+
+  .mobile-expanded-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+    width: 260px;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  @media (max-width: 767px) {
+    .hide-on-mobile-dropdown {
+      display: none;
     }
   }
 
@@ -179,6 +248,22 @@
 
   .tool-icon {
     font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tool-icon :global(svg) {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+
+  @media (min-width: 1025px) {
+    .camera-snap-btn {
+      min-width: 96px;
+      justify-content: center;
+    }
   }
 
   /* Touch-friendly targets */
@@ -189,7 +274,9 @@
     }
 
     .sub-toolbar {
-      padding: 4px 10px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
     }
   }
+  
 </style>
