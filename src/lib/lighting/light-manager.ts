@@ -200,6 +200,7 @@ export class LightManager {
         const edges = new EdgesGeometry(geo);
         const mat = new LineBasicMaterial({ color: 0xffdd44 });
         const mesh = new LineSegments(edges, mat);
+        (mesh as any).color = 0xffdd44;
         geo.dispose();
         helper = mesh;
         break;
