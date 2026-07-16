@@ -3,6 +3,8 @@ import { Camera, Object3D, Matrix4, Vector3 } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 import type { CameraController } from '$lib/camera/camera-controller';
 import { commitHistory } from '$lib/stores/history';
+import { get } from 'svelte/store';
+import { cameraStore } from '$lib/stores/camera';
 
 export type TransformMode = 'select' | 'translate' | 'rotate' | 'scale';
 export type TransformSpace = 'world' | 'local';
@@ -25,6 +27,26 @@ export class TransformSystem {
     this.cameraController = cameraController;
 
     this.controls = new TransformControls(camera, canvas);
+
+    const originalGetPointer = (this.controls as any)._getPointer;
+    if (originalGetPointer) {
+      (this.controls as any)._getPointer = (event: Event) => {
+        const pointer = originalGetPointer(event);
+        if (pointer) {
+          const state = get(cameraStore);
+          if (state.fisheye && state.fisheyeIntensity !== 0) {
+            const r2 = pointer.x * pointer.x + pointer.y * pointer.y;
+            const k = state.fisheyeIntensity * 0.009;
+            const maxScale = 1.0 + k * 2.0;
+            const scale = (1.0 + k * r2) / maxScale;
+            pointer.x *= scale;
+            pointer.y *= scale;
+          }
+        }
+        return pointer;
+      };
+    }
+
     sceneManager.scene.add(this.controls.getHelper());
     sceneManager.scene.add(this.dummyPivot);
 
