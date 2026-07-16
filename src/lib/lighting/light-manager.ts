@@ -16,7 +16,9 @@ import {
   MeshBasicMaterial,
   LineSegments,
   WireframeGeometry,
-  Scene
+  Scene,
+  SphereGeometry,
+  EdgesGeometry
 } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 
@@ -190,7 +192,18 @@ export class LightManager {
       case 'spot':
         helper = new SpotLightHelper(light as SpotLight, 0xffdd44);
         break;
-      // Ambient and hemisphere don't need visual helpers
+      case 'ambient':
+      case 'hemisphere': {
+        // No built-in Three.js helper — use a wireframe sphere so the light
+        // is visible and selectable in the viewport.
+        const geo = new SphereGeometry(0.25, 8, 6);
+        const edges = new EdgesGeometry(geo);
+        const mat = new LineBasicMaterial({ color: 0xffdd44 });
+        const mesh = new LineSegments(edges, mat);
+        geo.dispose();
+        helper = mesh;
+        break;
+      }
     }
 
     if (helper) {
