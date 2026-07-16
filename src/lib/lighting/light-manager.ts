@@ -254,6 +254,12 @@ export class LightManager {
 
       const light = this.sceneManager.getObject(id);
       if (light) {
+        if (!('update' in helper) || typeof (helper as any).update !== 'function') {
+          helper.position.copy(light.position);
+          helper.rotation.copy(light.rotation);
+          helper.scale.copy(light.scale);
+        }
+
         helper.traverse((child) => {
           if ((child as any).isLine && child.name !== 'dashedHelper') {
             const line = child as Line;
