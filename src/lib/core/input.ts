@@ -3,6 +3,8 @@ import { SelectionBox } from 'three/addons/interactive/SelectionBox.js';
 import type { SceneManager } from './scene';
 import type { TransformSystem } from '../transforms/transform-controls';
 import { uiStore } from '../stores/ui';
+import { get } from 'svelte/store';
+import { cameraStore } from '../stores/camera';
 
 export class InputSystem {
   private mouse = new Vector2();
@@ -131,10 +133,25 @@ export class InputSystem {
     }
   };
 
+  private applyFisheye(x: number, y: number): { x: number, y: number } {
+    const state = get(cameraStore);
+    if (!state.fisheye || state.fisheyeIntensity === 0) return { x, y };
+
+    const r2 = x * x + y * y;
+    const k = state.fisheyeIntensity * 0.009;
+    const maxScale = 1.0 + k * 2.0;
+    const scale = (1.0 + k * r2) / maxScale;
+    return { x: x * scale, y: y * scale };
+  }
+
   private performSelection(e: PointerEvent, additive: boolean) {
     const rect = this.canvas.getBoundingClientRect();
-    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    let x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    let y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const warped = this.applyFisheye(x, y);
+    this.mouse.x = warped.x;
+    this.mouse.y = warped.y;
 
     const hit = this.sceneManager.raycastFromScreen(this.mouse, this.camera);
     if (hit) {
@@ -146,14 +163,17 @@ export class InputSystem {
 
   private performBoxSelection(e: PointerEvent, additive: boolean) {
     const rect = this.canvas.getBoundingClientRect();
-    const startX = ((this.pointerDownPos.x - rect.left) / rect.width) * 2 - 1;
-    const startY = -((this.pointerDownPos.y - rect.top) / rect.height) * 2 + 1;
-    const endX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const endY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    let startX = ((this.pointerDownPos.x - rect.left) / rect.width) * 2 - 1;
+    let startY = -((this.pointerDownPos.y - rect.top) / rect.height) * 2 + 1;
+    let endX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    let endY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const warpedStart = this.applyFisheye(startX, startY);
+    const warpedEnd = this.applyFisheye(endX, endY);
 
     // SelectionBox expects top-left and bottom-right points
-    this.selectionBox.startPoint.set(Math.min(startX, endX), Math.max(startY, endY), 0.5);
-    this.selectionBox.endPoint.set(Math.max(startX, endX), Math.min(startY, endY), 0.5);
+    this.selectionBox.startPoint.set(Math.min(warpedStart.x, warpedEnd.x), Math.max(warpedStart.y, warpedEnd.y), 0.5);
+    this.selectionBox.endPoint.set(Math.max(warpedStart.x, warpedEnd.x), Math.min(warpedStart.y, warpedEnd.y), 0.5);
 
     const intersects = this.selectionBox.select();
     const hitIds = new Set<string>();
