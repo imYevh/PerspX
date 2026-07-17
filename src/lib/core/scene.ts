@@ -215,6 +215,51 @@ export class SceneManager {
     return name;
   }
 
+  renameObject(id: string, newName: string): void {
+    const meta = this.metadata.get(id);
+    if (!meta) return;
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === meta.name) return;
+    meta.name = trimmed;
+    this.emit('object-updated', { id, meta });
+  }
+
+  duplicateObject(id: string): string | null {
+    const original = this.objects.get(id);
+    const meta = this.metadata.get(id);
+    if (!original || !meta) return null;
+
+    const clone = original.clone();
+    // Offset slightly so the duplicate is distinguishable in the viewport
+    clone.position.x += 0.5;
+    clone.position.z += 0.5;
+
+    // Strip the old PerspXId so addObject generates a fresh one
+    clone.traverse((child) => { delete child.userData.PerspXId; });
+
+    // Generate a unique copy name: strip trailing " (Copy N)" first, then suffix
+    const baseName = meta.name.replace(/ \(Copy(?: \d+)?\)$/, '');
+    const copyBase = `${baseName} (Copy)`;
+    const existingNames = new Set(Array.from(this.metadata.values()).map(m => m.name));
+    let copyName = copyBase;
+    let n = 1;
+    while (existingNames.has(copyName)) {
+      n++;
+      copyName = `${baseName} (Copy ${n})`;
+    }
+
+    // Let addObject create a clean id + default meta, then patch the name
+    const newId = this.addObject(clone, meta.type, baseName);
+    const newMeta = this.metadata.get(newId);
+    if (newMeta) {
+      newMeta.name = copyName;
+      newMeta.visible = meta.visible;
+      // emit update so the store reflects the correct name
+      this.emit('object-updated', { id: newId, meta: newMeta });
+    }
+    return newId;
+  }
+
   // --- Events ---
 
   on(event: SceneEventType, callback: SceneEventCallback): void {

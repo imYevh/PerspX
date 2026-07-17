@@ -9,7 +9,7 @@
   import rotateIcon from '$lib/assets/rotate.svg?raw';
   import scaleIcon from '$lib/assets/scale.svg?raw';
   import freeCamIcon from '$lib/assets/free cam.svg?raw';
-  import snapCamIcon from '$lib/assets/snap cam.svg?raw';
+  import focusCamIcon from '$lib/assets/focus cam.svg?raw';
   import snapToGridIcon from '$lib/assets/snap to grid.svg?raw';
   import OverlaysDropdown from './ui/OverlaysDropdown.svelte';
   import ShadersDropdown from './ui/ShadersDropdown.svelte';
@@ -81,13 +81,13 @@
 
     <div class="toolbar-group">
       <button
-        class="tool-btn camera-snap-btn"
-        class:active={$cameraStore.orbitMode === 'snap'}
-        onclick={() => updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'free' ? 'snap' : 'free' })}
-        title="Camera: Free / Snap to Object"
+        class="tool-btn camera-focus-btn"
+        class:active={$cameraStore.orbitMode === 'focus'}
+        onclick={() => updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'free' ? 'focus' : 'free' })}
+        title="Camera: Free / Focus Object"
       >
-        <span class="tool-icon">{@html $cameraStore.orbitMode === 'free' ? freeCamIcon : snapCamIcon}</span>
-        <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Snap Cam'}</span>
+        <span class="tool-icon">{@html $cameraStore.orbitMode === 'free' ? freeCamIcon : focusCamIcon}</span>
+        <span class="tool-label">{$cameraStore.orbitMode === 'free' ? 'Free Cam' : 'Focus Object'}</span>
       </button>
     </div>
 
@@ -260,7 +260,7 @@
   }
 
   @media (min-width: 1025px) {
-    .camera-snap-btn {
+    .camera-focus-btn {
       min-width: 96px;
       justify-content: center;
     }

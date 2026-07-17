@@ -72,6 +72,7 @@
               max={paramDef.max}
               step={paramDef.step}
               value={activeParams[key]}
+              ondblclick={() => onShaderParamInput(key, paramDef.default)}
               oninput={(e) => onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value))}
               class="slider"
             />

@@ -4,7 +4,10 @@ import {
   Vector3,
   Spherical,
   MathUtils,
+  Box3,
+  Sphere,
   type Camera,
+  type Object3D,
 } from 'three';
 
 export type CameraMode = 'perspective' | 'orthographic';
@@ -193,6 +196,47 @@ export class CameraController {
     const offset = position.clone().sub(target);
     this.spherical.setFromVector3(offset);
     this.sphericalTarget.copy(this.spherical);
+  }
+
+  // --- Focus / Frame Object ---
+
+  focusOn(object: Object3D, padding: number = 1.5): void {
+    // Compute world-space bounding box of the object (incl. all descendants)
+    const box = new Box3().setFromObject(object);
+
+    // If box is empty (e.g. a helper with no geometry), fall back to world pos
+    if (box.isEmpty()) {
+      const worldPos = new Vector3();
+      object.getWorldPosition(worldPos);
+      box.setFromCenterAndSize(worldPos, new Vector3(0.5, 0.5, 0.5));
+    }
+
+    const sphere = new Sphere();
+    box.getBoundingSphere(sphere);
+
+    const center = sphere.center.clone();
+    const radius = Math.max(sphere.radius, 0.01); // guard against zero-size
+
+    // Keep the current orbit angle, just adjust distance and target
+    this.target.copy(center);
+    this.panOffset.set(0, 0, 0);
+
+    if (this.mode === 'perspective') {
+      const fovRad = MathUtils.degToRad(this.perspCamera.fov);
+      const distance = (radius / Math.sin(fovRad / 2)) * padding;
+      this.sphericalTarget.radius = MathUtils.clamp(distance, this.minDist, this.maxDist);
+    } else {
+      // For orthographic, adjust frustum size instead of distance
+      const frustum = radius * padding;
+      const aspect = this.perspCamera.aspect;
+      this.orthoCamera.left   = -frustum * aspect;
+      this.orthoCamera.right  =  frustum * aspect;
+      this.orthoCamera.top    =  frustum;
+      this.orthoCamera.bottom = -frustum;
+      this.orthoCamera.updateProjectionMatrix();
+      // Also pull camera back slightly so the object isn't clipped
+      this.sphericalTarget.radius = MathUtils.clamp(radius * padding * 4, this.minDist, this.maxDist);
+    }
   }
 
   // --- Update (call each frame) ---

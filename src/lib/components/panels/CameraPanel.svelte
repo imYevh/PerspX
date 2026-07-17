@@ -101,6 +101,7 @@
         </div>
       </div>
       <input type="range" min="1" max="179" step="1" value={$cameraStore.fov} 
+             ondblclick={() => updateCameraStore({ zolly: false, fov: 50 })}
              oninput={(e) => updateCameraStore({ zolly: false, fov: parseFloat((e.target as HTMLInputElement).value) })} 
              class="slider" />
     </div>
@@ -121,6 +122,7 @@
           </div>
         </div>
         <input type="range" min="1" max="179" step="1" value={$cameraStore.fov} 
+               ondblclick={() => updateCameraStore({ zolly: true, fov: 50 })}
                oninput={(e) => updateCameraStore({ zolly: true, fov: parseFloat((e.target as HTMLInputElement).value) })} 
                class="slider" />
       {/if}
@@ -135,7 +137,7 @@
         <button class="icon-btn" onclick={resetRoll} title="Reset Roll">⟲</button>
       </div>
     </div>
-    <input type="range" min="-180" max="180" step="1" value={$cameraStore.roll} oninput={onRollInput} class="slider" />
+    <input type="range" min="-180" max="180" step="1" value={$cameraStore.roll} ondblclick={resetRoll} oninput={onRollInput} class="slider" />
   </div>
 
 
@@ -149,6 +151,7 @@
       </div>
       <input type="range" min="-50" max="50" step="0.1" 
              value={$cameraStore.fisheyeIntensity} 
+             ondblclick={() => updateCameraStore({ fisheyeIntensity: 0 })}
              oninput={(e) => updateCameraStore({ fisheyeIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
              class="slider" />
     </div>
@@ -163,6 +166,7 @@
       </div>
       <input type="range" min="-1" max="1" step="0.01" 
              value={$cameraStore.chromaticAberrationIntensity} 
+             ondblclick={() => updateCameraStore({ chromaticAberrationIntensity: 0 })}
              oninput={(e) => updateCameraStore({ chromaticAberrationIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
              class="slider" />
     </div>
@@ -179,6 +183,7 @@
         <span class="sub-label">Position: {$cameraStore.tiltShiftPosition.toFixed(2)}</span>
         <input type="range" min="0" max="1" step="0.01" 
                value={$cameraStore.tiltShiftPosition} 
+               ondblclick={() => updateCameraStore({ tiltShiftPosition: 0.5 })}
                oninput={(e) => updateCameraStore({ tiltShiftPosition: parseFloat((e.target as HTMLInputElement).value) })} 
                class="slider" />
       </div>
@@ -186,6 +191,7 @@
         <span class="sub-label">Width: {$cameraStore.tiltShiftWidth.toFixed(2)}</span>
         <input type="range" min="0" max="1" step="0.01" 
                value={$cameraStore.tiltShiftWidth} 
+               ondblclick={() => updateCameraStore({ tiltShiftWidth: 0.2 })}
                oninput={(e) => updateCameraStore({ tiltShiftWidth: parseFloat((e.target as HTMLInputElement).value) })} 
                class="slider" />
       </div>
@@ -193,6 +199,7 @@
         <span class="sub-label">Intensity: {$cameraStore.tiltShiftIntensity.toFixed(2)}</span>
         <input type="range" min="0" max="1" step="0.01" 
                value={$cameraStore.tiltShiftIntensity} 
+               ondblclick={() => updateCameraStore({ tiltShiftIntensity: 0 })}
                oninput={(e) => updateCameraStore({ tiltShiftIntensity: parseFloat((e.target as HTMLInputElement).value) })} 
                class="slider" />
       </div>
@@ -260,7 +267,7 @@
     color: var(--color-accent);
   }
 
-  .snap-cam-btn {
+  .focus-cam-btn {
     width: 100%;
     display: flex;
     align-items: center;
@@ -275,12 +282,12 @@
     transition: all 0.15s;
   }
 
-  .snap-cam-btn:hover {
+  .focus-cam-btn:hover {
     background: var(--color-surface-hover);
     color: var(--color-text);
   }
 
-  .snap-cam-btn.active {
+  .focus-cam-btn.active {
     background: color-mix(in srgb, #51cf66 12%, transparent);
     border-color: #51cf66;
     color: #51cf66;

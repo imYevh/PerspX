@@ -24,7 +24,7 @@
   }
 
   function toggleSnap() {
-    updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'snap' ? 'free' : 'snap' });
+    updateCameraStore({ orbitMode: $cameraStore.orbitMode === 'focus' ? 'free' : 'focus' });
   }
 
   function applyPreset(key: string) {
@@ -33,7 +33,7 @@
 
     // If there's a selected object, offset preset position to orbit around it
     let target = preset.target.clone();
-    if ($cameraStore.orbitMode === 'snap' && sceneManager) {
+    if ($cameraStore.orbitMode === 'focus' && sceneManager) {
       const ids = sceneManager.getSelectedIds();
       if (ids.length > 0) {
         const obj = sceneManager.getObject(ids[0]);

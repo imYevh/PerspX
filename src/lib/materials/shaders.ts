@@ -449,45 +449,116 @@ function buildWatercolorNode(
   uvCoord: any
 ): any {
   return Fn(() => {
-    const scale1 = 40.0;
-    const scale2 = 90.0;
+    const center = sceneTexNode.sample(uvCoord);
 
-    const noise1X = sin(add(mul(uvCoord.x, scale1), mul(uvCoord.y, scale1)));
-    const noise1Y = cos(add(mul(uvCoord.x, scale1), mul(uvCoord.y, scale1)));
+    // Color bleed: 4-tap neighbor average at a generous radius.
+    // bleed=5 → step=0.03 UV → clearly visible soft smearing at color edges.
+    const bleedStep = mul(uniformBleed, 0.006);
+    const nR = sceneTexNode.sample(add(uvCoord, vec2(bleedStep, 0.0)));
+    const nL = sceneTexNode.sample(add(uvCoord, vec2(sub(0.0, bleedStep), 0.0)));
+    const nU = sceneTexNode.sample(add(uvCoord, vec2(0.0, bleedStep)));
+    const nD = sceneTexNode.sample(add(uvCoord, vec2(0.0, sub(0.0, bleedStep))));
+    const avgNeighbor = mul(add(add(add(nR, nL), nU), nD), 0.25);
+    // 25% blend toward average → paint bleeds visibly but colors aren’t destroyed
+    const bleedColor = mix(center, avgNeighbor, 0.25);
 
-    const noise2X = sin(add(mul(uvCoord.x, scale2), mul(uvCoord.y, scale2)));
-    const noise2Y = cos(add(mul(uvCoord.x, scale2), mul(uvCoord.y, scale2)));
+    // Paper grain: amplitude is scaled down to ×0.08 internally so the slider
+    // range 0–1 maps to barely-there → subtle, never to heavy static.
+    // uniformPaper=0.15 default → grain swings ±0.012 — just enough to feel like paper.
+    const sc = mul(uvCoord, 700.0) as any;
+    const dotVal = add(mul(floor(sc.x), 12.9898), mul(floor(sc.y), 78.233));
+    const grain = sub(mul(fract(mul(sin(dotVal), 43758.5453)), 2.0), 1.0); // [−1, 1]
+    const grainAmt = mul(uniformPaper, 0.08); // internal scale-down
+    const grained = add(bleedColor, mul(vec4(grain, grain, grain, 0.0), grainAmt));
 
-    const dispX = add(mul(noise1X, 0.7), mul(noise2X, 0.3));
-    const dispY = add(mul(noise1Y, 0.7), mul(noise2Y, 0.3));
+    // Pigment pooling: the most iconic watercolor look — pigment dries darker
+    // at shape boundaries where it accumulates. We detect edges via luminance
+    // deviation and darken those pixels proportionally.
+    const centerLum = luminance(center);
+    const avgLum = luminance(avgNeighbor);
+    const edgeStrength = clamp(abs(sub(centerLum, avgLum)), 0.0, 1.0);
+    const edgeMultiplier = sub(1.0, mul(edgeStrength, 0.65));
+    const finalColor = mul(grained, edgeMultiplier);
 
-    const bleedOffset = mul(vec2(dispX, dispY), div(uniformBleed, 1000.0));
-    const deformedUV = add(uvCoord, bleedOffset);
+    return mix(center, finalColor, uniformIntensity);
+  })();
+}
 
-    const sceneColor = sceneTexNode.sample(deformedUV);
+// ---------------------------------------------------------------------------
+// Refraction (water / glass distortion)
+// ---------------------------------------------------------------------------
 
-    const paperUV = mul(deformedUV, 450.0);
-    const pVal = add(mul(paperUV.x, 127.1), mul(paperUV.y, 311.7));
-    const paperGrain = fract(mul(sin(pVal), 43758.5453123));
-    const grainOffset = sub(mul(paperGrain, 0.4), 0.2);
+function buildRefractionNode(
+  sceneTexNode: any,
+  uniformScale: any,
+  uniformStrength: any,
+  uniformIntensity: any,
+  uvCoord: any
+): any {
+  return Fn(() => {
+    const sceneColor = sceneTexNode.sample(uvCoord);
 
-    const texturedColor = add(sceneColor, mul(grainOffset, uniformPaper));
+    // Two-scale sin/cos warp: large waves (scale * 0.4) overlaid with
+    // fine ripples (scale * 1.3). Mixing them 70/30 gives natural water caustics.
+    const freq1 = mul(uniformScale, 0.4);
+    const freq2 = mul(uniformScale, 1.3);
 
-    const edgeStep = 0.003;
-    const neighborR = luminance(sceneTexNode.sample(add(deformedUV, vec2(edgeStep, 0.0))));
-    const neighborL = luminance(sceneTexNode.sample(add(deformedUV, vec2(sub(0.0, edgeStep), 0.0))));
-    const neighborU = luminance(sceneTexNode.sample(add(deformedUV, vec2(0.0, edgeStep))));
-    const neighborD = luminance(sceneTexNode.sample(add(deformedUV, vec2(0.0, sub(0.0, edgeStep)))));
+    const arg1 = add(mul(uvCoord.x, freq1), mul(uvCoord.y, freq1));
+    const arg2 = add(mul(uvCoord.x, freq2), mul(uvCoord.y, freq2));
 
-    const centerLum = luminance(sceneColor);
-    const dx = sub(centerLum, mul(add(neighborR, neighborL), 0.5));
-    const dy = sub(centerLum, mul(add(neighborU, neighborD), 0.5));
-    const edgeStrength = clamp(add(abs(dx), abs(dy)), 0.0, 1.0);
+    const dispX = add(mul(sin(arg1), 0.7), mul(sin(arg2), 0.3));
+    const dispY = add(mul(cos(arg1), 0.7), mul(cos(arg2), 0.3));
 
-    const edgeMultiplier = sub(1.0, mul(edgeStrength, 0.35));
-    const finalColor = mul(texturedColor, edgeMultiplier);
+    const warpStrength = div(uniformStrength, 800.0);
+    const deformedUV = add(uvCoord, mul(vec2(dispX, dispY), warpStrength));
 
-    return mix(sceneColor, finalColor, uniformIntensity);
+    const warpedColor = sceneTexNode.sample(deformedUV);
+
+    return mix(sceneColor, warpedColor, uniformIntensity);
+  })();
+}
+
+// ---------------------------------------------------------------------------
+// Paper (warm cream tint + very fine grain + slight desaturation)
+// ---------------------------------------------------------------------------
+
+function buildPaperNode(
+  sceneTexNode: any,
+  uniformScale: any,
+  uniformPaper: any,
+  uniformIntensity: any,
+  uvCoord: any
+): any {
+  return Fn(() => {
+    const sceneColor = sceneTexNode.sample(uvCoord);
+
+    // Warm cream tint: multiply scene colors by a warm paper tone.
+    // This immediately shifts the whole image to feel like it’s printed
+    // on aged paper — the dominant visual characteristic.
+    // cream = (0.98, 0.94, 0.82) — slightly warm/yellow
+    const cream = vec4(0.98, 0.94, 0.82, 1.0);
+    // Tint strength: uniformPaper=0.4 default → tintAmt=0.12 (12% shift toward cream)
+    const tintAmt = mul(uniformPaper, 0.30);
+    const tinted = mix(sceneColor, mul(sceneColor, cream), tintAmt);
+
+    // Very fine grain: amplitude ×0.05 so the slider range feels natural.
+    // uniformPaper=0.4 → grain ±0.02 — perceptible as fine texture, not static.
+    const sc = mul(uvCoord, uniformScale) as any;
+    const fx = floor(sc.x);
+    const fy = floor(sc.y);
+    const dotVal = add(mul(fx, 12.9898), mul(fy, 78.233));
+    const grain = sub(mul(fract(mul(sin(dotVal), 43758.5453)), 2.0), 1.0);
+    const grainAmt = mul(uniformPaper, 0.05);
+    const grainy = add(tinted, mul(vec4(grain, grain, grain, 0.0), grainAmt));
+
+    // Slight desaturation: paper mutes colors a little, especially strong hues.
+    // uniformPaper=0.4 → desatAmt=0.06 (6% toward grayscale)
+    const lum = luminance(grainy);
+    const lumVec = vec4(lum, lum, lum, grainy.a);
+    const desatAmt = mul(uniformPaper, 0.15);
+    const desaturated = mix(grainy, lumVec, desatAmt);
+
+    return mix(sceneColor, desaturated, uniformIntensity);
   })();
 }
 
@@ -600,6 +671,22 @@ export function buildShaderNode(
       return buildWatercolorNode(
         sceneTexNode,
         uniforms.bleed,
+        uniforms.paper,
+        uniforms.intensity,
+        uvCoord
+      );
+    case 'refraction':
+      return buildRefractionNode(
+        sceneTexNode,
+        uniforms.scale,
+        uniforms.bleed,
+        uniforms.intensity,
+        uvCoord
+      );
+    case 'paper':
+      return buildPaperNode(
+        sceneTexNode,
+        uniforms.scale,
         uniforms.paper,
         uniforms.intensity,
         uvCoord

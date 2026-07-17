@@ -30,6 +30,8 @@ export type ShaderType =
   | 'dither'
   | 'stipple'
   | 'watercolor'
+  | 'refraction'
+  | 'paper'
   | 'noise';
 
 export interface ShaderParamDef {
@@ -182,11 +184,33 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
     id: 'watercolor',
     label: 'Watercolor',
     icon: '💧',
-    description: 'Watercolor wash with paper texture & bleed',
+    description: 'Paint bleed at edges, paper grain, pigment pooling at contours',
     params: {
-      bleed: { label: 'Bleed', min: 1, max: 10, step: 0.5, default: 4 },
-      paper: { label: 'Paper', min: 0, max: 1, step: 0.05, default: 0.3 },
-      intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.65 },
+      bleed: { label: 'Bleed', min: 1, max: 15, step: 0.5, default: 5 },
+      paper: { label: 'Paper', min: 0, max: 1, step: 0.05, default: 0.15 },
+      intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.85 },
+    },
+  },
+  refraction: {
+    id: 'refraction',
+    label: 'Refraction',
+    icon: '〰',
+    description: 'Glass / water surface distortion — objects seen through a liquid lens',
+    params: {
+      scale: { label: 'Frequency', min: 5, max: 80, step: 1, default: 18 },
+      bleed: { label: 'Strength', min: 1, max: 20, step: 0.5, default: 8 },
+      intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.85 },
+    },
+  },
+  paper: {
+    id: 'paper',
+    label: 'Paper',
+    icon: '📄',
+    description: 'Fine paper grain overlaid on the scene — clean white noise, no banding',
+    params: {
+      scale: { label: 'Grain Size', min: 100, max: 1500, step: 50, default: 700 },
+      paper: { label: 'Strength', min: 0, max: 1, step: 0.05, default: 0.5 },
+      intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.9 },
     },
   },
 };
@@ -203,6 +227,8 @@ export const SHADER_ORDER: ShaderType[] = [
   'dither',
   'stipple',
   'watercolor',
+  'refraction',
+  'paper',
   'noise',
 ];
 

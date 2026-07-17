@@ -1,7 +1,7 @@
 import type { WebGPURenderer } from "three/webgpu";
 import { Scene, type Camera, Vector2 } from "three";
 import { PostProcessing } from "three/webgpu";
-import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, select, texture } from "three/tsl";
+import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, or, select, texture } from "three/tsl";
 import { buildShaderNode, type ShaderNodeUniforms } from "$lib/materials/shaders";
 import type { ShaderType } from "$lib/stores/shader.svelte";
 
@@ -16,6 +16,7 @@ export class RenderLoop {
   private postProcessing: PostProcessing;
   private scenePass: any;
   private overlayPass: any;
+  private viewportPass: any;
   private combinedEffectNode: any;
   
   private fisheyeIntensityUniform = uniform(0.0);
@@ -51,6 +52,9 @@ export class RenderLoop {
 
   public overlayScene = new Scene();
 
+  /** Viewport helpers (grid, guidelines, vanishing point) — composited after shader, before gizmos. */
+  public viewportScene = new Scene();
+
   constructor(
     private renderer: WebGPURenderer,
     private scene: Scene,
@@ -59,6 +63,7 @@ export class RenderLoop {
     this.postProcessing = new PostProcessing(this.renderer);
     this.scenePass = pass(this.scene, this.camera, { depthBuffer: true });
     this.overlayPass = pass(this.overlayScene, this.camera, { depthBuffer: true });
+    this.viewportPass = pass(this.viewportScene, this.camera, { depthBuffer: true });
 
     const postProcessFn = this.buildCameraEffectsNode();
 
@@ -197,6 +202,7 @@ export class RenderLoop {
       
       const oldAutoClear = this.renderer.autoClear;
       this.renderer.autoClear = false;
+      this.renderer.render(this.viewportScene, this.camera);
       this.renderer.render(this.overlayScene, this.camera);
       this.renderer.autoClear = oldAutoClear;
     }
@@ -206,26 +212,21 @@ export class RenderLoop {
     return Fn(() => {
       const sceneTexNode = this.scenePass.getTextureNode();
 
-      // Helper to evaluate either the shader or just sample the scene at a given UV
-      const getColorAt = (targetUV: any) => {
-        const sceneColor = sceneTexNode.sample(targetUV);
-        if (this.activeShaderType !== 'none') {
-          const shaderColor = buildShaderNode(this.activeShaderType, sceneTexNode, this.shaderUniforms, targetUV);
-          // Only apply the shader where the scene has alpha (objects), leaving background intact
-          return mix(sceneColor, shaderColor, sceneColor.a);
-        }
-        return sceneColor;
-      };
+      // Raw scene sample — used for CA splits and blur taps.
+      // The procedural shader is intentionally NOT applied here; it runs once
+      // at the end on the final blended color to avoid re-evaluating expensive
+      // shaders (e.g. watercolor) for every blur tap.
+      const getRawAt = (targetUV: any) => sceneTexNode.sample(targetUV);
 
       // 1. Fisheye UV warp
       const fisheyeUV = this.getFisheyeUVNode();
 
-      // 2. Chromatic Aberration
+      // 2. Chromatic Aberration — splits on raw samples only
       const caOffset = mul(sub(fisheyeUV, 0.5), this.caIntensityUniform, 0.05);
-      const cR = getColorAt(add(fisheyeUV, caOffset)).r;
-      const cG = getColorAt(fisheyeUV).g;
-      const cB = getColorAt(sub(fisheyeUV, caOffset)).b;
-      const cA = getColorAt(fisheyeUV).a;
+      const cR = getRawAt(add(fisheyeUV, caOffset)).r;
+      const cG = getRawAt(fisheyeUV).g;
+      const cB = getRawAt(sub(fisheyeUV, caOffset)).b;
+      const cA = getRawAt(fisheyeUV).a;
       const caColor = vec4(cR, cG, cB, cA);
 
       // 3. Tilt-shift blur amount
@@ -234,34 +235,68 @@ export class RenderLoop {
       const tBlur = mul(smoothstep(w2, this.tiltShiftWidthUniform, yDist), this.tiltShiftIntensityUniform);
       let blurAmount = clamp(tBlur, 0.0, 1.0);
 
-      // 4. Compute Blur
+      // 4. Tilt-shift blur — 16-tap golden spiral on RAW scene samples only.
+      //    Running the procedural shader inside each tap would multiply its cost
+      //    by 17× (1 base + 16 taps), which was causing the GPU spike.
       const blurRadius = mul(blurAmount, 0.02);
-      
-      let bColor = getColorAt(fisheyeUV);
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(-1.0, -1.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(0.0, -1.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(1.0, -1.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(-1.0, 0.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(1.0, 0.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(-1.0, 1.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(0.0, 1.0), blurRadius))));
-      bColor = add(bColor, getColorAt(add(fisheyeUV, mul(vec2(1.0, 1.0), blurRadius))));
-      bColor = mul(bColor, div(1.0, 9.0));
 
-      const mainOutputColor = mix(caColor, bColor, blurAmount);
+      let bColor = getRawAt(fisheyeUV);
+      const samplesCount = 16;
+      let bSamples = 1.0;
 
-      // 5. Combine main color and overlay color using depth testing
+      for (let i = 0; i < samplesCount; i++) {
+        const angle = i * 2.39996; // Golden angle
+        const radius = Math.sqrt(i + 0.5) / Math.sqrt(samplesCount);
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        bColor = add(bColor, getRawAt(add(fisheyeUV, mul(vec2(x, y), blurRadius))));
+        bSamples += 1.0;
+      }
+
+      bColor = mul(bColor, div(1.0, bSamples));
+
+      // Blended raw scene color (CA + tilt-shift)
+      const blendedRaw = mix(caColor, bColor, blurAmount);
+
+      // 5. Apply procedural shader ONCE to the blended scene color.
+      //    Only affects pixels where the main scene has content (alpha > 0),
+      //    leaving the background untouched.
+      let mainOutputColor = blendedRaw;
+      if (this.activeShaderType !== 'none') {
+        // The shader samples sceneTexNode internally; we pass fisheyeUV so it
+        // aligns with the warped coordinate space.
+        const shaderColor = buildShaderNode(this.activeShaderType, sceneTexNode, this.shaderUniforms, fisheyeUV);
+        mainOutputColor = mix(blendedRaw, shaderColor, blendedRaw.a);
+      }
+
+      const mainDepth = texture(this.scenePass.renderTarget.depthTexture).sample(fisheyeUV).r;
+
+      // 5. Composite viewport helpers (grid, guidelines, vanishing point) over the
+      //    shader-processed main scene.  Viewport elements are occluded by opaque
+      //    objects via depth test AND by transparent/semi-transparent objects via
+      //    the main scene alpha — so the grid never bleeds through a transparent cube.
+      const viewportTexNode = this.viewportPass.getTextureNode();
+      const viewportColor = viewportTexNode.sample(fisheyeUV);
+      const viewportDepth = texture(this.viewportPass.renderTarget.depthTexture).sample(fisheyeUV).r;
+
+      const isViewportCloser = lessThan(viewportDepth, mainDepth);
+      const isViewportVisible = lessThan(0.0, viewportColor.a);
+      // Don't show viewport element when a (potentially transparent) main-scene object
+      // occupies this pixel — prevents grid appearing on top of transparent cubes.
+      const isMainEmpty = lessThan(mainOutputColor.a, 0.01);
+      const showViewport = and(isViewportCloser, and(isViewportVisible, isMainEmpty));
+      const afterViewport = select(showViewport, viewportColor, mainOutputColor);
+
+      // 6. Composite gizmo overlay (transform controls, light helpers) — always on top.
       const overlayTexNode = this.overlayPass.getTextureNode();
       const overlayColor = overlayTexNode.sample(fisheyeUV);
-      
-      const mainDepth = texture(this.scenePass.renderTarget.depthTexture).sample(fisheyeUV).r;
       const overlayDepth = texture(this.overlayPass.renderTarget.depthTexture).sample(fisheyeUV).r;
 
-      const isOverlayCloser = lessThan(overlayDepth, mainDepth);
+      const isOverlayCloserOrNoDepth = or(lessThan(overlayDepth, mainDepth), lessThan(0.99999, overlayDepth));
       const isOverlayVisible = lessThan(0.0, overlayColor.a);
-      const showOverlay = and(isOverlayCloser, isOverlayVisible);
+      const showOverlay = and(isOverlayCloserOrNoDepth, isOverlayVisible);
 
-      return select(showOverlay, overlayColor, mainOutputColor);
+      return select(showOverlay, overlayColor, afterViewport);
     })();
   }
 
@@ -272,6 +307,9 @@ export class RenderLoop {
     }
     if (this.overlayPass) {
       this.overlayPass.camera = camera;
+    }
+    if (this.viewportPass) {
+      this.viewportPass.camera = camera;
     }
   }
 

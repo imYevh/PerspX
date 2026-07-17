@@ -106,7 +106,7 @@
 
   <div class="content" style="display: {currentHeight <= minHeight ? 'none' : 'block'}">
     {#if activeTab === 'scene'}
-      <ScenePanel {sceneManager} />
+      <ScenePanel {sceneManager} {cameraController} />
     {:else if activeTab === 'library'}
       <LibraryPanel {objectManager} {lightManager} />
     {:else if activeTab === 'properties'}

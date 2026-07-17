@@ -17,7 +17,7 @@ export interface CameraState {
   guidelines: 'disabled' | 'full';
   lockPan: boolean;
   lockOrbit: boolean;
-  orbitMode: 'free' | 'snap';
+  orbitMode: 'free' | 'focus';
 }
 
 export const cameraStore = writable<CameraState>({

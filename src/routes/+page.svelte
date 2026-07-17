@@ -160,6 +160,8 @@
     let loop: RenderLoop;
     let _sceneManager: SceneManager;
     let _cameraController: CameraController;
+    let _lastFocusObjId: string | null = null;
+    let _sceneStateUrl: string | null = null;
     let _transformSystem: TransformSystem;
     let inputSystem: InputSystem;
     let vanishingHelper: VanishingPointHelper;
@@ -167,7 +169,6 @@
     let cleanupKeys = () => {};
 
     let _guidelinesFull: any;
-    let _lastSnapObjId: string | null = null;
 
     async function init() {
       if (!canvas) return;
@@ -289,20 +290,19 @@
       lightManager = _lightManager;
       await _lightManager.applyPreset('studio');
 
-      // Add helpers
+      // Add helpers — placed in viewportScene so shader effects never apply to them.
+      // (viewportScene is composited after the procedural shader but before gizmos.)
       const grid = createInfiniteGrid();
       const guidelinesFull = createVerticalGuidelines();
       
       guidelinesFull.visible = $cameraStore.guidelines === 'full';
       
-      _renderer.scene.add(grid);
-      _renderer.scene.add(guidelinesFull);
-      
       // Store reference to guidelines so we can toggle and move them
       _guidelinesFull = guidelinesFull;
       
       vanishingHelper = new VanishingPointHelper();
-      _renderer.scene.add(vanishingHelper.group);
+      // Note: grid / guidelines / vanishing helper are added to viewportScene
+      // after loop is created below (loop isn't available yet at this point).
 
       // Sync UI store visibility toggles
       const unsubscribeUI = uiStore.subscribe(s => {
@@ -358,8 +358,8 @@
           orbitMode: 'free'
         });
 
-        // Reset theme to default
-        import('$lib/stores/theme.svelte').then(({ THEME_MODES, ACCENT_PRESETS }) => {
+      // Reset theme to default
+      import('$lib/stores/theme.svelte').then(({ THEME_MODES, ACCENT_PRESETS }) => {
            // We can't easily call the setter from here without importing the stores, 
            // but we can dispatch a custom event that Toolbar can listen to.
         });
@@ -549,14 +549,13 @@
         _transformSystem.detach();
       }
       
-      // Move helpers to the overlay scene in loop to keep them free from chromatic aberration
-      _renderer.scene.remove(grid);
-      _renderer.scene.remove(guidelinesFull);
-      _renderer.scene.remove(vanishingHelper.group);
-      
-      loop.overlayScene.add(grid);
-      loop.overlayScene.add(guidelinesFull);
-      loop.overlayScene.add(vanishingHelper.group);
+      // Move viewport helpers (grid, guidelines, vanishing point) to viewportScene
+      // so that procedural shaders (halftone, manga, etc.) are never applied to them.
+      // Gizmo overlay (transform controls, light helpers) stays in overlayScene.
+      loop.viewportScene.add(grid);
+      loop.viewportScene.add(guidelinesFull);
+      loop.viewportScene.add(vanishingHelper.group);
+      loop.overlayScene.add(_transformSystem.controls.getHelper());
       
       // Keep light helpers out of camera effects by moving them to the overlay scene
       if (_lightManager) {
@@ -574,14 +573,14 @@
         if (_cameraController.lockOrbit !== $cameraStore.lockOrbit) {
           _cameraController.lockOrbit = $cameraStore.lockOrbit;
         }
-        // Force lockPan if in snap mode
-        const shouldLockPan = $cameraStore.lockPan || $cameraStore.orbitMode === 'snap';
+        // Force lockPan if in focus mode
+        const shouldLockPan = $cameraStore.lockPan || $cameraStore.orbitMode === 'focus';
         if (_cameraController.lockPan !== shouldLockPan) {
           _cameraController.lockPan = shouldLockPan;
         }
 
-        // Apply Snap to Object BEFORE updating camera controller
-        if ($cameraStore.orbitMode === 'snap') {
+        // Apply Focus to Object BEFORE updating camera controller
+        if ($cameraStore.orbitMode === 'focus') {
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
             const currentObjId = selectedIds[0];
@@ -590,7 +589,7 @@
               const worldPos = new Vector3();
               obj.getWorldPosition(worldPos);
               
-              if (_lastSnapObjId !== currentObjId) {
+              if (_lastFocusObjId !== currentObjId) {
                 // New object selected. Keep camera position static, but rotate to focus on it.
                 _cameraController.applyState(_cameraController.perspCamera.position, worldPos);
               } else {
@@ -598,13 +597,13 @@
                 _cameraController.target.copy(worldPos);
               }
               
-              _lastSnapObjId = currentObjId;
+              _lastFocusObjId = currentObjId;
             }
           } else {
-            _lastSnapObjId = null;
+            _lastFocusObjId = null;
           }
         } else {
-          _lastSnapObjId = null;
+          _lastFocusObjId = null;
         }
 
         _cameraController.update();
@@ -801,7 +800,7 @@
         {#if !$uiStore.sceneCollapsed || !$uiStore.libraryCollapsed}
           <aside class="sidebar left-sidebar">
             {#if !$uiStore.sceneCollapsed}
-              <ScenePanel {sceneManager} />
+              <ScenePanel {sceneManager} {cameraController} />
             {/if}
             {#if !$uiStore.sceneCollapsed && !$uiStore.libraryCollapsed}
               <div class="panel-gap"></div>
@@ -889,6 +888,7 @@
     min-height: 0;
     overflow: hidden;
     position: relative;
+    z-index: 1;
   }
 
   .sidebar {
@@ -911,6 +911,7 @@
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
     transition: width 0.2s ease;
+    z-index: 10;
   }
 
   /* Narrow sidebar on tablet */

@@ -112,6 +112,9 @@ export function applySceneSnapshot(
 
   // Restore camera state
   if (snapshot.camera && updateCameraStore) {
+    if ((snapshot.camera as any).orbitMode === 'snap') {
+      (snapshot.camera as any).orbitMode = 'focus';
+    }
     updateCameraStore(snapshot.camera);
   }
 

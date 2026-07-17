@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
-  import { themeStore, setTheme, setAccent, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
+  import { themeStore, setTheme, setAccent, setAccentHue, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
   import { appModeStore, setAppMode, APP_MODES, APP_MODE_LABELS, APP_MODE_DESCRIPTIONS } from '$lib/stores/appMode.svelte';
   import ConfirmDialog from './ConfirmDialog.svelte';
 
@@ -159,6 +159,7 @@
           min="-45" 
           max="405" 
           value={sliderValue} 
+          ondblclick={() => setAccentHue(217)}
           oninput={handleSliderInput}
           class="hue-slider"
         />
