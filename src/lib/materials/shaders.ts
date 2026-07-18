@@ -563,6 +563,56 @@ function buildPaperNode(
 }
 
 // ---------------------------------------------------------------------------
+// Gradient Blur
+// ---------------------------------------------------------------------------
+
+function buildGradientBlurNode(
+  sceneTexNode: any,
+  uniformPosition: any, // center of the fade in % (0 to 100)
+  uniformLength: any,   // width of the fade in % (0 to 100)
+  uniformAngle: any,    // direction toward the transparent side, in degrees
+  uniformIntensity: any, // opacity
+  uvCoord: any
+): any {
+  return Fn(() => {
+    const sceneColor = sceneTexNode.sample(uvCoord);
+
+    // Direction unit vector: points toward the transparent side.
+    const angleRad = mul(uniformAngle, Math.PI / 180);
+    const dirX = cos(angleRad);
+    const dirY = sin(angleRad);
+
+    // Project centered UV onto direction → t ∈ [0, 1]
+    const cx = sub(uvCoord.x, 0.5);
+    const cy = sub(uvCoord.y, 0.5);
+    const t = clamp(add(add(mul(cx, dirX), mul(cy, dirY)), 0.5), 0.0, 1.0);
+
+    // Convert % to 0..1 ranges
+    const pos = div(uniformPosition, 100.0);
+    // Smoothness needs to be mapped to start/end points
+    // length=20 means 20% of the screen is the gradient transition
+    const halfLen = div(uniformLength, 200.0);
+    
+    // Prevent divide by zero in smoothstep by ensuring a minimum width
+    const safeHalfLen = max(halfLen, 0.001);
+
+    const edgeStart = sub(pos, safeHalfLen);
+    const edgeEnd = add(pos, safeHalfLen);
+
+    const gradVal = smoothstep(edgeStart, edgeEnd, t);
+
+    // Fade toward transparent.
+    // alphaMultiplier = 1.0 - (gradVal * intensity)
+    const alphaMultiplier = sub(1.0, mul(gradVal, uniformIntensity));
+    
+    // Multiply all components (RGB and A) by the alpha multiplier.
+    // This ensures pre-multiplied alpha is correct for the canvas compositor,
+    // making it truly transparent instead of rendering solid black.
+    return mul(sceneColor, alphaMultiplier);
+  })();
+}
+
+// ---------------------------------------------------------------------------
 // Public Factory
 // ---------------------------------------------------------------------------
 
@@ -580,6 +630,8 @@ export interface ShaderNodeUniforms {
   density: any;
   bleed: any;
   paper: any;
+  position: any;
+  length: any;
 }
 
 export function buildShaderNode(
@@ -696,6 +748,15 @@ export function buildShaderNode(
         sceneTexNode,
         uniforms.intensity,
         uniforms.scale,
+        uvCoord
+      );
+    case 'gradient_blur':
+      return buildGradientBlurNode(
+        sceneTexNode,
+        uniforms.position,
+        uniforms.length,
+        uniforms.angle,
+        uniforms.intensity,
         uvCoord
       );
     case 'none':

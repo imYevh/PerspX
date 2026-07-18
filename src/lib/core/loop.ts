@@ -45,6 +45,8 @@ export class RenderLoop {
     density:   uniform(1.0),
     bleed:     uniform(4.0),
     paper:     uniform(0.3),
+    position:  uniform(80.0),
+    length:    uniform(20.0),
   };
   private activeShaderType: ShaderType = 'none';
 
@@ -106,6 +108,8 @@ export class RenderLoop {
     if (params.density   !== undefined) this.shaderUniforms.density.value   = params.density;
     if (params.bleed     !== undefined) this.shaderUniforms.bleed.value     = params.bleed;
     if (params.paper     !== undefined) this.shaderUniforms.paper.value     = params.paper;
+    if (params.position  !== undefined) this.shaderUniforms.position.value  = params.position;
+    if (params.length    !== undefined) this.shaderUniforms.length.value    = params.length;
 
     // Rebuild the final composite effect node
     this.combinedEffectNode = this.buildCameraEffectsNode();
@@ -126,6 +130,8 @@ export class RenderLoop {
     if (params.density   !== undefined) this.shaderUniforms.density.value   = params.density;
     if (params.bleed     !== undefined) this.shaderUniforms.bleed.value     = params.bleed;
     if (params.paper     !== undefined) this.shaderUniforms.paper.value     = params.paper;
+    if (params.position  !== undefined) this.shaderUniforms.position.value  = params.position;
+    if (params.length    !== undefined) this.shaderUniforms.length.value    = params.length;
     // No needsUpdate needed — uniforms update live
   }
 
@@ -280,12 +286,16 @@ export class RenderLoop {
       const viewportDepth = texture(this.viewportPass.renderTarget.depthTexture).sample(fisheyeUV).r;
 
       const isViewportCloser = lessThan(viewportDepth, mainDepth);
-      const isViewportVisible = lessThan(0.0, viewportColor.a);
-      // Don't show viewport element when a (potentially transparent) main-scene object
-      // occupies this pixel — prevents grid appearing on top of transparent cubes.
-      const isMainEmpty = lessThan(mainOutputColor.a, 0.01);
-      const showViewport = and(isViewportCloser, and(isViewportVisible, isMainEmpty));
-      const afterViewport = select(showViewport, viewportColor, mainOutputColor);
+      
+      // Proper alpha blending:
+      // gridOverMain = grid + main * (1 - grid.a)
+      const gridOverMain = add(viewportColor, mul(mainOutputColor, sub(1.0, viewportColor.a)));
+      // mainOverGrid = main + grid * (1 - main.a)
+      const mainOverGrid = add(mainOutputColor, mul(viewportColor, sub(1.0, mainOutputColor.a)));
+
+      // If grid is closer, draw it on top. Otherwise draw main scene on top.
+      // This ensures the grid is visible through transparent objects!
+      const afterViewport = select(isViewportCloser, gridOverMain, mainOverGrid);
 
       // 6. Composite gizmo overlay (transform controls, light helpers) — always on top.
       const overlayTexNode = this.overlayPass.getTextureNode();
@@ -293,10 +303,11 @@ export class RenderLoop {
       const overlayDepth = texture(this.overlayPass.renderTarget.depthTexture).sample(fisheyeUV).r;
 
       const isOverlayCloserOrNoDepth = or(lessThan(overlayDepth, mainDepth), lessThan(0.99999, overlayDepth));
-      const isOverlayVisible = lessThan(0.0, overlayColor.a);
-      const showOverlay = and(isOverlayCloserOrNoDepth, isOverlayVisible);
+      
+      // Blend overlay on top of everything
+      const overlayOverAll = add(overlayColor, mul(afterViewport, sub(1.0, overlayColor.a)));
 
-      return select(showOverlay, overlayColor, afterViewport);
+      return select(isOverlayCloserOrNoDepth, overlayOverAll, afterViewport);
     })();
   }
 

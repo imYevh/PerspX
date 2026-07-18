@@ -32,7 +32,8 @@ export type ShaderType =
   | 'watercolor'
   | 'refraction'
   | 'paper'
-  | 'noise';
+  | 'noise'
+  | 'gradient_blur';
 
 export interface ShaderParamDef {
   label: string;
@@ -213,6 +214,18 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
       intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.9 },
     },
   },
+  gradient_blur: {
+    id: 'gradient_blur',
+    label: 'Gradient',
+    icon: '◑',
+    description: 'Fades the scene to transparent along a direction, revealing the background',
+    params: {
+      position: { label: 'Position %', min: -50, max: 150, step: 1, default: 80 },
+      length: { label: 'Length %', min: 0, max: 100, step: 1, default: 20 },
+      angle: { label: 'Angle °', min: 0, max: 360, step: 1, default: 270 },
+      intensity: { label: 'Opacity', min: 0, max: 1, step: 0.01, default: 1.0 },
+    },
+  },
 };
 
 export const SHADER_ORDER: ShaderType[] = [
@@ -230,6 +243,7 @@ export const SHADER_ORDER: ShaderType[] = [
   'refraction',
   'paper',
   'noise',
+  'gradient_blur',
 ];
 
 // ---------------------------------------------------------------------------

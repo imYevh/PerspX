@@ -1,5 +1,5 @@
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-import { Camera, Object3D, Matrix4, Vector3 } from 'three';
+import { Camera, Object3D, Matrix4, Vector3, Quaternion } from 'three';
 import type { SceneManager } from '$lib/core/scene';
 import type { CameraController } from '$lib/camera/camera-controller';
 import { commitHistory } from '$lib/stores/history';
@@ -14,6 +14,13 @@ export class TransformSystem {
   private activeObjectIds: string[] = [];
   private dummyPivot = new Object3D();
   private previousPivotMatrix = new Matrix4();
+  private singleScaleData: {
+    initScale: Vector3;
+    initPosition: Vector3;
+    initSize: Vector3;
+    pivotInitScale: Vector3;
+    sign?: Vector3;
+  } | null = null;
   private sceneManager: SceneManager;
   private cameraController: CameraController;
 
@@ -50,17 +57,58 @@ export class TransformSystem {
     sceneManager.scene.add(this.controls.getHelper());
     sceneManager.scene.add(this.dummyPivot);
 
-    // Apply delta matrix when transforming multiple objects
+    // Apply delta matrix when transforming multiple objects or single-sided scaling
     this.controls.addEventListener('change', () => {
-      if (this.activeObjectIds.length > 1 && this.controls.object === this.dummyPivot) {
-        const deltaMatrix = this.dummyPivot.matrixWorld.clone().multiply(this.previousPivotMatrix.clone().invert());
-        
-        for (const id of this.activeObjectIds) {
+      if (this.controls.object === this.dummyPivot) {
+        if (this.activeObjectIds.length === 1 && this._currentMode === 'scale' && this.singleScaleData) {
+          const id = this.activeObjectIds[0];
           const obj = this.sceneManager.getObject(id);
-          if (obj) obj.applyMatrix4(deltaMatrix);
+          if (obj) {
+            const data = this.singleScaleData;
+            const Sp = this.dummyPivot.scale.clone().divide(data.pivotInitScale);
+            
+            const axis = (this.controls as any).axis;
+            let doX = axis && axis.includes('X') && axis !== 'XYZ';
+            let doY = axis && axis.includes('Y') && axis !== 'XYZ';
+            let doZ = axis && axis.includes('Z') && axis !== 'XYZ';
+            
+            if (axis === 'XYZ') {
+              doX = false; doY = false; doZ = false;
+            }
+
+            const sign = data.sign || new Vector3(1, 1, 1);
+            
+            const newScale = new Vector3(
+              doX ? data.initScale.x * Sp.x : data.initScale.x,
+              doY ? data.initScale.y * Sp.y : data.initScale.y,
+              doZ ? data.initScale.z * Sp.z : data.initScale.z
+            );
+            
+            obj.scale.copy(newScale);
+            
+            // Simple local translation: when scaling from one face, the center must move
+            // by exactly half the change in size to keep the opposite face stationary.
+            if (doX || doY || doZ) {
+              const deltaX = doX ? sign.x * (Sp.x - 1) * data.initSize.x * data.initScale.x / 2 : 0;
+              const deltaY = doY ? sign.y * (Sp.y - 1) * data.initSize.y * data.initScale.y / 2 : 0;
+              const deltaZ = doZ ? sign.z * (Sp.z - 1) * data.initSize.z * data.initScale.z / 2 : 0;
+
+              obj.position.copy(data.initPosition);
+              obj.translateX(deltaX);
+              obj.translateY(deltaY);
+              obj.translateZ(deltaZ);
+            }
+          }
+        } else if (this.activeObjectIds.length > 1) {
+          const deltaMatrix = this.dummyPivot.matrixWorld.clone().multiply(this.previousPivotMatrix.clone().invert());
+          
+          for (const id of this.activeObjectIds) {
+            const obj = this.sceneManager.getObject(id);
+            if (obj) obj.applyMatrix4(deltaMatrix);
+          }
+          
+          this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
         }
-        
-        this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
       }
     });
 
@@ -68,8 +116,61 @@ export class TransformSystem {
     this.controls.addEventListener('dragging-changed', (event) => {
       if (event.value) {
         this.cameraController.enabled = false;
+        
+        if (this.activeObjectIds.length === 1 && this._currentMode === 'scale') {
+          const obj = this.sceneManager.getObject(this.activeObjectIds[0]);
+          if (obj) {
+            let mesh: any = null;
+            obj.traverse((child) => {
+              if ((child as any).isMesh && !mesh) mesh = child;
+            });
+
+            if (mesh && mesh.geometry) {
+              mesh.geometry.computeBoundingBox();
+              const bbox = mesh.geometry.boundingBox;
+              const size = new Vector3();
+              if (bbox) bbox.getSize(size);
+              
+              // pointStart is a WORLD direction offset from the object center when dragging starts.
+              // To get the local direction, apply the inverse world rotation.
+              const pointStart = (this.controls as any).pointStart;
+              let sign = new Vector3(1, 1, 1);
+              if (pointStart) {
+                const localPoint = pointStart.clone().applyQuaternion(obj.getWorldQuaternion(new Quaternion()).invert());
+                sign.set(
+                  localPoint.x >= 0 ? 1 : -1,
+                  localPoint.y >= 0 ? 1 : -1,
+                  localPoint.z >= 0 ? 1 : -1
+                );
+              }
+              const axis = (this.controls as any).axis;
+              let doX = axis && axis.includes('X') && axis !== 'XYZ';
+              let doY = axis && axis.includes('Y') && axis !== 'XYZ';
+              let doZ = axis && axis.includes('Z') && axis !== 'XYZ';
+              
+              if (axis === 'XYZ') {
+                doX = false; doY = false; doZ = false;
+              }
+
+              this.singleScaleData = {
+                initScale: obj.scale.clone(),
+                initPosition: obj.position.clone(),
+                initSize: size,
+                pivotInitScale: this.dummyPivot.scale.clone(),
+                sign: sign
+              };
+            }
+          }
+        }
       } else {
         this.cameraController.enabled = true;
+        this.singleScaleData = null;
+        
+        // Re-attach to update dummy pivot position and reset scale
+        if (this.activeObjectIds.length === 1 && this._currentMode === 'scale') {
+          this.attachToObject(this.activeObjectIds[0]);
+        }
+
         // Transform ended, commit to history
         if (this.activeObjectIds.length > 0) {
           commitHistory(this.sceneManager);
@@ -100,8 +201,17 @@ export class TransformSystem {
     const meta = this.sceneManager.getMeta(id);
     if (!obj || !meta || meta.locked) return;
 
-    this.controls.attach(obj);
     this.activeObjectIds = [id];
+
+    if (this._currentMode === 'scale') {
+      this.dummyPivot.position.copy(obj.getWorldPosition(new Vector3()));
+      this.dummyPivot.quaternion.copy(obj.getWorldQuaternion(new Quaternion()));
+      this.dummyPivot.scale.set(1, 1, 1);
+      this.dummyPivot.updateMatrixWorld(true);
+      this.controls.attach(this.dummyPivot);
+    } else {
+      this.controls.attach(obj);
+    }
   }
 
   attachToMultiple(ids: string[]): void {
@@ -152,6 +262,7 @@ export class TransformSystem {
   private _currentMode: TransformMode = 'translate';
 
   setMode(mode: TransformMode): void {
+    const oldMode = this._currentMode;
     this._currentMode = mode;
     if (mode === 'select') {
       this.controls.enabled = false;
@@ -160,6 +271,13 @@ export class TransformSystem {
       this.controls.enabled = true;
       (this.controls as any).visible = true;
       this.controls.setMode(mode);
+    }
+    
+    // Re-attach if switching between scale and other modes for single object
+    if (this.activeObjectIds.length === 1) {
+      if ((mode === 'scale' && oldMode !== 'scale') || (mode !== 'scale' && oldMode === 'scale')) {
+        this.attachToObject(this.activeObjectIds[0]);
+      }
     }
   }
 
