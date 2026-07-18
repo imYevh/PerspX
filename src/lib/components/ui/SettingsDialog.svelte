@@ -3,6 +3,7 @@
   import { themeStore, setTheme, setAccent, setAccentHue, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
   import { appModeStore, setAppMode, APP_MODES, APP_MODE_LABELS, APP_MODE_DESCRIPTIONS } from '$lib/stores/appMode.svelte';
   import ConfirmDialog from './ConfirmDialog.svelte';
+  import { shortcutsStore, formatShortcut } from '$lib/stores/shortcuts.svelte';
 
   interface Props {
     onClose: () => void;
@@ -14,8 +15,50 @@
   let isModeDropdownOpen = $state(false);
   
   let confirmDialog = $state<{ newMode: any } | null>(null);
+  let activeTab = $state<'general' | 'shortcuts'>('general');
+
+  let editingShortcutId = $state<string | null>(null);
+
+  function handleShortcutAssign(e: KeyboardEvent) {
+    if (!editingShortcutId) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.key === 'Escape') {
+      editingShortcutId = null;
+      window.removeEventListener('keydown', handleShortcutAssign, { capture: true });
+      return;
+    }
+
+    const isModifierOnly = ['ControlLeft', 'ControlRight', 'ShiftLeft', 'ShiftRight', 'AltLeft', 'AltRight', 'MetaLeft', 'MetaRight'].includes(e.code);
+    if (isModifierOnly) return;
+
+    shortcutsStore.updateBinding(editingShortcutId, {
+      code: e.code,
+      ctrl: e.ctrlKey || e.metaKey,
+      shift: e.shiftKey,
+      alt: e.altKey
+    });
+
+    editingShortcutId = null;
+    window.removeEventListener('keydown', handleShortcutAssign, { capture: true });
+  }
+
+  function startEditingShortcut(id: string) {
+    if (editingShortcutId) {
+      window.removeEventListener('keydown', handleShortcutAssign, { capture: true });
+    }
+    editingShortcutId = id;
+    window.addEventListener('keydown', handleShortcutAssign, { capture: true });
+  }
+
+  function resetShortcut(id: string) {
+    shortcutsStore.updateBinding(id, null);
+  }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (editingShortcutId) return; // let the capture listener handle it
     if (e.key === 'Escape') onClose();
   }
 
@@ -92,7 +135,13 @@
       <button class="close-btn" onclick={onClose}>×</button>
     </div>
     
+    <div class="tabs">
+      <button class="tab-btn" class:active={activeTab === 'general'} onclick={() => activeTab = 'general'}>General</button>
+      <button class="tab-btn" class:active={activeTab === 'shortcuts'} onclick={() => activeTab = 'shortcuts'}>Shortcuts</button>
+    </div>
+    
     <div class="content">
+      {#if activeTab === 'general'}
       <!-- Application Mode -->
       <div class="setting-group">
         <label>Application Mode</label>
@@ -164,6 +213,36 @@
           class="hue-slider"
         />
       </div>
+      {/if}
+
+      {#if activeTab === 'shortcuts'}
+      <div class="shortcuts-list">
+        {#each Object.entries($shortcutsStore.reduce((acc: Record<string, typeof $shortcutsStore>, def) => {
+          if (!acc[def.group]) acc[def.group] = [];
+          acc[def.group].push(def);
+          return acc;
+        }, {})) as [group, defs]}
+          <div class="shortcut-group">
+            <h4>{group}</h4>
+            {#each defs as def}
+              <div class="shortcut-item">
+                <span>{def.label}</span>
+                <div class="shortcut-actions">
+                  <kbd>{formatShortcut(def.id)}</kbd>
+                  <button class="edit-btn" class:editing={editingShortcutId === def.id} onclick={() => startEditingShortcut(def.id)}>
+                    {editingShortcutId === def.id ? 'Press key...' : 'Edit'}
+                  </button>
+                  {#if def.bindings !== undefined}
+                    <button class="reset-btn" onclick={() => resetShortcut(def.id)} title="Reset to default">↺</button>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/each}
+        <button class="reset-all-btn" onclick={() => shortcutsStore.resetAll()}>Reset All to Default</button>
+      </div>
+      {/if}
     </div>
   </div>
 </div>
@@ -228,6 +307,126 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-height: 380px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 12px;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .tab-btn.active {
+    background: var(--color-accent);
+    color: white;
+  }
+
+  .shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+  
+  .shortcuts-list::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .shortcuts-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+
+  .shortcut-group h4 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .shortcut-item:last-child {
+    border-bottom: none;
+  }
+
+  kbd {
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--color-text);
+  }
+
+  .shortcut-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .edit-btn, .reset-btn, .reset-all-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .edit-btn:hover, .reset-btn:hover, .reset-all-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  .edit-btn.editing {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+  }
+
+  .reset-btn {
+    padding: 4px;
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .reset-all-btn {
+    margin-top: 16px;
+    align-self: flex-end;
   }
 
   .setting-group {

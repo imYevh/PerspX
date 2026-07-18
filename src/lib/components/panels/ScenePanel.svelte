@@ -1,6 +1,7 @@
 <script lang="ts">
   import Panel from './Panel.svelte';
   import ContextMenu from '$lib/components/ui/ContextMenu.svelte';
+  import { formatShortcut, matchShortcut } from '$lib/stores/shortcuts.svelte';
   import { sceneStore } from '$lib/stores/scene';
   import type { SceneManager } from '$lib/core/scene';
   import type { CameraController } from '$lib/camera/camera-controller';
@@ -120,8 +121,8 @@
     const isMulti = $sceneStore.selectedIds.length > 1;
     const items: { id: string; label: string; icon?: string; shortcut?: string; divider?: boolean; danger?: boolean }[] = [];
     if (!isMulti) {
-      items.push({ id: 'rename',    label: 'Rename',    icon: '✏️', shortcut: 'F2' });
-      items.push({ id: 'duplicate', label: 'Duplicate', icon: '⧉', shortcut: 'Ctrl+D' });
+      items.push({ id: 'rename',    label: 'Rename',    icon: '✏️', shortcut: formatShortcut('rename') });
+      items.push({ id: 'duplicate', label: 'Duplicate', icon: '⧉', shortcut: formatShortcut('duplicate') });
       items.push({ id: '__div__',   label: '',          divider: true });
     }
     const n = $sceneStore.selectedIds.length;
@@ -182,6 +183,21 @@
       cancelRename();
     }
   }
+
+  $effect(() => {
+    const handleRenameShortcut = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (matchShortcut(e, 'rename')) {
+        e.preventDefault();
+        const selectedIds = $sceneStore.selectedIds;
+        if (selectedIds.length === 1) {
+          startRename(selectedIds[0]);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleRenameShortcut);
+    return () => window.removeEventListener('keydown', handleRenameShortcut);
+  });
 </script>
 
 <Panel title="Scene" maxHeight="250px">

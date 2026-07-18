@@ -16,6 +16,7 @@
 
   import Dropdown from './ui/Dropdown.svelte';
   import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, setShaderParam, type ShaderType } from '$lib/stores/shader.svelte';
+  import { formatShortcut } from '$lib/stores/shortcuts.svelte';
 
   interface Props {
     transformSystem: TransformSystem | undefined;
@@ -23,11 +24,11 @@
   
   let { transformSystem }: Props = $props();
 
-  const modes: { key: TransformMode; label: string; icon: string; shortcut: string }[] = [
-    { key: 'select', label: 'Select', icon: selectIcon, shortcut: 'Esc' },
-    { key: 'translate', label: 'Move', icon: moveIcon, shortcut: 'G' },
-    { key: 'rotate', label: 'Rotate', icon: rotateIcon, shortcut: 'R' },
-    { key: 'scale', label: 'Scale', icon: scaleIcon, shortcut: 'S' },
+  const modes: { key: TransformMode; label: string; icon: string; shortcutId: string }[] = [
+    { key: 'select', label: 'Select', icon: selectIcon, shortcutId: 'cancel' },
+    { key: 'translate', label: 'Move', icon: moveIcon, shortcutId: 'mode_translate' },
+    { key: 'rotate', label: 'Rotate', icon: rotateIcon, shortcutId: 'mode_rotate' },
+    { key: 'scale', label: 'Scale', icon: scaleIcon, shortcutId: 'mode_scale' },
   ];
 
   function setMode(mode: TransformMode) {
@@ -55,7 +56,7 @@
           class="tool-btn"
           class:active={$uiStore.transformMode === mode.key}
           onclick={() => setMode(mode.key)}
-          title="{$uiStore.breakpoint === 'mobile' ? mode.label : `${mode.label} (${mode.shortcut})`}"
+          title="{$uiStore.breakpoint === 'mobile' ? mode.label : `${mode.label} (${formatShortcut(mode.shortcutId)})`}"
         >
           <span class="tool-icon">{@html mode.icon}</span>
           <span class="tool-label">{mode.label}</span>

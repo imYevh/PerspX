@@ -5,6 +5,8 @@ import type { CameraController } from '$lib/camera/camera-controller';
 import { commitHistory } from '$lib/stores/history';
 import { get } from 'svelte/store';
 import { cameraStore } from '$lib/stores/camera';
+import { uiStore } from '$lib/stores/ui';
+import { matchShortcut } from '$lib/stores/shortcuts.svelte';
 
 export type TransformMode = 'select' | 'translate' | 'rotate' | 'scale';
 export type TransformSpace = 'world' | 'local';
@@ -23,6 +25,23 @@ export class TransformSystem {
   } | null = null;
   private sceneManager: SceneManager;
   private cameraController: CameraController;
+  public isShiftDown: boolean = false;
+  public isCtrlDown: boolean = false;
+
+  private updateModifiers(e: KeyboardEvent | MouseEvent | PointerEvent | TouchEvent) {
+    let ctrl = false;
+    let shift = false;
+    if ('ctrlKey' in e) {
+      ctrl = e.ctrlKey || e.metaKey;
+      shift = e.shiftKey;
+    }
+    if (ctrl !== this.isCtrlDown) {
+      this.isCtrlDown = ctrl;
+      if (this.isCtrlDown) this.enableGridSnap();
+      else this.disableSnap();
+    }
+    this.isShiftDown = shift;
+  }
 
   constructor(
     camera: Camera,
@@ -36,9 +55,15 @@ export class TransformSystem {
     this.controls = new TransformControls(camera, canvas);
 
     const originalGetPointer = (this.controls as any)._getPointer;
+    let dragStartPointer: { x: number, y: number } | null = null;
+
     if (originalGetPointer) {
       (this.controls as any)._getPointer = (event: Event) => {
-        const pointer = originalGetPointer(event);
+        if (event instanceof MouseEvent || event instanceof PointerEvent || typeof (event as any).ctrlKey !== 'undefined') {
+          this.updateModifiers(event as any);
+        }
+
+        const pointer = originalGetPointer.call(this.controls, event);
         if (pointer) {
           const state = get(cameraStore);
           if (state.fisheye && state.fisheyeIntensity !== 0) {
@@ -48,6 +73,24 @@ export class TransformSystem {
             const scale = (1.0 + k * r2) / maxScale;
             pointer.x *= scale;
             pointer.y *= scale;
+          }
+
+          // Dampen rotation and translation sensitivity
+          if (!this.controls.dragging) {
+            dragStartPointer = { x: pointer.x, y: pointer.y };
+          } else if (dragStartPointer) {
+            let pointerSensitivity = 1.0;
+            if (this._currentMode === 'rotate') {
+              pointerSensitivity = 0.5; // Base rotation speed
+            }
+            if (this.isShiftDown && this._currentMode !== 'scale') {
+              pointerSensitivity *= 0.1; // 10x slower when holding shift (except for scale, handled mathematically)
+            }
+
+            if (pointerSensitivity !== 1.0) {
+              pointer.x = dragStartPointer.x + (pointer.x - dragStartPointer.x) * pointerSensitivity;
+              pointer.y = dragStartPointer.y + (pointer.y - dragStartPointer.y) * pointerSensitivity;
+            }
           }
         }
         return pointer;
@@ -68,35 +111,38 @@ export class TransformSystem {
             const Sp = this.dummyPivot.scale.clone().divide(data.pivotInitScale);
             
             const axis = (this.controls as any).axis;
-            let doX = axis && axis.includes('X') && axis !== 'XYZ';
-            let doY = axis && axis.includes('Y') && axis !== 'XYZ';
-            let doZ = axis && axis.includes('Z') && axis !== 'XYZ';
+            const isXYZ = axis === 'XYZ';
+            const doX = axis && axis.includes('X');
+            const doY = axis && axis.includes('Y');
+            const doZ = axis && axis.includes('Z');
             
-            if (axis === 'XYZ') {
-              doX = false; doY = false; doZ = false;
-            }
-
             const sign = data.sign || new Vector3(1, 1, 1);
             
+            // Dampen scale sensitivity. Single-sided scale effectively doubled the rate of edge expansion.
+            // A sensitivity of 0.5 restores the original edge movement rate and makes uniform scaling less jarring.
+            const sensitivity = this.isShiftDown ? 0.05 : 0.5;
+            
             const newScale = new Vector3(
-              doX ? data.initScale.x * Sp.x : data.initScale.x,
-              doY ? data.initScale.y * Sp.y : data.initScale.y,
-              doZ ? data.initScale.z * Sp.z : data.initScale.z
+              doX ? data.initScale.x * (1 + (Sp.x - 1) * sensitivity) : data.initScale.x,
+              doY ? data.initScale.y * (1 + (Sp.y - 1) * sensitivity) : data.initScale.y,
+              doZ ? data.initScale.z * (1 + (Sp.z - 1) * sensitivity) : data.initScale.z
             );
             
             obj.scale.copy(newScale);
             
             // Simple local translation: when scaling from one face, the center must move
             // by exactly half the change in size to keep the opposite face stationary.
-            if (doX || doY || doZ) {
-              const deltaX = doX ? sign.x * (Sp.x - 1) * data.initSize.x * data.initScale.x / 2 : 0;
-              const deltaY = doY ? sign.y * (Sp.y - 1) * data.initSize.y * data.initScale.y / 2 : 0;
-              const deltaZ = doZ ? sign.z * (Sp.z - 1) * data.initSize.z * data.initScale.z / 2 : 0;
+            if (!isXYZ && (doX || doY || doZ)) {
+              const deltaX = doX ? sign.x * (Sp.x - 1) * sensitivity * data.initSize.x * data.initScale.x / 2 : 0;
+              const deltaY = doY ? sign.y * (Sp.y - 1) * sensitivity * data.initSize.y * data.initScale.y / 2 : 0;
+              const deltaZ = doZ ? sign.z * (Sp.z - 1) * sensitivity * data.initSize.z * data.initScale.z / 2 : 0;
 
               obj.position.copy(data.initPosition);
               obj.translateX(deltaX);
               obj.translateY(deltaY);
               obj.translateZ(deltaZ);
+            } else if (isXYZ) {
+              obj.position.copy(data.initPosition);
             }
           }
         } else if (this.activeObjectIds.length > 1) {
@@ -273,6 +319,9 @@ export class TransformSystem {
       this.controls.setMode(mode);
     }
     
+    // Sync the UI
+    uiStore.update(s => ({ ...s, transformMode: mode }));
+    
     // Re-attach if switching between scale and other modes for single object
     if (this.activeObjectIds.length === 1) {
       if ((mode === 'scale' && oldMode !== 'scale') || (mode !== 'scale' && oldMode === 'scale')) {
@@ -342,49 +391,51 @@ export class TransformSystem {
 
   private bindKeyboard(): void {
     window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keyup', this.onKeyUp);
   }
 
+  private onKeyUp = (e: KeyboardEvent): void => {
+    this.updateModifiers(e);
+  };
+
   private onKeyDown = (e: KeyboardEvent): void => {
+    this.updateModifiers(e);
+
     // Don't trigger if typing in an input
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-    switch (e.code) {
-      case 'KeyA':
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          const allIds = this.sceneManager.getAllObjects()
-            .filter(o => !o.meta.locked)
-            .map(o => o.id);
-          this.sceneManager.selectMultiple(allIds, false);
-        }
-        break;
-      case 'KeyT':
-      case 'KeyG': // Grab (Blender style)
-        this.setMode('translate');
-        break;
-      case 'KeyR':
-        this.setMode('rotate');
-        break;
-      case 'KeyS':
-        this.setMode('scale');
-        break;
-      case 'KeyX':
-        this.toggleSpace();
-        break;
-      case 'Escape':
+    if (matchShortcut(e, 'select_all')) {
+      e.preventDefault();
+      const allIds = this.sceneManager.getAllObjects()
+        .filter(o => !o.meta.locked)
+        .map(o => o.id);
+      this.sceneManager.selectMultiple(allIds, false);
+    } else if (matchShortcut(e, 'mode_translate')) {
+      e.preventDefault();
+      this.setMode('translate');
+    } else if (matchShortcut(e, 'mode_rotate')) {
+      e.preventDefault();
+      this.setMode('rotate');
+    } else if (matchShortcut(e, 'mode_scale')) {
+      e.preventDefault();
+      this.setMode('scale');
+    } else if (matchShortcut(e, 'toggle_space')) {
+      e.preventDefault();
+      this.toggleSpace();
+    } else if (matchShortcut(e, 'cancel')) {
+      e.preventDefault();
+      this.setMode('select');
+      this.detach();
+      this.sceneManager.deselectAll();
+    } else if (matchShortcut(e, 'delete')) {
+      e.preventDefault();
+      if (this.activeObjectIds.length > 0) {
+        const ids = [...this.activeObjectIds];
         this.detach();
-        this.sceneManager.deselectAll();
-        break;
-      case 'Delete':
-      case 'Backspace':
-        if (this.activeObjectIds.length > 0) {
-          const ids = [...this.activeObjectIds];
-          this.detach();
-          for (const id of ids) {
-            this.sceneManager.removeObject(id);
-          }
+        for (const id of ids) {
+          this.sceneManager.removeObject(id);
         }
-        break;
+      }
     }
   };
 
@@ -394,6 +445,7 @@ export class TransformSystem {
 
   dispose(): void {
     window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keyup', this.onKeyUp);
     this.controls.dispose();
   }
 }
