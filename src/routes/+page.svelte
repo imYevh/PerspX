@@ -351,6 +351,9 @@
           zolly: false,
           fisheye: true,
           fisheyeIntensity: 0,
+          swirl: false,
+          swirlAmount: 0,
+          swirlRadius: 0.5,
           chromaticAberration: true,
           chromaticAberrationIntensity: 0,
           tiltShift: true,
@@ -616,6 +619,7 @@
 
         // Apply camera effects
         loop.setFisheye($cameraStore.fisheye, $cameraStore.fisheyeIntensity);
+        loop.setSwirl($cameraStore.swirl, $cameraStore.swirlAmount, $cameraStore.swirlRadius);
         loop.setChromaticAberration($cameraStore.chromaticAberration, $cameraStore.chromaticAberrationIntensity);
         loop.setTiltShift($cameraStore.tiltShift, $cameraStore.tiltShiftPosition, $cameraStore.tiltShiftWidth, $cameraStore.tiltShiftIntensity);
 
@@ -736,6 +740,7 @@
         if (loop) loop.setCompactMode(true);
         updateCameraStore({
           fisheye: false, fisheyeIntensity: 0,
+          swirl: false, swirlAmount: 0,
           chromaticAberration: false, chromaticAberrationIntensity: 0,
           tiltShift: false, tiltShiftIntensity: 0,
         });
@@ -821,8 +826,8 @@
 
     <!-- Viewport -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
-      <!-- SubToolbar — hidden in compact mode -->
-      {#if $uiStore.panelsVisible && appModeStore.mode === 'desktop'}
+      <!-- SubToolbar — hidden in compact mode and on mobile (tools are in top bar) -->
+      {#if $uiStore.panelsVisible && appModeStore.mode === 'desktop' && $uiStore.breakpoint !== 'mobile'}
         <SubToolbar {transformSystem} />
       {/if}
       {#if appModeStore.mode === 'compact' && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
@@ -969,6 +974,8 @@
     width: 100%;
     height: 100%;
     touch-action: none;
+    position: relative;
+    z-index: 0;
   }
 
 </style>

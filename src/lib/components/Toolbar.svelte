@@ -19,11 +19,15 @@
   import resetIcon from '$lib/assets/reset.svg?raw';
   import undoRedoIcon from '$lib/assets/undo redo.svg?raw';
   import lightingIcon from '$lib/assets/lighting.svg?raw';
+  import lightsOnIcon from '$lib/assets/lights-on.svg?raw';
+  import lightsOffIcon from '$lib/assets/lights-off.svg?raw';
 
   import Dropdown from './ui/Dropdown.svelte';
   import type { DropdownItem } from './ui/Dropdown.svelte';
   import ConfirmDialog from './ui/ConfirmDialog.svelte';
   import SettingsDialog from './ui/SettingsDialog.svelte';
+  import OverlaysDropdown from './ui/OverlaysDropdown.svelte';
+  import ShadersDropdown from './ui/ShadersDropdown.svelte';
 
   interface Props {
     objectManager: ObjectManager | undefined;
@@ -113,6 +117,7 @@
     
     if (lightManager) {
       lightManager.applyPreset('studio');
+      lightManager.setShowHelpers(true);
     }
     resetCameraAndUI();
   }
@@ -140,7 +145,8 @@
     uiStore.update(s => ({
       ...s,
       transformMode: 'translate',
-      snapEnabled: false
+      snapEnabled: false,
+      lightHelpersVisible: true
     }));
 
     import('$lib/objects/primitives').then(({ resetColorCycle }) => {
@@ -285,12 +291,20 @@
       }));
     }
   }
+
+  function toggleMobileTab(tab: 'scene' | 'library' | 'properties' | 'camera') {
+    if ($uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === tab) {
+      uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: false }));
+    } else {
+      uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: true, mobileActiveTab: tab }));
+    }
+  }
 </script>
 
   {#snippet toolbarActions()}
     <!-- Central actions — some hidden in compact mode -->
     <div class="toolbar-group">
-      {#if appModeStore.mode === 'desktop'}
+      {#if appModeStore.mode === 'desktop' && $uiStore.breakpoint !== 'mobile'}
         <Dropdown 
           icon="" 
           label="View" 
@@ -300,7 +314,7 @@
         />
         <div class="toolbar-sep"></div>
       {/if}
-      {#if $uiStore.breakpoint !== 'desktop' && appModeStore.mode === 'desktop'}
+      {#if $uiStore.breakpoint === 'tablet' && appModeStore.mode === 'desktop'}
         <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
           <span class="tool-icon">{@html $uiStore.panelsVisible ? invisibleIcon : visibleIcon}</span>
           <span class="tool-label">{$uiStore.panelsVisible ? 'Hide UI' : 'Show UI'}</span>
@@ -332,10 +346,10 @@
       <div class="toolbar-sep"></div>
       <Dropdown 
         icon={lightingIcon} 
-        label="Lighting" 
+        label="Environment" 
         items={lightingMenu} 
         onSelect={handleLightSelect} 
-        title="Lighting Presets" 
+        title="Environment Presets" 
         hideLabelOnMobile={true}
         isMobile={$uiStore.breakpoint === 'mobile'}
       />
@@ -401,6 +415,22 @@
             <span class="tool-label">Guidelines</span>
           {/if}
         </button>
+        <button
+          class="tool-btn"
+          class:active={$uiStore.lightHelpersVisible}
+          onclick={() => {
+            if (lightManager) {
+              const isVisible = lightManager.toggleHelpers();
+              uiStore.update(s => ({ ...s, lightHelpersVisible: isVisible }));
+            }
+          }}
+          title="Toggle Light Helpers"
+        >
+          <span class="tool-icon">{@html $uiStore.lightHelpersVisible ? lightsOnIcon : lightsOffIcon}</span>
+          {#if $uiStore.breakpoint !== 'mobile'}
+            <span class="tool-label">Helpers</span>
+          {/if}
+        </button>
         <div class="toolbar-sep"></div>
       {/if}
       <button class="tool-btn" title="Take Render" onclick={takeScreenshot}>
@@ -434,6 +464,18 @@
   <div class="toolbar-sep"></div>
 
   {#if $uiStore.breakpoint === 'mobile'}
+    <div class="mobile-top-tabs">
+      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'scene'} onclick={() => toggleMobileTab('scene')} title="Scene">📦</button>
+      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'library'} onclick={() => toggleMobileTab('library')} title="Library">📚</button>
+      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'properties'} onclick={() => toggleMobileTab('properties')} title="Properties">⚙️</button>
+      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'camera'} onclick={() => toggleMobileTab('camera')} title="Camera">🎥</button>
+      
+      <div class="toolbar-sep"></div>
+      
+      <OverlaysDropdown align="center" />
+      <ShadersDropdown align="center" />
+    </div>
+
     <div class="spacer"></div>
     <Dropdown icon="⋯" label="Tools" title="More Tools" align="right">
       <div class="mobile-expanded-toolbar">
@@ -469,7 +511,7 @@
     background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
-    z-index: 100; /* Higher than Sidebar (50) and SubToolbar (20) */
+    z-index: 500; /* Higher than Sidebar (10) and BottomSheet (100) */
     position: relative;
   }
 
@@ -602,8 +644,43 @@
     flex-wrap: wrap;
     gap: 8px;
     padding: 8px;
-    width: 260px;
+    width: min(260px, calc(100vw - 32px));
     align-items: center;
+  }
+
+  .mobile-top-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    overflow-x: auto;
+    padding: 0 4px;
+    scrollbar-width: none;
+  }
+  .mobile-top-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-tab-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .mobile-tab-btn:active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .mobile-tab-btn.active {
+    background: rgba(74, 158, 255, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(74, 158, 255, 0.4);
   }
   
   @media (max-width: 767px) {

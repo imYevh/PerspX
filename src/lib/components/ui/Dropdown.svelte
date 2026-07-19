@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import type { Snippet } from 'svelte';
 
   export interface DropdownItem {
@@ -23,6 +23,7 @@
     isMobile?: boolean;
     direction?: 'down' | 'up';
     align?: 'left' | 'right' | 'center';
+    isOpen?: boolean;
     children?: Snippet;
   }
 
@@ -36,61 +37,130 @@
     isMobile = false,
     direction = 'down',
     align = 'left',
+    isOpen = $bindable(false),
     children
   }: Props = $props();
 
-  let isOpen = $state(false);
-  let dropdownRef: HTMLDivElement | undefined = $state();
+  let triggerRef: HTMLButtonElement | undefined = $state();
+  let menuEl: HTMLDivElement | undefined = $state();
 
-  function toggle() {
+  // Portal menu position
+  let menuStyle = $state('');
+
+  function computePosition() {
+    if (!triggerRef) return;
+    const r = triggerRef.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Use actual rendered width if available, else fallback
+    const menuWidth = menuEl ? menuEl.offsetWidth : 180;
+
+    let top: number, left: number;
+
+    if (direction === 'up') {
+      top = r.top - 4;
+    } else {
+      top = r.bottom + 4;
+    }
+
+    if (align === 'right') {
+      left = r.right - menuWidth;
+    } else if (align === 'center') {
+      left = r.left + r.width / 2 - menuWidth / 2;
+    } else {
+      left = r.left;
+    }
+
+    // Clamp so menu stays on screen
+    left = Math.max(8, Math.min(left, vw - menuWidth - 8));
+
+    if (direction === 'up') {
+      menuStyle = `bottom: ${vh - r.top + 4}px; left: ${left}px; max-height: ${r.top - 12}px;`;
+    } else {
+      menuStyle = `top: ${top}px; left: ${left}px; max-height: ${vh - top - 8}px;`;
+    }
+  }
+
+  async function toggle() {
     isOpen = !isOpen;
+    if (isOpen) {
+      await tick();
+      computePosition();
+      // Re-clamp after content renders and we know the real width
+      await tick();
+      computePosition();
+    }
   }
 
   function handleSelect(item: DropdownItem) {
     if (item.disabled || item.divider) return;
-    if (!item.keepOpenOnClick) {
-      isOpen = false;
-    }
+    if (!item.keepOpenOnClick) isOpen = false;
     if (onSelect) onSelect(item.id);
   }
 
-  function handleClickOutside(e: Event) {
-    if (isOpen && dropdownRef && !dropdownRef.contains(e.target as Node)) {
-      isOpen = false;
-    }
+  // Svelte action: moves the node to document.body (true DOM portal)
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return {
+      destroy() {
+        if (node.parentNode) node.parentNode.removeChild(node);
+      }
+    };
+  }
+
+  function handleClickOutside(e: PointerEvent) {
+    if (!isOpen) return;
+    const target = e.target as Node;
+    if (triggerRef?.contains(target)) return;
+    if (menuEl?.contains(target)) return;
+    isOpen = false;
+  }
+
+  function handleScrollResize() {
+    if (isOpen) computePosition();
   }
 
   onMount(() => {
-    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside, true);
+    window.addEventListener('scroll', handleScrollResize, true);
+    window.addEventListener('resize', handleScrollResize);
   });
 
   onDestroy(() => {
-    document.removeEventListener('pointerdown', handleClickOutside);
+    document.removeEventListener('pointerdown', handleClickOutside, true);
+    window.removeEventListener('scroll', handleScrollResize, true);
+    window.removeEventListener('resize', handleScrollResize);
   });
 </script>
 
-<div class="dropdown-wrapper" bind:this={dropdownRef}>
-  <button class="tool-btn" {title} onclick={toggle} class:active={isOpen}>
-    {#if icon}
-      <span class="tool-icon">{@html icon}</span>
+<button class="tool-btn" bind:this={triggerRef} {title} onclick={toggle} class:active={isOpen}>
+  {#if icon}
+    <span class="tool-icon">{@html icon}</span>
+  {/if}
+  {#if label}
+    {#if !(hideLabelOnMobile && isMobile)}
+      <span class="tool-label">{label}</span>
     {/if}
-    {#if label}
-      {#if !(hideLabelOnMobile && isMobile)}
-        <span class="tool-label">{label}</span>
-      {/if}
-    {/if}
-  </button>
+  {/if}
+</button>
 
-  {#if isOpen}
-    <div class="dropdown-menu" 
-         class:direction-up={direction === 'up'}
-         class:align-right={align === 'right'}
-         class:align-center={align === 'center'}>
-      {#if children}
-        {@render children()}
-      {:else if items}
-        {#each items as item}
-          {#if item.divider}
+{#if isOpen}
+  <!-- Portal: physically moved to <body> to escape WebGL canvas compositing -->
+  <div
+    use:portal
+    bind:this={menuEl}
+    class="dropdown-menu"
+    class:direction-up={direction === 'up'}
+    class:align-right={align === 'right'}
+    class:align-center={align === 'center'}
+    style={menuStyle}
+  >
+    {#if children}
+      {@render children()}
+    {:else if items}
+      {#each items as item}
+        {#if item.divider}
           <div class="dropdown-divider"></div>
         {:else}
           <button 
@@ -112,17 +182,11 @@
           </button>
         {/if}
       {/each}
-      {/if}
-    </div>
-  {/if}
-</div>
+    {/if}
+  </div>
+{/if}
 
 <style>
-  .dropdown-wrapper {
-    position: relative;
-    display: inline-block;
-  }
-
   .tool-btn {
     display: flex;
     align-items: center;
@@ -163,10 +227,10 @@
   }
 
   .dropdown-menu {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
+    position: fixed;
     min-width: 180px;
+    max-width: calc(100vw - 16px);
+    overflow-y: auto;
     background: var(--color-dropdown-bg, var(--color-surface-hover));
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -176,20 +240,16 @@
     padding: 4px;
     display: flex;
     flex-direction: column;
-    z-index: 1000;
+    z-index: 9999;
     animation: fadeIn 0.15s ease-out forwards;
     transform-origin: top left;
   }
 
   .dropdown-menu.direction-up {
-    top: auto;
-    bottom: calc(100% + 4px);
     transform-origin: bottom left;
   }
 
   .dropdown-menu.align-right {
-    left: auto;
-    right: 0;
     transform-origin: top right;
   }
   .dropdown-menu.direction-up.align-right {
@@ -197,8 +257,6 @@
   }
 
   .dropdown-menu.align-center {
-    left: 50%;
-    transform: translateX(-50%);
     transform-origin: top center;
   }
   .dropdown-menu.direction-up.align-center {

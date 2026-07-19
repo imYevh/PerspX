@@ -4,6 +4,7 @@
   import PropertiesPanel from './panels/PropertiesPanel.svelte';
   import CameraPanel from './panels/CameraPanel.svelte';
   import { appModeStore } from '$lib/stores/appMode.svelte';
+  import { uiStore } from '$lib/stores/ui';
   
   import type { SceneManager } from '$lib/core/scene';
   import type { ObjectManager } from '$lib/objects/object-manager';
@@ -17,10 +18,6 @@
     lightManager: LightManager | undefined;
   }
   let { sceneManager, objectManager, cameraController, lightManager }: Props = $props();
-
-  // In compact mode, only scene/library tabs are available
-  type TabKey = 'scene' | 'library' | 'properties' | 'camera';
-  let activeTab = $state<TabKey>('properties');
 
   let currentHeight = $state(250);
   let isDragging = $state(false);
@@ -78,40 +75,34 @@
   function snapHeight() {
     const maxH = getMaxHeight();
     if (currentHeight < 100) {
-      currentHeight = minHeight;
+      uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: false }));
+      currentHeight = 250; // reset for next open
     } else if (currentHeight > maxH * 0.75) {
       currentHeight = maxH;
     } else {
       currentHeight = Math.min(350, maxH); // Mid snap, capped by maxH
     }
   }
-
-  // Tabs behavior is now identical across modes
 </script>
 
 <svelte:window ontouchmove={handleTouchMove} ontouchend={handleTouchEnd} />
 
-<div class="bottom-sheet glass" style="height: {currentHeight}px; transition: {isDragging ? 'none' : 'height 0.2s ease'}">
+<div class="bottom-sheet glass" 
+     class:mobile-collapsed={$uiStore.breakpoint === 'mobile' && !$uiStore.mobileBottomSheetExpanded}
+     style="height: {currentHeight}px; transition: {isDragging ? 'none' : 'height 0.2s ease'}">
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="handle-area" ontouchstart={handleTouchStart} onmousedown={handleMouseDown}>
     <div class="handle-bar"></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab" class:active={activeTab === 'scene'} onclick={() => activeTab = 'scene'}>Scene</button>
-    <button class="tab" class:active={activeTab === 'library'} onclick={() => activeTab = 'library'}>Library</button>
-    <button class="tab" class:active={activeTab === 'properties'} onclick={() => activeTab = 'properties'}>Props</button>
-    <button class="tab" class:active={activeTab === 'camera'} onclick={() => activeTab = 'camera'}>Cam</button>
-  </div>
-
   <div class="content" style="display: {currentHeight <= minHeight ? 'none' : 'block'}">
-    {#if activeTab === 'scene'}
+    {#if $uiStore.mobileActiveTab === 'scene'}
       <ScenePanel {sceneManager} {cameraController} />
-    {:else if activeTab === 'library'}
+    {:else if $uiStore.mobileActiveTab === 'library'}
       <LibraryPanel {objectManager} {lightManager} />
-    {:else if activeTab === 'properties'}
+    {:else if $uiStore.mobileActiveTab === 'properties'}
       <PropertiesPanel {sceneManager} />
-    {:else if activeTab === 'camera'}
+    {:else if $uiStore.mobileActiveTab === 'camera'}
       <CameraPanel {cameraController} />
     {/if}
   </div>
@@ -160,38 +151,6 @@
     border-radius: 2px;
   }
 
-  .tabs {
-    display: flex;
-    gap: 4px;
-    padding: 0 8px 8px;
-    overflow-x: auto;
-    scrollbar-width: none; /* Hide scrollbar for clean look */
-  }
-  
-  .tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tab {
-    flex: 1;
-    min-width: max-content;
-    min-height: 44px; /* Touch-friendly */
-    padding: 8px 12px;
-    font-size: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .tab.active {
-    background: rgba(74, 158, 255, 0.15);
-    border-color: rgba(74, 158, 255, 0.3);
-    color: #fff;
-  }
-
   .content {
     flex: 1;
     overflow-y: auto;
@@ -200,5 +159,11 @@
     /* Hide scrollbar but keep functionality */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  /* Hide bottom sheet entirely when collapsed on mobile */
+  .bottom-sheet.mobile-collapsed {
+    transform: translateY(100%);
+    pointer-events: none;
   }
 </style>

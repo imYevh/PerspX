@@ -2,8 +2,10 @@
   import { fade, fly } from 'svelte/transition';
   import { themeStore, setTheme, setAccent, setAccentHue, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
   import { appModeStore, setAppMode, APP_MODES, APP_MODE_LABELS, APP_MODE_DESCRIPTIONS } from '$lib/stores/appMode.svelte';
+  import { shaderStore, setUse3DPreviews } from '$lib/stores/shader.svelte';
   import ConfirmDialog from './ConfirmDialog.svelte';
   import { shortcutsStore, formatShortcut } from '$lib/stores/shortcuts.svelte';
+  import { uiStore } from '$lib/stores/ui';
 
   interface Props {
     onClose: () => void;
@@ -15,7 +17,7 @@
   let isModeDropdownOpen = $state(false);
   
   let confirmDialog = $state<{ newMode: any } | null>(null);
-  let activeTab = $state<'general' | 'shortcuts'>('general');
+  let activeTab = $state<'general' | 'appearance' | 'keybinds'>('general');
 
   let editingShortcutId = $state<string | null>(null);
 
@@ -137,7 +139,10 @@
     
     <div class="tabs">
       <button class="tab-btn" class:active={activeTab === 'general'} onclick={() => activeTab = 'general'}>General</button>
-      <button class="tab-btn" class:active={activeTab === 'shortcuts'} onclick={() => activeTab = 'shortcuts'}>Shortcuts</button>
+      <button class="tab-btn" class:active={activeTab === 'appearance'} onclick={() => activeTab = 'appearance'}>Appearance</button>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <button class="tab-btn" class:active={activeTab === 'keybinds'} onclick={() => activeTab = 'keybinds'}>Keybinds</button>
+      {/if}
     </div>
     
     <div class="content">
@@ -165,6 +170,20 @@
 
       <div class="setting-divider"></div>
 
+      <!-- Shader Previews -->
+      <div class="setting-group toggle-group">
+        <div class="toggle-info">
+          <label for="shader-preview-toggle">3D Shader Previews</label>
+          <p class="setting-hint">Generate and display 3D cubes for procedural shader previews. Turn off for better performance on low-end devices.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="shader-preview-toggle" bind:checked={shaderStore.use3DPreviews}>
+          <span class="slider round"></span>
+        </label>
+      </div>
+      {/if}
+
+      {#if activeTab === 'appearance'}
       <!-- Base Theme -->
       <div class="setting-group">
         <label>Base Theme</label>
@@ -215,7 +234,7 @@
       </div>
       {/if}
 
-      {#if activeTab === 'shortcuts'}
+      {#if activeTab === 'keybinds'}
       <div class="shortcuts-list">
         {#each Object.entries($shortcutsStore.reduce((acc: Record<string, typeof $shortcutsStore>, def) => {
           if (!acc[def.group]) acc[def.group] = [];
@@ -271,6 +290,9 @@
     padding: 20px;
     width: calc(100% - 32px);
     max-width: 380px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
     box-shadow: var(--shadow-panel);
     color: var(--color-text);
@@ -281,6 +303,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-shrink: 0;
   }
 
   .title {
@@ -307,7 +330,9 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    min-height: 380px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px; /* Space for scrollbar */
   }
 
   .tabs {
@@ -316,6 +341,7 @@
     margin-bottom: 20px;
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 12px;
+    flex-shrink: 0;
   }
 
   .tab-btn {
@@ -337,15 +363,14 @@
 
   .tab-btn.active {
     background: var(--color-accent);
-    color: white;
+    color: var(--color-accent-text, white);
   }
 
   .shortcuts-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-height: 350px;
-    overflow-y: auto;
+    overflow-y: visible; /* Inherits scroll from parent .content */
     padding-right: 8px;
   }
   
@@ -529,7 +554,8 @@
 
   .presets {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 6px;
     overflow-x: auto;
     padding: 4px;
@@ -539,41 +565,119 @@
   .preset-btn {
     width: 24px;
     height: 24px;
+    aspect-ratio: 1;
     border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
     transition: transform 0.1s;
     padding: 0;
     flex-shrink: 0;
+    box-sizing: content-box;
+  }
+
+  @media (max-height: 500px) {
+    .preset-btn {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .preset-btn:hover {
-    transform: scale(1.1);
+    filter: brightness(1.2);
   }
 
   .preset-btn.active {
-    border-color: var(--color-text);
-    box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-text);
+    border-color: transparent;
+    box-shadow: inset 0 0 0 3px var(--color-surface), inset 0 0 0 5px var(--color-text);
   }
 
   .hue-slider {
-    width: 100%;
     -webkit-appearance: none;
-    height: 4px;
-    background: linear-gradient(to right, #ffffff 0%, #ff0000 10%, #ffff00 23.33%, #00ff00 36.66%, #00ffff 50%, #0000ff 63.33%, #ff00ff 76.66%, #ff0000 90%, #000000 100%);
-    border-radius: 2px;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
     outline: none;
   }
 
   .hue-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    border: 2px solid white;
+  }
+
+  .toggle-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    padding-right: 16px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-surface-active);
+    border: 1px solid var(--color-border);
+    transition: .2s;
+  }
+
+  .switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--color-text-muted);
+    transition: .2s;
+  }
+
+  input:checked + .slider {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(16px);
+    background-color: white;
+  }
+
+  .slider.round {
+    border-radius: 20px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
   }
 </style>
 

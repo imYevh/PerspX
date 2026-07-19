@@ -33,7 +33,10 @@ export type ShaderType =
   | 'refraction'
   | 'paper'
   | 'noise'
-  | 'gradient_blur';
+  | 'gradient_blur'
+  | 'pixelate'
+  | 'sobel'
+  | 'duotone';
 
 export interface ShaderParamDef {
   label: string;
@@ -61,14 +64,14 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   none: {
     id: 'none',
     label: 'None',
-    icon: '○',
+    icon: 'N',
     description: 'No procedural shader',
     params: {},
   },
   manga: {
     id: 'manga',
     label: 'Manga',
-    icon: '≡',
+    icon: 'M',
     description: 'Diagonal hatch lines — density driven by scene luminance',
     params: {
       scale: { label: 'Scale', min: 50, max: 800, step: 10, default: 300 },
@@ -80,7 +83,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   halftone: {
     id: 'halftone',
     label: 'Halftone',
-    icon: '⠿',
+    icon: 'H',
     description: 'Dot-grid pattern — dot size driven by luminance',
     params: {
       scale: { label: 'Scale', min: 20, max: 400, step: 5, default: 120 },
@@ -91,7 +94,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   checkerboard: {
     id: 'checkerboard',
     label: 'Checker',
-    icon: '▦',
+    icon: 'C',
     description: 'Hard alternating squares tinted by scene color',
     params: {
       scale: { label: 'Scale', min: 2, max: 80, step: 1, default: 20 },
@@ -101,7 +104,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   gradient: {
     id: 'gradient',
     label: 'Gradient',
-    icon: '▓',
+    icon: 'G',
     description: 'Vertical luminance gradient overlay',
     params: {
       intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.7 },
@@ -110,7 +113,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   hatch_gradient: {
     id: 'hatch_gradient',
     label: 'Hatch Grad',
-    icon: '▤',
+    icon: 'HG',
     description: 'Vertical gradient made of hatching lines',
     params: {
       scale: { label: 'Scale', min: 50, max: 800, step: 10, default: 200 },
@@ -121,7 +124,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   cartoon: {
     id: 'cartoon',
     label: 'Cartoon',
-    icon: '🔲',
+    icon: 'Ca',
     description: 'Posterization / cel shading effect',
     params: {
       intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.7 },
@@ -131,7 +134,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   crosshatch: {
     id: 'crosshatch',
     label: 'Crosshatch',
-    icon: '⌗',
+    icon: 'Cr',
     description: 'Bi-directional hatching perpendicular lines',
     params: {
       scale: { label: 'Scale', min: 50, max: 800, step: 10, default: 250 },
@@ -142,7 +145,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   noise: {
     id: 'noise',
     label: 'Grain',
-    icon: '∴',
+    icon: 'Gr',
     description: 'Animated film-grain procedural noise overlay',
     params: {
       intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.25 },
@@ -152,7 +155,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   sketch: {
     id: 'sketch',
     label: 'Sketch',
-    icon: '✎',
+    icon: 'S',
     description: 'Hand-drawn pencil contours and outlines',
     params: {
       thickness: { label: 'Thickness', min: 1, max: 8, step: 0.5, default: 2 },
@@ -163,7 +166,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   dither: {
     id: 'dither',
     label: 'Dither',
-    icon: '⛶',
+    icon: 'D',
     description: 'Retro Bayer matrix 4x4 dither',
     params: {
       scale: { label: 'Scale', min: 1, max: 8, step: 1, default: 2 },
@@ -173,7 +176,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   stipple: {
     id: 'stipple',
     label: 'Stipple',
-    icon: '░',
+    icon: 'St',
     description: 'Organic pointillistic ink dots',
     params: {
       scale: { label: 'Scale', min: 50, max: 800, step: 10, default: 300 },
@@ -184,7 +187,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   watercolor: {
     id: 'watercolor',
     label: 'Watercolor',
-    icon: '💧',
+    icon: 'W',
     description: 'Paint bleed at edges, paper grain, pigment pooling at contours',
     params: {
       bleed: { label: 'Bleed', min: 1, max: 15, step: 0.5, default: 5 },
@@ -195,7 +198,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   refraction: {
     id: 'refraction',
     label: 'Refraction',
-    icon: '〰',
+    icon: 'R',
     description: 'Glass / water surface distortion — objects seen through a liquid lens',
     params: {
       scale: { label: 'Frequency', min: 5, max: 80, step: 1, default: 18 },
@@ -206,7 +209,7 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   paper: {
     id: 'paper',
     label: 'Paper',
-    icon: '📄',
+    icon: 'P',
     description: 'Fine paper grain overlaid on the scene — clean white noise, no banding',
     params: {
       scale: { label: 'Grain Size', min: 100, max: 1500, step: 50, default: 700 },
@@ -217,13 +220,44 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
   gradient_blur: {
     id: 'gradient_blur',
     label: 'Gradient',
-    icon: '◑',
+    icon: 'G',
     description: 'Fades the scene to transparent along a direction, revealing the background',
     params: {
       position: { label: 'Position %', min: -50, max: 150, step: 1, default: 80 },
       length: { label: 'Length %', min: 0, max: 100, step: 1, default: 20 },
       angle: { label: 'Angle °', min: 0, max: 360, step: 1, default: 270 },
       intensity: { label: 'Opacity', min: 0, max: 1, step: 0.01, default: 1.0 },
+    },
+  },
+  pixelate: {
+    id: 'pixelate',
+    label: 'Pixelate',
+    icon: 'Px',
+    description: 'Downsamples the image to give a low-resolution pixel art look',
+    params: {
+      size: { label: 'Block Size', min: 2, max: 64, step: 1, default: 8 },
+    },
+  },
+  sobel: {
+    id: 'sobel',
+    label: 'Sobel Edge',
+    icon: 'SE',
+    description: 'Highlights the edges of objects in the scene',
+    params: {
+      thickness: { label: 'Thickness', min: 0.5, max: 5, step: 0.1, default: 1.0 },
+      intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.9 },
+    },
+  },
+  duotone: {
+    id: 'duotone',
+    label: 'Duotone',
+    icon: '◩',
+    description: 'Remaps the image to a two-color palette based on luminance',
+    params: {
+      hue1: { label: 'Dark Hue °', min: 0, max: 360, step: 1, default: 220 },
+      hue2: { label: 'Light Hue °', min: 0, max: 360, step: 1, default: 40 },
+      threshold: { label: 'Threshold', min: 0, max: 1, step: 0.01, default: 0.5 },
+      intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.9 },
     },
   },
 };
@@ -244,6 +278,9 @@ export const SHADER_ORDER: ShaderType[] = [
   'paper',
   'noise',
   'gradient_blur',
+  'pixelate',
+  'sobel',
+  'duotone',
 ];
 
 // ---------------------------------------------------------------------------
@@ -268,6 +305,7 @@ function buildDefaultParams(): ShaderParams {
 
 const STORAGE_KEY_ACTIVE = 'perspx-shader-active';
 const STORAGE_KEY_PARAMS = 'perspx-shader-params';
+const STORAGE_KEY_SETTINGS = 'perspx-shader-settings';
 
 // ---------------------------------------------------------------------------
 // Reactive State (Svelte 5 Runes)
@@ -275,6 +313,9 @@ const STORAGE_KEY_PARAMS = 'perspx-shader-params';
 
 let active = $state<ShaderType>('none');
 let params = $state<ShaderParams>(buildDefaultParams());
+let previews = $state<Partial<Record<ShaderType, string>>>({});
+let previewsLoading = $state(false);
+let use3DPreviews = $state(false);
 
 // ---------------------------------------------------------------------------
 // Persistence Helpers
@@ -302,6 +343,18 @@ function loadFromStorage(): void {
       // ignore corrupt storage
     }
   }
+
+  const storedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
+  if (storedSettings) {
+    try {
+      const parsed = JSON.parse(storedSettings);
+      if (typeof parsed.use3DPreviews === 'boolean') {
+        use3DPreviews = parsed.use3DPreviews;
+      }
+    } catch {
+      // ignore corrupt storage
+    }
+  }
 }
 
 function saveActive(type: ShaderType): void {
@@ -311,6 +364,11 @@ function saveActive(type: ShaderType): void {
 function saveParams(): void {
   if (typeof localStorage === 'undefined') return;
   localStorage.setItem(STORAGE_KEY_PARAMS, JSON.stringify(params));
+}
+
+function saveSettings(): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({ use3DPreviews }));
 }
 
 // ---------------------------------------------------------------------------
@@ -325,11 +383,47 @@ export const shaderStore = {
   get params(): ShaderParams {
     return params;
   },
+  get previews(): Partial<Record<ShaderType, string>> {
+    return previews;
+  },
+  get previewsLoading(): boolean {
+    return previewsLoading;
+  },
+  get use3DPreviews(): boolean {
+    return use3DPreviews;
+  },
+  set use3DPreviews(use: boolean) {
+    setUse3DPreviews(use);
+  }
 };
 
 /** Initialize the shader system. Call once on app mount. */
 export function initShader(): void {
   loadFromStorage();
+}
+
+/** Initialize the shader cube previews. Call when dropdown is opened. */
+export async function initShaderPreviews(): Promise<void> {
+  if (previewsLoading || Object.keys(previews).length > 0) return;
+  previewsLoading = true;
+  try {
+    const { generateShaderPreviews } = await import('$lib/materials/shader-previews');
+    const generated = await generateShaderPreviews();
+    previews = generated;
+  } catch (err) {
+    console.error('Failed to generate shader previews:', err);
+  } finally {
+    previewsLoading = false;
+  }
+}
+
+/** Set whether to use 3D cube previews */
+export function setUse3DPreviews(use: boolean): void {
+  use3DPreviews = use;
+  saveSettings();
+  if (use) {
+    initShaderPreviews();
+  }
 }
 
 /**

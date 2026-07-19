@@ -8,6 +8,7 @@
   import visibleSvg from '$lib/assets/visible.svg?raw';
   import invisibleSvg from '$lib/assets/invisible.svg?raw';
   import trashSvg from '$lib/assets/trashbin.svg?raw';
+  import lightsOffSvg from '$lib/assets/lights-off.svg?raw';
   import { tick } from 'svelte';
 
   interface Props {
@@ -93,8 +94,8 @@
 
   function getIcon(type: string): string {
     switch (type) {
-      case 'light': return '💡';
-      case 'model': return '📦';
+      case 'light': return lightsOffSvg;
+      case 'model': return '⬡';
       default: return '⬡';
     }
   }
@@ -212,7 +213,7 @@
         ondblclick={() => focusObject(id)}
         oncontextmenu={(e) => openContextMenu(id, e)}
       >
-        <span class="scene-icon">{getIcon(meta.type)}</span>
+        <span class="scene-icon">{@html getIcon(meta.type)}</span>
 
         {#if renamingId === id}
           <!-- Inline rename input -->
@@ -304,6 +305,15 @@
   .scene-icon {
     font-size: 14px;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scene-icon :global(svg) {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
   }
 
   .scene-name {

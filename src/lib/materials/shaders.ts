@@ -13,6 +13,7 @@ import {
   Fn,
   uv,
   vec2,
+  vec3,
   vec4,
   float,
   uniform,
@@ -613,6 +614,100 @@ function buildGradientBlurNode(
 }
 
 // ---------------------------------------------------------------------------
+// Pixelate
+// ---------------------------------------------------------------------------
+
+function buildPixelateNode(
+  sceneTexNode: any,
+  uniformSize: any,
+  uniformResolution: any,
+  uvCoord: any
+): any {
+  return Fn(() => {
+    const blocks = div(uniformResolution, uniformSize);
+    const snappedUV = div(add(floor(mul(uvCoord, blocks)), 0.5), blocks);
+    return sceneTexNode.sample(snappedUV);
+  })();
+}
+
+// ---------------------------------------------------------------------------
+// Sobel Edge
+// ---------------------------------------------------------------------------
+
+function buildSobelNode(
+  sceneTexNode: any,
+  uniformThickness: any,
+  uniformIntensity: any,
+  uniformResolution: any,
+  uvCoord: any
+): any {
+  return Fn(() => {
+    const sceneColor = sceneTexNode.sample(uvCoord);
+    
+    const stepSize = div(uniformThickness, uniformResolution) as any;
+    const uL = sceneTexNode.sample(add(uvCoord, vec2(sub(0.0, stepSize.x), 0.0)));
+    const uR = sceneTexNode.sample(add(uvCoord, vec2(stepSize.x, 0.0)));
+    const uD = sceneTexNode.sample(add(uvCoord, vec2(0.0, sub(0.0, stepSize.y))));
+    const uU = sceneTexNode.sample(add(uvCoord, vec2(0.0, stepSize.y)));
+
+    const lumL = luminance(uL);
+    const lumR = luminance(uR);
+    const lumD = luminance(uD);
+    const lumU = luminance(uU);
+
+    const gradX = sub(lumR, lumL);
+    const gradY = sub(lumU, lumD);
+    const edgeStrength = length(vec2(gradX, gradY));
+
+    const edgeColor = vec4(0.0, 0.0, 0.0, 1.0);
+    const isEdge = clamp(mul(edgeStrength, 5.0), 0.0, 1.0);
+    
+    const blended = mix(sceneColor, edgeColor, isEdge);
+    
+    return mix(sceneColor, blended, uniformIntensity);
+  })();
+}
+
+// ---------------------------------------------------------------------------
+// Duotone
+// ---------------------------------------------------------------------------
+
+function hsv2rgb(hNode: any, sNode: any, vNode: any): any {
+  const hNorm = div(hNode, 360.0);
+  const K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  const cX = vec3(hNorm, hNorm, hNorm);
+  const Kxyz = vec3(K.x, K.y, K.z);
+  const Kwww = vec3(K.w, K.w, K.w);
+  const Kxxx = vec3(K.x, K.x, K.x);
+  
+  const p = abs(sub(mul(fract(add(cX, Kxyz)), 6.0), Kwww));
+  const mixVal = clamp(sub(p, Kxxx), 0.0, 1.0);
+  return mul(vNode, mix(Kxxx, mixVal, sNode));
+}
+
+function buildDuotoneNode(
+  sceneTexNode: any,
+  uniformHue1: any,
+  uniformHue2: any,
+  uniformThreshold: any,
+  uniformIntensity: any,
+  uvCoord: any
+): any {
+  return Fn(() => {
+    const sceneColor = sceneTexNode.sample(uvCoord);
+    const lum = luminance(sceneColor);
+    
+    const color1 = hsv2rgb(uniformHue1, 1.0, 1.0);
+    const color2 = hsv2rgb(uniformHue2, 1.0, 1.0);
+    
+    const t = smoothstep(sub(uniformThreshold, 0.2), add(uniformThreshold, 0.2), lum);
+    const duotoneColor = vec4(mix(color1, color2, t), sceneColor.a);
+    
+    return mix(sceneColor, duotoneColor, uniformIntensity);
+  })();
+}
+
+// ---------------------------------------------------------------------------
 // Public Factory
 // ---------------------------------------------------------------------------
 
@@ -632,6 +727,9 @@ export interface ShaderNodeUniforms {
   paper: any;
   position: any;
   length: any;
+  size: any;
+  hue1: any;
+  hue2: any;
 }
 
 export function buildShaderNode(
@@ -756,6 +854,30 @@ export function buildShaderNode(
         uniforms.position,
         uniforms.length,
         uniforms.angle,
+        uniforms.intensity,
+        uvCoord
+      );
+    case 'pixelate':
+      return buildPixelateNode(
+        sceneTexNode,
+        uniforms.size,
+        uniforms.resolution,
+        uvCoord
+      );
+    case 'sobel':
+      return buildSobelNode(
+        sceneTexNode,
+        uniforms.thickness,
+        uniforms.intensity,
+        uniforms.resolution,
+        uvCoord
+      );
+    case 'duotone':
+      return buildDuotoneNode(
+        sceneTexNode,
+        uniforms.hue1,
+        uniforms.hue2,
+        uniforms.threshold,
         uniforms.intensity,
         uvCoord
       );

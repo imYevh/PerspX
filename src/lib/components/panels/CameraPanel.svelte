@@ -158,6 +158,39 @@
 
     <div class="cam-section">
       <div class="prop-header">
+        <div class="prop-title">Swirl</div>
+        <div class="value-row">
+          <button class="icon-btn" onclick={() => updateCameraStore({ swirl: false, swirlAmount: 0, swirlRadius: 0.5 })} title="Reset">⟲</button>
+        </div>
+      </div>
+      <div class="guidelines-toggle" style="margin-bottom: 8px;">
+        <label class="toggle-label">
+          <input type="checkbox" checked={$cameraStore.swirl} onchange={(e) => updateCameraStore({ swirl: (e.target as HTMLInputElement).checked })} />
+          <span>Enable Swirl</span>
+        </label>
+      </div>
+      {#if $cameraStore.swirl}
+        <div class="sub-prop">
+          <span class="sub-label">Amount: {$cameraStore.swirlAmount.toFixed(2)}</span>
+          <input type="range" min="-10" max="10" step="0.1" 
+                 value={$cameraStore.swirlAmount} 
+                 ondblclick={() => updateCameraStore({ swirlAmount: 0 })}
+                 oninput={(e) => updateCameraStore({ swirlAmount: parseFloat((e.target as HTMLInputElement).value) })} 
+                 class="slider" />
+        </div>
+        <div class="sub-prop">
+          <span class="sub-label">Radius: {$cameraStore.swirlRadius.toFixed(2)}</span>
+          <input type="range" min="0.1" max="2" step="0.01" 
+                 value={$cameraStore.swirlRadius} 
+                 ondblclick={() => updateCameraStore({ swirlRadius: 0.5 })}
+                 oninput={(e) => updateCameraStore({ swirlRadius: parseFloat((e.target as HTMLInputElement).value) })} 
+                 class="slider" />
+        </div>
+      {/if}
+    </div>
+
+    <div class="cam-section">
+      <div class="prop-header">
         <div class="prop-title">Chromatic Aberration</div>
         <div class="value-row">
           <span class="control-value">{$cameraStore.chromaticAberrationIntensity.toFixed(2)}</span>

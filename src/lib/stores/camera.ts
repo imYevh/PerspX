@@ -8,6 +8,9 @@ export interface CameraState {
   zolly: boolean;
   fisheye: boolean;
   fisheyeIntensity: number;
+  swirl: boolean;
+  swirlAmount: number;
+  swirlRadius: number;
   chromaticAberration: boolean;
   chromaticAberrationIntensity: number;
   tiltShift: boolean;
@@ -27,6 +30,9 @@ export const cameraStore = writable<CameraState>({
   zolly: false,
   fisheye: true,
   fisheyeIntensity: 0,
+  swirl: false,
+  swirlAmount: 0,
+  swirlRadius: 0.5,
   chromaticAberration: true,
   chromaticAberrationIntensity: 0,
   tiltShift: true,

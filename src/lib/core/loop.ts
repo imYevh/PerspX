@@ -1,7 +1,7 @@
 import type { WebGPURenderer } from "three/webgpu";
 import { Scene, type Camera, Vector2 } from "three";
 import { PostProcessing } from "three/webgpu";
-import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, or, select, texture } from "three/tsl";
+import { pass, uv, sub, mul, add, dot, Fn, uniform, div, vec4, vec2, float, max, abs, smoothstep, clamp, mix, lessThan, and, or, select, texture, exp, cos, sin, length } from "three/tsl";
 import { buildShaderNode, type ShaderNodeUniforms } from "$lib/materials/shaders";
 import type { ShaderType } from "$lib/stores/shader.svelte";
 
@@ -21,6 +21,10 @@ export class RenderLoop {
   
   private fisheyeIntensityUniform = uniform(0.0);
   public fisheyeEnabled = false;
+
+  private swirlAmountUniform = uniform(0.0);
+  private swirlRadiusUniform = uniform(0.5);
+  public swirlEnabled = false;
 
   private caIntensityUniform = uniform(0.0);
   public caEnabled = false;
@@ -47,6 +51,9 @@ export class RenderLoop {
     paper:     uniform(0.3),
     position:  uniform(80.0),
     length:    uniform(20.0),
+    size:      uniform(8.0),
+    hue1:      uniform(220.0),
+    hue2:      uniform(40.0),
   };
   private activeShaderType: ShaderType = 'none';
 
@@ -73,8 +80,8 @@ export class RenderLoop {
     this.postProcessing.outputNode = this.combinedEffectNode;
   }
 
-  private getFisheyeUVNode(): any {
-    const p = sub(mul(uv(), 2.0), 1.0); // p = uv * 2 - 1
+  private getFisheyeUVNode(baseUV: any): any {
+    const p = sub(mul(baseUV, 2.0), 1.0); // p = uv * 2 - 1
     const r2 = dot(p, p);
     
     const k = mul(this.fisheyeIntensityUniform, 0.009);
@@ -83,6 +90,23 @@ export class RenderLoop {
     const newP = mul(p, scale);
     
     return add(mul(newP, 0.5), 0.5);
+  }
+
+  private getSwirlUVNode(baseUV: any): any {
+    const center = vec2(0.5, 0.5);
+    const p = sub(baseUV, center);
+    
+    const r = length(p);
+    const decay = div(r, this.swirlRadiusUniform);
+    const rot = mul(this.swirlAmountUniform, exp(sub(0.0, mul(decay, decay))));
+    
+    const cosT = cos(rot);
+    const sinT = sin(rot);
+    
+    const x = sub(mul(p.x, cosT), mul(p.y, sinT));
+    const y = add(mul(p.x, sinT), mul(p.y, cosT));
+    
+    return add(vec2(x, y), center);
   }
 
   // ── Shader API ────────────────────────────────────────────────────────────
@@ -110,6 +134,9 @@ export class RenderLoop {
     if (params.paper     !== undefined) this.shaderUniforms.paper.value     = params.paper;
     if (params.position  !== undefined) this.shaderUniforms.position.value  = params.position;
     if (params.length    !== undefined) this.shaderUniforms.length.value    = params.length;
+    if (params.size      !== undefined) this.shaderUniforms.size.value      = params.size;
+    if (params.hue1      !== undefined) this.shaderUniforms.hue1.value      = params.hue1;
+    if (params.hue2      !== undefined) this.shaderUniforms.hue2.value      = params.hue2;
 
     // Rebuild the final composite effect node
     this.combinedEffectNode = this.buildCameraEffectsNode();
@@ -132,12 +159,21 @@ export class RenderLoop {
     if (params.paper     !== undefined) this.shaderUniforms.paper.value     = params.paper;
     if (params.position  !== undefined) this.shaderUniforms.position.value  = params.position;
     if (params.length    !== undefined) this.shaderUniforms.length.value    = params.length;
+    if (params.size      !== undefined) this.shaderUniforms.size.value      = params.size;
+    if (params.hue1      !== undefined) this.shaderUniforms.hue1.value      = params.hue1;
+    if (params.hue2      !== undefined) this.shaderUniforms.hue2.value      = params.hue2;
     // No needsUpdate needed — uniforms update live
   }
 
   setFisheye(enabled: boolean, intensity: number): void {
     this.fisheyeEnabled = enabled;
     this.fisheyeIntensityUniform.value = enabled ? intensity : 0.0; 
+  }
+
+  setSwirl(enabled: boolean, amount: number, radius: number): void {
+    this.swirlEnabled = enabled;
+    this.swirlAmountUniform.value = enabled ? amount : 0.0;
+    this.swirlRadiusUniform.value = radius;
   }
 
   setChromaticAberration(enabled: boolean, intensity: number): void {
@@ -189,11 +225,12 @@ export class RenderLoop {
   public renderOnce(): void {
 
     const hasFisheye = this.fisheyeEnabled && this.fisheyeIntensityUniform.value !== 0;
+    const hasSwirl = this.swirlEnabled && this.swirlAmountUniform.value !== 0;
     const hasCA = this.caEnabled && this.caIntensityUniform.value !== 0;
     const hasTiltShift = this.tiltShiftEnabled && this.tiltShiftIntensityUniform.value !== 0;
     const hasShader = this.activeShaderType !== 'none';
 
-    if (hasFisheye || hasCA || hasTiltShift || hasShader) {
+    if (hasFisheye || hasSwirl || hasCA || hasTiltShift || hasShader) {
       if (this.postProcessing.outputNode !== this.combinedEffectNode) {
         this.postProcessing.outputNode = this.combinedEffectNode;
         this.postProcessing.needsUpdate = true;
@@ -224,8 +261,11 @@ export class RenderLoop {
       // shaders (e.g. watercolor) for every blur tap.
       const getRawAt = (targetUV: any) => sceneTexNode.sample(targetUV);
 
+      // 0. Swirl UV warp
+      const swirledUV = this.getSwirlUVNode(uv());
+
       // 1. Fisheye UV warp
-      const fisheyeUV = this.getFisheyeUVNode();
+      const fisheyeUV = this.getFisheyeUVNode(swirledUV);
 
       // 2. Chromatic Aberration — splits on raw samples only
       const caOffset = mul(sub(fisheyeUV, 0.5), this.caIntensityUniform, 0.05);

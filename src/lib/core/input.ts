@@ -144,12 +144,39 @@ export class InputSystem {
     return { x: x * scale, y: y * scale };
   }
 
+  private applySwirl(x: number, y: number): { x: number, y: number } {
+    const state = get(cameraStore);
+    if (!state.swirl || state.swirlAmount === 0) return { x, y };
+    
+    const uvX = (x + 1) / 2;
+    const uvY = (y + 1) / 2;
+    
+    const pX = uvX - 0.5;
+    const pY = uvY - 0.5;
+    
+    const r = Math.sqrt(pX * pX + pY * pY);
+    const decay = r / state.swirlRadius;
+    const rot = state.swirlAmount * Math.exp(-(decay * decay));
+    
+    const cosT = Math.cos(rot);
+    const sinT = Math.sin(rot);
+    
+    const nx = pX * cosT - pY * sinT;
+    const ny = pX * sinT + pY * cosT;
+    
+    const ndcX = (nx + 0.5) * 2 - 1;
+    const ndcY = (ny + 0.5) * 2 - 1;
+    
+    return { x: ndcX, y: ndcY };
+  }
+
   private performSelection(e: PointerEvent, additive: boolean) {
     const rect = this.canvas.getBoundingClientRect();
     let x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     let y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    const warped = this.applyFisheye(x, y);
+    let warped = this.applySwirl(x, y);
+    warped = this.applyFisheye(warped.x, warped.y);
     this.mouse.x = warped.x;
     this.mouse.y = warped.y;
 
@@ -168,8 +195,11 @@ export class InputSystem {
     let endX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     let endY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    const warpedStart = this.applyFisheye(startX, startY);
-    const warpedEnd = this.applyFisheye(endX, endY);
+    let warpedStart = this.applySwirl(startX, startY);
+    warpedStart = this.applyFisheye(warpedStart.x, warpedStart.y);
+    
+    let warpedEnd = this.applySwirl(endX, endY);
+    warpedEnd = this.applyFisheye(warpedEnd.x, warpedEnd.y);
 
     // SelectionBox expects top-left and bottom-right points
     this.selectionBox.startPoint.set(Math.min(warpedStart.x, warpedEnd.x), Math.max(warpedStart.y, warpedEnd.y), 0.5);

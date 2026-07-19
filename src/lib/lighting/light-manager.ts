@@ -246,6 +246,13 @@ export class LightManager {
     return this.showHelpers;
   }
 
+  setShowHelpers(visible: boolean): void {
+    this.showHelpers = visible;
+    for (const helper of this.helpers.values()) {
+      helper.visible = visible;
+    }
+  }
+
   updateHelpers(): void {
     for (const [id, helper] of this.helpers.entries()) {
       if ('update' in helper && typeof (helper as any).update === 'function') {

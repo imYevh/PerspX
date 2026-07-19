@@ -31,6 +31,7 @@ export interface UIState {
   breakpoint: 'desktop' | 'tablet' | 'mobile';
   gridVisible: boolean;
   vanishingVisible: boolean;
+  lightHelpersVisible: boolean;
   overlays: {
     edges: boolean;
     half: boolean;
@@ -41,6 +42,8 @@ export interface UIState {
     textured: boolean;
   };
   orientation: 'portrait' | 'landscape';
+  mobileBottomSheetExpanded: boolean;
+  mobileActiveTab: 'scene' | 'library' | 'properties' | 'camera';
 }
 
 export const uiStore = writable<UIState>({
@@ -69,6 +72,7 @@ export const uiStore = writable<UIState>({
   breakpoint: 'desktop',
   gridVisible: true,
   vanishingVisible: false,
+  lightHelpersVisible: true,
   overlays: {
     edges: true,
     half: false,
@@ -78,7 +82,9 @@ export const uiStore = writable<UIState>({
     xyz: false,
     textured: false,
   },
-  orientation: 'landscape'
+  orientation: 'landscape',
+  mobileBottomSheetExpanded: false,
+  mobileActiveTab: 'properties'
 });
 
 export function getBreakpoint(width: number, height: number): 'desktop' | 'tablet' | 'mobile' {

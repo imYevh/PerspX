@@ -2,12 +2,21 @@
   import shadersIcon from '$lib/assets/shaders.svg?raw';
   import Dropdown from './Dropdown.svelte';
   import { uiStore } from '$lib/stores/ui';
-  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, setShaderParam, type ShaderType } from '$lib/stores/shader.svelte';
+  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, setShaderParam, initShaderPreviews, type ShaderType } from '$lib/stores/shader.svelte';
+import { onMount } from 'svelte';
 
   interface Props {
     align?: 'left' | 'right' | 'center';
   }
   let { align = 'left' }: Props = $props();
+
+  let isOpen = $state(false);
+
+  $effect(() => {
+    if (isOpen && shaderStore.use3DPreviews) {
+      initShaderPreviews();
+    }
+  });
 
   function onShaderSelect(type: ShaderType) {
     if (shaderStore.active === type) {
@@ -42,6 +51,7 @@
   isMobile={$uiStore.breakpoint === 'mobile'}
   direction="down"
   align={align}
+  bind:isOpen={isOpen}
 >
   <div class="popover-content">
     <div class="shader-grid">
@@ -53,7 +63,11 @@
           onclick={() => onShaderSelect(type)}
           title={def.description}
         >
-          <span class="shader-icon">{def.icon}</span>
+          {#if shaderStore.use3DPreviews && shaderStore.previews[type]}
+            <img src={shaderStore.previews[type]} alt={def.label} class="shader-preview-img" />
+          {:else}
+            <span class="shader-icon" class:loading={shaderStore.use3DPreviews && shaderStore.previewsLoading}>{def.icon}</span>
+          {/if}
           <span class="shader-label">{def.label}</span>
         </button>
       {/each}
@@ -152,6 +166,26 @@
   .shader-icon {
     font-size: 16px;
     line-height: 1;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shader-icon.loading {
+    opacity: 0.5;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+    100% { opacity: 0.3; }
+  }
+  .shader-preview-img {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: var(--color-bg);
   }
   .shader-label {
     font-size: 9px;

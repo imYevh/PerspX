@@ -61,7 +61,7 @@ let accentLightness = $state<number | null>(null);
 // DOM Helpers
 // ---------------------------------------------------------------------------
 
-function updateAccentTextColor(lit: number | null, currentMode: ThemeMode): void {
+function updateAccentTextColor(lit: number | null, currentMode: ThemeMode, hue?: number): void {
 	if (typeof document === 'undefined') return;
 	let effectiveLit = lit;
 	if (effectiveLit === null) {
@@ -69,7 +69,11 @@ function updateAccentTextColor(lit: number | null, currentMode: ThemeMode): void
 		const isChromatic = currentMode === 'chromatic';
 		effectiveLit = isChromatic ? 45 : (isLight ? 50 : 64);
 	}
-	if (effectiveLit > 70) {
+	// Yellow/amber/green hues (30-180) are perceptually brighter — use lower threshold
+	const effectiveHue = hue ?? 217;
+	const isPerceptuallyBright = effectiveHue >= 30 && effectiveHue <= 180;
+	const threshold = isPerceptuallyBright ? 55 : 70;
+	if (effectiveLit > threshold) {
 		document.documentElement.style.setProperty('--color-accent-text', '#111111');
 	} else {
 		document.documentElement.style.setProperty('--color-accent-text', '#ffffff');
@@ -159,7 +163,7 @@ export function initTheme(): void {
 		}
 	}
 
-	updateAccentTextColor(accentLightness, mode);
+	updateAccentTextColor(accentLightness, mode, accentHue);
 }
 
 /** Set the base theme. */
@@ -167,7 +171,7 @@ export function setTheme(newMode: ThemeMode): void {
 	mode = newMode;
 	applyThemeToDOM(newMode);
 	saveTheme(newMode);
-	updateAccentTextColor(accentLightness, newMode);
+	updateAccentTextColor(accentLightness, newMode, accentHue);
 }
 
 /** Set the accent hue (0–360). */
@@ -186,7 +190,7 @@ export function setAccentHue(hue: number): void {
 		document.documentElement.style.removeProperty('--accent-saturation');
 		document.documentElement.style.removeProperty('--accent-lightness');
 	}
-	updateAccentTextColor(accentLightness, mode);
+	updateAccentTextColor(accentLightness, mode, accentHue);
 }
 
 /** Set custom accent color variables */
@@ -212,7 +216,7 @@ export function setAccent(hue: number, saturation?: number, lightness?: number):
 		}
 	}
 
-	updateAccentTextColor(accentLightness, mode);
+	updateAccentTextColor(accentLightness, mode, accentHue);
 
 	if (typeof localStorage !== 'undefined') {
 		if (saturation !== undefined) localStorage.setItem('perspx-accent-sat', String(saturation));
