@@ -113,6 +113,7 @@
         if (meta.type !== 'light') {
           sceneManager.removeObject(id);
         }
+      }
     }
     
     if (lightManager) {
