@@ -363,8 +363,13 @@
     .prop-row {
       flex-direction: column;
       align-items: stretch;
-      gap: 4px;
-      margin-bottom: 12px;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    
+    .xyz {
+      flex-direction: column;
+      gap: 6px;
     }
     
     label {
