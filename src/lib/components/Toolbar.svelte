@@ -441,12 +441,11 @@
     <div class="toolbar-sep"></div>
 
     <Dropdown 
-      icon={$uiStore.breakpoint === 'mobile' ? '⋮' : ''} 
+      icon="" 
       label="Tools" 
       items={toolsMenu} 
       onSelect={handleToolsSelect} 
       title="Tools" 
-      hideLabelOnMobile={true}
     />
 
     <div class="toolbar-sep"></div>
