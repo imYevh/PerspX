@@ -1,6 +1,8 @@
 <script lang="ts">
   import overlaysIcon from '$lib/assets/overlays.svg?raw';
   import Dropdown from './Dropdown.svelte';
+  import checkedIcon from '$lib/assets/checked_checkbox.svg?raw';
+  import uncheckedIcon from '$lib/assets/unchecked_checkbox.svg?raw';
   import { uiStore } from '$lib/stores/ui';
 
   interface Props {
@@ -46,8 +48,12 @@
           class:active={$uiStore.overlays[item.id as keyof typeof $uiStore.overlays]}
           onclick={() => toggleOverlay(item.id)}
         >
-          <div class="checkbox">
-            {#if $uiStore.overlays[item.id as keyof typeof $uiStore.overlays]}✓{/if}
+          <div class="checkbox-icon">
+            {#if $uiStore.overlays[item.id as keyof typeof $uiStore.overlays]}
+              {@html checkedIcon}
+            {:else}
+              {@html uncheckedIcon}
+            {/if}
           </div>
           {item.label}
         </button>
@@ -94,18 +100,15 @@
     background: var(--color-accent-muted);
     border-color: var(--color-accent);
   }
-  .checkbox {
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-    border: 1px solid var(--color-text-muted);
+  .checkbox-icon {
+    width: 16px;
+    height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    color: var(--color-accent);
+    color: var(--color-text-muted);
   }
-  .toggle-btn.active .checkbox {
-    border-color: var(--color-accent);
+  .toggle-btn.active .checkbox-icon {
+    color: var(--color-accent);
   }
 </style>
