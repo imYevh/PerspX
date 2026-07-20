@@ -6,7 +6,9 @@
     maxHeight?: string;
   }
   let { title, children, defaultCollapsed = false, maxHeight }: Props = $props();
-  let collapsed = $state(defaultCollapsed);
+  let collapsed = $state(false);
+  // svelte-ignore state_referenced_locally
+  collapsed = defaultCollapsed;
 </script>
 
 <div class="panel">

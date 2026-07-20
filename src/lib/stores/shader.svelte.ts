@@ -33,7 +33,7 @@ export type ShaderType =
   | 'refraction'
   | 'paper'
   | 'noise'
-  | 'gradient_blur'
+  | 'fade'
   | 'pixelate'
   | 'sobel'
   | 'duotone';
@@ -217,10 +217,10 @@ export const SHADER_DEFS: Record<ShaderType, ShaderDef> = {
       intensity: { label: 'Intensity', min: 0, max: 1, step: 0.01, default: 0.9 },
     },
   },
-  gradient_blur: {
-    id: 'gradient_blur',
-    label: 'Gradient',
-    icon: 'G',
+  fade: {
+    id: 'fade',
+    label: 'Fade',
+    icon: 'F',
     description: 'Fades the scene to transparent along a direction, revealing the background',
     params: {
       position: { label: 'Position %', min: -50, max: 150, step: 1, default: 80 },
@@ -277,7 +277,7 @@ export const SHADER_ORDER: ShaderType[] = [
   'refraction',
   'paper',
   'noise',
-  'gradient_blur',
+  'fade',
   'pixelate',
   'sobel',
   'duotone',

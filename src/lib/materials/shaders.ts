@@ -564,10 +564,10 @@ function buildPaperNode(
 }
 
 // ---------------------------------------------------------------------------
-// Gradient Blur
+// Fade
 // ---------------------------------------------------------------------------
 
-function buildGradientBlurNode(
+function buildFadeNode(
   sceneTexNode: any,
   uniformPosition: any, // center of the fade in % (0 to 100)
   uniformLength: any,   // width of the fade in % (0 to 100)
@@ -848,8 +848,8 @@ export function buildShaderNode(
         uniforms.scale,
         uvCoord
       );
-    case 'gradient_blur':
-      return buildGradientBlurNode(
+    case 'fade':
+      return buildFadeNode(
         sceneTexNode,
         uniforms.position,
         uniforms.length,

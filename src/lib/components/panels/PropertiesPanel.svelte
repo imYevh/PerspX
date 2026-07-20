@@ -201,17 +201,20 @@
     <div class="prop-section">
       <div class="prop-title">🎨 Object</div>
       <div class="prop-row">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label>Name</label>
         <input class="pi full" type="text" value={meta.name}
           oninput={(e) => setName((e.target as HTMLInputElement).value)} onchange={commit} />
       </div>
       <div class="prop-row">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label>Type</label>
         <span class="prop-badge">{meta.type}</span>
       </div>
 
       {#if 'intensity' in obj}
         <div class="prop-row">
+          <!-- svelte-ignore a11y_label_has_associated_control -->
           <label>Intensity</label>
           <ScrubInput class="pi full" step={0.1} {tick} getValue={() => (obj as any).intensity}
             oninput={(v) => setIntensity(v.toString())} onchange={commit} />
@@ -220,6 +223,7 @@
 
       {#if 'color' in obj}
         <div class="prop-row">
+          <!-- svelte-ignore a11y_label_has_associated_control -->
           <label>Color</label>
           <input class="pi full" type="color" value={"#" + (obj as any).color.getHexString()}
             oninput={(e) => setColor((e.target as HTMLInputElement).value)} onchange={commit}

@@ -25,6 +25,13 @@ allprojects {
 }
 
 subprojects {
+    tasks.withType(Task).configureEach { task ->
+        if (task.hasProperty("kotlinOptions")) {
+            task.kotlinOptions {
+                jvmTarget = "20"
+            }
+        }
+    }
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android {

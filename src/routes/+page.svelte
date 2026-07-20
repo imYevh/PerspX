@@ -19,6 +19,7 @@
   import { initAppMode, appModeStore } from '$lib/stores/appMode.svelte';
   import { initShader, shaderStore, resetShaders } from '$lib/stores/shader.svelte';
   import { matchShortcut } from '$lib/stores/shortcuts.svelte';
+  import { serializeObjects, pasteObjects } from '$lib/utils/serialization';
 
   // UI Components
   import Toolbar from '$lib/components/Toolbar.svelte';
@@ -30,7 +31,7 @@
   import SubToolbar from '$lib/components/SubToolbar.svelte';
   import CompactCameraBar from '$lib/components/CompactCameraBar.svelte';
   import ViewportOverlay from '$lib/components/ViewportOverlay.svelte';
-
+  import FloatingShaderPanel from '$lib/components/ui/FloatingShaderPanel.svelte';
 
   let canvas: HTMLCanvasElement;
   let renderer = $state<Renderer | undefined>();
@@ -408,28 +409,100 @@
         // 3. Get Data URL
         const dataUrl = _renderer.instance.domElement.toDataURL('image/png');
 
+        // Convert DataURL to Blob synchronously
+        const arr = dataUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+        const blob = new Blob([u8arr], { type: mime });
+
         // 4. Download file
         try {
-          if ('showSaveFilePicker' in window) {
-            // Modern API to specify path
-            const handle = await (window as any).showSaveFilePicker({
-              suggestedName: filename,
-              types: [{
-                description: 'PNG Image',
-                accept: {'image/png': ['.png']},
-              }],
-            });
-            const writable = await handle.createWritable();
-            const response = await fetch(dataUrl);
-            const blob = await response.blob();
-            await writable.write(blob);
-            await writable.close();
-          } else {
-            // Fallback for older devices/safari
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = filename;
-            a.click();
+          if ('Capacitor' in window && (window as any).Capacitor.isNativePlatform()) {
+            const { Filesystem, Directory } = await import('@capacitor/filesystem');
+            const { Media } = await import('@capacitor-community/media');
+            
+            try {
+              await Media.requestPermissions();
+              
+              const base64Data = dataUrl.split(',')[1];
+              const savedFile = await Filesystem.writeFile({
+                path: filename,
+                data: base64Data,
+                directory: Directory.Cache
+              });
+              
+              let album;
+              try {
+                album = await Media.createAlbum({ name: 'PerspX' });
+              } catch (albumErr) {
+                console.warn('Could not create album, saving to default', albumErr);
+              }
+              
+              await Media.savePhoto({
+                path: savedFile.uri,
+                albumIdentifier: album ? album.identifier : undefined
+              });
+              
+              alert('Image successfully saved to gallery!');
+            } catch(e: any) {
+              console.error('Capacitor save failed', e);
+              alert('Failed to save image to gallery: ' + (e.message || 'Unknown error'));
+            }
+            return;
+          }
+
+          const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+          const isAndroid = /Android/i.test(navigator.userAgent);
+          let shared = false;
+          
+          if (isMobile && !isAndroid && navigator.share) {
+            try {
+              const file = new File([u8arr], filename, { type: mime });
+              
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                  title: 'PerspX Render',
+                  files: [file]
+                });
+                shared = true;
+              }
+            } catch (e) {
+              console.warn('Share failed or user cancelled', e);
+            }
+          }
+
+          if (!shared) {
+            if ('showSaveFilePicker' in window && !isMobile) {
+              // Modern API to specify path (desktop only)
+              const handle = await (window as any).showSaveFilePicker({
+                suggestedName: filename,
+                types: [{
+                  description: 'PNG Image',
+                  accept: {'image/png': ['.png']},
+                }],
+              });
+              const writable = await handle.createWritable();
+              await writable.write(blob);
+              await writable.close();
+            } else {
+              // Fallback for older devices/safari/mobile without share
+              // Using ObjectURL is much more robust for large canvas images
+              const objectUrl = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.style.display = 'none';
+              a.href = objectUrl;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(objectUrl);
+              }, 100);
+            }
           }
         } catch (err) {
           console.log('User cancelled screenshot save or failed', err);
@@ -502,7 +575,6 @@
           e.preventDefault();
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
-            const { serializeObjects } = await import('$lib/utils/serialization');
             const objects = serializeObjects(_sceneManager, selectedIds);
             const data = JSON.stringify({ type: 'perspx-clipboard', objects });
             await navigator.clipboard.writeText(data);
@@ -521,7 +593,6 @@
             if (text) {
               const data = JSON.parse(text);
               if (data.type === 'perspx-clipboard' && Array.isArray(data.objects)) {
-                const { pasteObjects } = await import('$lib/utils/serialization');
                 if (objectManager && lightManager) {
                   const newIds = pasteObjects(data.objects, _sceneManager, objectManager, lightManager);
                   if (newIds.length > 0) {
@@ -825,6 +896,7 @@
     {/if}
 
     <!-- Viewport -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
       <!-- SubToolbar — hidden in compact mode and on mobile (tools are in top bar) -->
       {#if $uiStore.panelsVisible && appModeStore.mode === 'desktop' && $uiStore.breakpoint !== 'mobile'}
@@ -835,6 +907,7 @@
       {/if}
       <canvas bind:this={canvas} id="viewport"></canvas>
       <ViewportOverlay />
+      <FloatingShaderPanel />
 
     </div>
 

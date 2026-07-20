@@ -107,7 +107,7 @@
         onclick={() => handleSelect(item)}
       >
         {#if item.icon}
-          <span class="item-icon">{item.icon}</span>
+          <span class="item-icon">{@html item.icon}</span>
         {/if}
         <span class="item-label">{item.label}</span>
         {#if item.shortcut}
@@ -172,6 +172,14 @@
     width: 16px;
     text-align: center;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .item-icon :global(svg) {
+    width: 14px;
+    height: 14px;
   }
 
   .item-label {
@@ -182,6 +190,12 @@
     color: var(--color-text-dim);
     font-size: 10px;
     margin-left: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    .item-shortcut {
+      display: none;
+    }
   }
 
   .divider {

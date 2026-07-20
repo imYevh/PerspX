@@ -17,7 +17,7 @@
   let isModeDropdownOpen = $state(false);
   
   let confirmDialog = $state<{ newMode: any } | null>(null);
-  let activeTab = $state<'general' | 'appearance' | 'keybinds'>('general');
+  let activeTab = $state<'general' | 'appearance' | 'keybinds' | 'about'>('general');
 
   let editingShortcutId = $state<string | null>(null);
 
@@ -129,8 +129,11 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="overlay" onclick={onClose} transition:fade={{ duration: 150 }}>
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="dialog" onclick={(e) => { e.stopPropagation(); closeAllDropdowns(); }} transition:fly={{ y: 20, duration: 200 }}>
     <div class="header">
       <h3 class="title">Settings</h3>
@@ -143,13 +146,17 @@
       {#if $uiStore.breakpoint !== 'mobile'}
         <button class="tab-btn" class:active={activeTab === 'keybinds'} onclick={() => activeTab = 'keybinds'}>Keybinds</button>
       {/if}
+      <button class="tab-btn" class:active={activeTab === 'about'} onclick={() => activeTab = 'about'}>About</button>
     </div>
     
     <div class="content">
       {#if activeTab === 'general'}
       <!-- Application Mode -->
       <div class="setting-group">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label>Application Mode</label>
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div class="custom-select" onclick={(e) => e.stopPropagation()}>
           <button class="select-btn" id="mode-select-btn" onclick={() => { isModeDropdownOpen = !isModeDropdownOpen; isThemeDropdownOpen = false; }}>
             {APP_MODE_LABELS[appModeStore.mode]}
@@ -186,7 +193,10 @@
       {#if activeTab === 'appearance'}
       <!-- Base Theme -->
       <div class="setting-group">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label>Base Theme</label>
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div class="custom-select" onclick={(e) => e.stopPropagation()}>
           <button class="select-btn" onclick={() => { isThemeDropdownOpen = !isThemeDropdownOpen; isModeDropdownOpen = false; }}>
             {themeStore.mode.charAt(0).toUpperCase() + themeStore.mode.slice(1)}
@@ -205,6 +215,7 @@
       </div>
 
       <div class="setting-group">
+        <!-- svelte-ignore a11y_label_has_associated_control -->
         <label>Accent Color Presets</label>
         <div class="presets">
           {#each ACCENT_PRESETS as preset}
@@ -260,6 +271,18 @@
           </div>
         {/each}
         <button class="reset-all-btn" onclick={() => shortcutsStore.resetAll()}>Reset All to Default</button>
+      </div>
+      {/if}
+
+      {#if activeTab === 'about'}
+      <div class="about-section">
+        <h4 style="margin: 0 0 8px 0; font-size: 16px;">PerspX</h4>
+        <p class="setting-hint">A procedural 3D workspace, layout, and rendering tool.</p>
+        <p class="setting-hint" style="margin-top: 8px;">Version: 1.0.0<br>Built with Svelte 5 and Three.js</p>
+        <div class="setting-divider" style="margin: 16px 0;"></div>
+        <p class="setting-hint">
+          <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" style="color: var(--color-accent); text-decoration: none;">View on GitHub</a>
+        </p>
       </div>
       {/if}
     </div>
@@ -523,6 +546,8 @@
     display: flex;
     flex-direction: column;
     padding: 4px;
+    max-height: 200px;
+    overflow-y: auto;
   }
 
   .select-item {
@@ -565,7 +590,9 @@
   .preset-btn {
     width: 24px;
     height: 24px;
-    aspect-ratio: 1;
+    min-width: 24px;
+    min-height: 24px;
+    flex: none;
     border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
@@ -575,10 +602,12 @@
     box-sizing: content-box;
   }
 
-  @media (max-height: 500px) {
+  @media (max-width: 768px), (max-height: 500px) {
     .preset-btn {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      min-height: 18px;
     }
   }
 

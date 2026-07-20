@@ -23,7 +23,11 @@
   let isDragging = $state(false);
   let startY = $state(0);
   let startHeight = $state(0);
-  const minHeight = 44;
+  
+  let innerWidth = $state(typeof window !== 'undefined' ? window.innerWidth : 1000);
+  let innerHeight = $state(typeof window !== 'undefined' ? window.innerHeight : 1000);
+  let isLandscape = $derived(innerWidth > innerHeight);
+  let minHeight = $derived(isLandscape ? 100 : 150);
 
   // Touch drag
   function handleTouchStart(e: TouchEvent) {
@@ -33,8 +37,7 @@
   }
 
   function getMaxHeight() {
-    const isLandscape = window.innerWidth > window.innerHeight;
-    return isLandscape ? window.innerHeight * 0.6 : window.innerHeight * 0.8;
+    return isLandscape ? innerHeight - 90 : innerHeight * 0.8;
   }
 
   function handleTouchMove(e: TouchEvent) {
@@ -74,9 +77,8 @@
 
   function snapHeight() {
     const maxH = getMaxHeight();
-    if (currentHeight < 100) {
-      uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: false }));
-      currentHeight = 250; // reset for next open
+    if (currentHeight < 200) {
+      currentHeight = minHeight; // Snap to minimum usable height
     } else if (currentHeight > maxH * 0.75) {
       currentHeight = maxH;
     } else {
@@ -85,17 +87,17 @@
   }
 </script>
 
-<svelte:window ontouchmove={handleTouchMove} ontouchend={handleTouchEnd} />
+<svelte:window bind:innerWidth bind:innerHeight ontouchmove={handleTouchMove} ontouchend={handleTouchEnd} />
 
 <div class="bottom-sheet glass" 
      class:mobile-collapsed={$uiStore.breakpoint === 'mobile' && !$uiStore.mobileBottomSheetExpanded}
-     style="height: {currentHeight}px; transition: {isDragging ? 'none' : 'height 0.2s ease'}">
+     style="height: {currentHeight}px; transition: {isDragging ? 'none' : 'height 0.2s ease'}; {isDragging ? 'backdrop-filter: none; -webkit-backdrop-filter: none;' : ''}">
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="handle-area" ontouchstart={handleTouchStart} onmousedown={handleMouseDown}>
     <div class="handle-bar"></div>
   </div>
 
-  <div class="content" style="display: {currentHeight <= minHeight ? 'none' : 'block'}">
+  <div class="content" style="display: block;">
     {#if $uiStore.mobileActiveTab === 'scene'}
       <ScenePanel {sceneManager} {cameraController} />
     {:else if $uiStore.mobileActiveTab === 'library'}
@@ -120,9 +122,11 @@
     flex-direction: column;
     /* Use strong glass effect that respects theme surface color */
     background: color-mix(in srgb, var(--color-surface) 85%, transparent);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
     /* Safe area for devices with home indicators and notches in landscape */
     padding-bottom: env(safe-area-inset-bottom, 0px);
     padding-left: env(safe-area-inset-left, 0px);

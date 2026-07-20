@@ -168,11 +168,6 @@
     color: var(--color-accent);
   }
 
-  .snap-btn.active {
-    background: color-mix(in srgb, #51cf66 12%, transparent);
-    border-color: #51cf66;
-    color: #51cf66;
-  }
 
   .cam-label {
     font-size: 12px;

@@ -26,8 +26,8 @@ const DEFAULT_MODE: AppMode = 'desktop';
 export const APP_MODES: AppMode[] = ['desktop', 'compact'];
 
 export const APP_MODE_LABELS: Record<AppMode, string> = {
-  desktop: 'Desktop (Full)',
-  compact: 'Mobile (Compact)',
+  desktop: 'Full',
+  compact: 'Mini',
 };
 
 export const APP_MODE_DESCRIPTIONS: Record<AppMode, string> = {

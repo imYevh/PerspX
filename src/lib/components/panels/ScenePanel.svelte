@@ -9,6 +9,8 @@
   import invisibleSvg from '$lib/assets/invisible.svg?raw';
   import trashSvg from '$lib/assets/trashbin.svg?raw';
   import lightsOffSvg from '$lib/assets/lights-off.svg?raw';
+  import renameSvg from '$lib/assets/rename.svg?raw';
+  import duplicateSvg from '$lib/assets/duplicate.svg?raw';
   import { tick } from 'svelte';
 
   interface Props {
@@ -122,12 +124,12 @@
     const isMulti = $sceneStore.selectedIds.length > 1;
     const items: { id: string; label: string; icon?: string; shortcut?: string; divider?: boolean; danger?: boolean }[] = [];
     if (!isMulti) {
-      items.push({ id: 'rename',    label: 'Rename',    icon: '✏️', shortcut: formatShortcut('rename') });
-      items.push({ id: 'duplicate', label: 'Duplicate', icon: '⧉', shortcut: formatShortcut('duplicate') });
+      items.push({ id: 'rename',    label: 'Rename',    icon: renameSvg, shortcut: formatShortcut('rename') });
+      items.push({ id: 'duplicate', label: 'Duplicate', icon: duplicateSvg, shortcut: formatShortcut('duplicate') });
       items.push({ id: '__div__',   label: '',          divider: true });
     }
     const n = $sceneStore.selectedIds.length;
-    items.push({ id: 'delete', label: isMulti ? `Delete ${n} objects` : 'Delete', icon: '🗑️', danger: true });
+    items.push({ id: 'delete', label: isMulti ? `Delete ${n} objects` : 'Delete', icon: trashSvg, danger: true });
     return items;
   }
 
@@ -204,7 +206,8 @@
 <Panel title="Scene" maxHeight="250px">
   <div class="scene-list">
     {#each $sceneStore.objects as { id, meta }}
-      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
       <div
         class="scene-item"
         class:selected={$sceneStore.selectedIds.includes(id)}

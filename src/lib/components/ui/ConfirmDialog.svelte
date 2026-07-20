@@ -29,8 +29,11 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="overlay" onclick={onCancel} transition:fade={{ duration: 150 }}>
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="dialog" onclick={(e) => e.stopPropagation()} transition:fly={{ y: 20, duration: 200 }}>
     <h3 class="title">{title}</h3>
     <p class="message">{message}</p>

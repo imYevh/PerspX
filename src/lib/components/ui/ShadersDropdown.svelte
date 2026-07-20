@@ -16,6 +16,9 @@ import { onMount } from 'svelte';
     if (isOpen && shaderStore.use3DPreviews) {
       initShaderPreviews();
     }
+    if (isOpen && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('perspx-shader-menu-opened'));
+    }
   });
 
   function onShaderSelect(type: ShaderType) {
@@ -72,48 +75,6 @@ import { onMount } from 'svelte';
         </button>
       {/each}
     </div>
-
-    {#if shaderStore.active !== 'none'}
-      {@const activeDef = SHADER_DEFS[shaderStore.active]}
-      {@const activeParams = shaderStore.params[shaderStore.active]}
-      <div class="shader-params">
-        {#each Object.entries(activeDef.params) as [key, paramDef]}
-          <div class="sub-prop">
-            <div class="sub-header">
-              <span class="sub-label">{paramDef.label}</span>
-              <div class="input-group">
-                <button
-                  class="reset-btn"
-                  title="Reset to default"
-                  onclick={() => onShaderParamInput(key, paramDef.default)}
-                >
-                  ⟲
-                </button>
-                <input
-                  type="number"
-                  min={paramDef.min}
-                  max={paramDef.max}
-                  step={paramDef.step}
-                  value={Number(activeParams[key]).toFixed(paramDef.step < 1 ? 2 : 0)}
-                  oninput={(e) => onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value))}
-                  class="num-input"
-                />
-              </div>
-            </div>
-            <input
-              type="range"
-              min={paramDef.min}
-              max={paramDef.max}
-              step={paramDef.step}
-              value={activeParams[key]}
-              ondblclick={() => onShaderParamInput(key, paramDef.default)}
-              oninput={(e) => onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value))}
-              class="slider"
-            />
-          </div>
-        {/each}
-      </div>
-    {/if}
   </div>
 </Dropdown>
 
@@ -134,10 +95,16 @@ import { onMount } from 'svelte';
     gap: 6px;
     min-width: 220px;
   }
-  @media (max-width: 400px) {
+  @media (max-width: 768px) and (orientation: portrait) {
     .shader-grid {
-      grid-template-columns: repeat(2, 1fr);
-      min-width: 160px;
+      grid-template-columns: repeat(4, 1fr);
+      min-width: 320px;
+    }
+  }
+  @media (max-width: 950px) and (orientation: landscape) {
+    .shader-grid {
+      grid-template-columns: repeat(8, 1fr);
+      min-width: 560px;
     }
   }
   .shader-btn {
@@ -192,65 +159,5 @@ import { onMount } from 'svelte';
     font-weight: 600;
     text-transform: uppercase;
   }
-  .shader-params {
-    margin-top: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-  }
-  .sub-prop {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .sub-label {
-    font-size: 11px;
-    color: var(--color-text-muted);
-  }
-  .sub-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .input-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .reset-btn {
-    background: transparent;
-    border: none;
-    color: var(--color-text-muted);
-    font-size: 14px;
-    cursor: pointer;
-    padding: 0 4px;
-    line-height: 1;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
-  }
-  .reset-btn:hover {
-    color: var(--color-text);
-    background: var(--color-surface-hover);
-  }
-  .num-input {
-    width: 50px;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    color: var(--color-text);
-    border-radius: 4px;
-    padding: 2px 4px;
-    font-size: 11px;
-    text-align: right;
-    outline: none;
-  }
-  .num-input:focus {
-    border-color: var(--color-accent);
-  }
-  .slider {
-    width: 100%;
-  }
+
 </style>

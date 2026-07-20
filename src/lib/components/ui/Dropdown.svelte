@@ -336,6 +336,12 @@
     font-size: 10px;
   }
 
+  @media (max-width: 768px) {
+    .item-shortcut {
+      display: none;
+    }
+  }
+
   .dropdown-divider {
     height: 1px;
     background: var(--color-border);

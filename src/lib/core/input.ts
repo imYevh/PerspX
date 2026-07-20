@@ -55,14 +55,7 @@ export class InputSystem {
     this.isDragging = false;
     this.isTouchSelectionMode = false;
 
-    if (e.pointerType === 'touch') {
-      this.holdTimer = window.setTimeout(() => {
-        this.isTouchSelectionMode = true;
-        if (this.cameraController) this.cameraController.lockOrbit = true;
-        // Optionally provide haptic feedback
-        if (navigator.vibrate) navigator.vibrate(50);
-      }, 500);
-    }
+    // Touch selection tap-and-hold removed
   };
 
   private onPointerMove = (e: PointerEvent): void => {
@@ -74,16 +67,12 @@ export class InputSystem {
     const dx = e.clientX - this.pointerDownPos.x;
     const dy = e.clientY - this.pointerDownPos.y;
     if (Math.sqrt(dx * dx + dy * dy) > 4) {
-      if (this.holdTimer !== null) {
-        window.clearTimeout(this.holdTimer);
-        this.holdTimer = null;
-      }
       this.isDragging = true;
       
       // Marquee selection box
       if (e.buttons === 1) { // Left mouse button is held down
-        if (e.pointerType === 'touch' && !this.isTouchSelectionMode) {
-          // Don't trigger marquee if touch and didn't tap-and-hold
+        if (e.pointerType === 'touch') {
+          // Can still trigger marquee if needed, but usually mobile users rely on taps
         } else {
           this.isMarquee = true;
           uiStore.update(s => ({
@@ -104,11 +93,6 @@ export class InputSystem {
   private onPointerUp = (e: PointerEvent): void => {
     if (e.button !== 0) return;
 
-    if (this.holdTimer !== null) {
-      window.clearTimeout(this.holdTimer);
-      this.holdTimer = null;
-    }
-
     if (this.cameraController) {
       this.cameraController.lockOrbit = false;
     }
@@ -122,14 +106,10 @@ export class InputSystem {
     if (this.isMarquee) {
       this.isMarquee = false;
       uiStore.update(s => ({ ...s, marquee: { ...s.marquee, active: false } }));
-      this.performBoxSelection(e, e.shiftKey);
-    } else if (!this.isDragging && !this.isTouchSelectionMode && e.pointerType !== 'touch') {
-      // For mouse, single click still selects.
-      // For touch, single tap will be handled if needed, but since we rely on tap-and-hold, we can select if not dragged.
-      this.performSelection(e, e.shiftKey);
-    } else if (!this.isDragging && e.pointerType === 'touch') {
-      // On touch, if not dragging, a single tap selects
-      this.performSelection(e, e.shiftKey);
+      this.performBoxSelection(e, e.shiftKey || get(uiStore).multiSelectMode);
+    } else if (!this.isDragging) {
+      // Single tap / click selection
+      this.performSelection(e, e.shiftKey || get(uiStore).multiSelectMode);
     }
   };
 

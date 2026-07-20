@@ -8,7 +8,8 @@
   import { undo, redo, initHistory } from '$lib/stores/history';
   import { serializeScene, applySceneSnapshot } from '$lib/utils/serialization';
   import { appModeStore } from '$lib/stores/appMode.svelte';
-  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, type ShaderType } from '$lib/stores/shader.svelte';
+  import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, resetShaders, type ShaderType } from '$lib/stores/shader.svelte';
+  import { resetColorCycle } from '$lib/objects/primitives';
   
   import lockIcon from '$lib/assets/lock.svg?raw';
   import orbitIcon from '$lib/assets/orbit.svg?raw';
@@ -21,6 +22,9 @@
   import lightingIcon from '$lib/assets/lighting.svg?raw';
   import lightsOnIcon from '$lib/assets/lights-on.svg?raw';
   import lightsOffIcon from '$lib/assets/lights-off.svg?raw';
+  import selectIcon from '$lib/assets/select.svg?raw';
+  import overlaysIcon from '$lib/assets/overlays.svg?raw';
+  import focusCamIcon from '$lib/assets/focus cam.svg?raw';
 
   import Dropdown from './ui/Dropdown.svelte';
   import type { DropdownItem } from './ui/Dropdown.svelte';
@@ -47,19 +51,17 @@
 
   let showSettings = $state(false);
 
-  const mainMenu: DropdownItem[] = [
+  let mainMenu = $derived([
     { id: 'reset', label: 'Reset Scene', icon: '' },
     { id: 'clear', label: 'Clear Scene', icon: '' },
     { id: 'save', label: 'Save Scene', icon: '' },
     { id: 'load', label: 'Load Scene', icon: '' },
     { id: 'divider1', label: '', divider: true },
-    { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: '' },
+    ...($uiStore.breakpoint === 'mobile' ? [] : [{ id: 'shortcuts', label: 'Keyboard Shortcuts', icon: '' }]),
     { id: 'settings', label: 'Settings', icon: '' },
     { id: 'divider2', label: '', divider: true },
-    { id: 'about', label: 'About PerspX', icon: '' },
-    { id: 'divider3', label: '', divider: true },
     { id: 'exit', label: 'Exit', icon: '' },
-  ];
+  ] as DropdownItem[]);
 
   const lightingMenu: DropdownItem[] = [
     { id: 'studio', label: 'Studio', icon: '' },
@@ -149,13 +151,8 @@
       lightHelpersVisible: true
     }));
 
-    import('$lib/objects/primitives').then(({ resetColorCycle }) => {
-      resetColorCycle();
-    });
-
-    import('$lib/stores/shader.svelte').then(({ resetShaders }) => {
-      resetShaders();
-    });
+    resetColorCycle();
+    resetShaders();
 
     window.dispatchEvent(new CustomEvent('perspx-reset-camera'));
   }
@@ -178,9 +175,7 @@
       guidelines: 'disabled'
     });
 
-    import('$lib/stores/shader.svelte').then(({ resetShaders }) => {
-      resetShaders();
-    });
+    resetShaders();
   }
 
   function handleLightSelect(id: string) {
@@ -299,6 +294,11 @@
       uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: true, mobileActiveTab: tab }));
     }
   }
+
+  const listIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
+  const boxIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
+  const slidersIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>`;
+  const videoIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`;
 </script>
 
   {#snippet toolbarActions()}
@@ -343,33 +343,22 @@
           <span class="tool-label">Reset Camera</span>
         {/if}
       </button>
-      <div class="toolbar-sep"></div>
-      <Dropdown 
-        icon={lightingIcon} 
-        label="Environment" 
-        items={lightingMenu} 
-        onSelect={handleLightSelect} 
-        title="Environment Presets" 
-        hideLabelOnMobile={true}
-        isMobile={$uiStore.breakpoint === 'mobile'}
-      />
+
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <div class="toolbar-sep"></div>
+        <Dropdown 
+          icon={lightingIcon} 
+          label="Environment" 
+          items={lightingMenu} 
+          onSelect={handleLightSelect} 
+          title="Environment Presets" 
+        />
+      {/if}
     </div>
 
     <div class="toolbar-sep hide-on-mobile-dropdown"></div>
 
-    <!-- History controls -->
-    <div class="toolbar-group">
-      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
-        if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
-      }}>
-        <span class="tool-icon">{@html undoRedoIcon}</span>
-      </button>
-      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
-        if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
-      }}>
-        <span class="tool-icon" style="transform: scaleX(-1);">{@html undoRedoIcon}</span>
-      </button>
-    </div>
+
     
     <div class="spacer hide-on-mobile-dropdown"></div>
 
@@ -442,48 +431,119 @@
     </div>
   {/snippet}
 
-<header class="toolbar">
-  <div class="toolbar-brand">
-    {#if $uiStore.breakpoint !== 'mobile'}
-      <div class="brand-logo-container">
-        <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
-        {#if appModeStore.mode === 'compact'}
-          <span class="mode-badge">Compact</span>
-        {/if}
-      </div>
-    {/if}
-    <Dropdown 
-      icon={$uiStore.breakpoint === 'desktop' ? '' : '☰'} 
-      label={$uiStore.breakpoint === 'desktop' ? 'File' : ''} 
-      items={mainMenu} 
-      onSelect={handleMenuSelect} 
-      title={$uiStore.breakpoint === 'desktop' ? 'File Menu' : 'Main Menu'} 
-    />
-  </div>
-
-  <div class="toolbar-sep"></div>
-
-  {#if $uiStore.breakpoint === 'mobile'}
-    <div class="mobile-top-tabs">
-      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'scene'} onclick={() => toggleMobileTab('scene')} title="Scene">📦</button>
-      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'library'} onclick={() => toggleMobileTab('library')} title="Library">📚</button>
-      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'properties'} onclick={() => toggleMobileTab('properties')} title="Properties">⚙️</button>
-      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'camera'} onclick={() => toggleMobileTab('camera')} title="Camera">🎥</button>
-      
-      <div class="toolbar-sep"></div>
-      
-      <OverlaysDropdown align="center" />
-      <ShadersDropdown align="center" />
+<header class="toolbar" class:mobile-layout={$uiStore.breakpoint === 'mobile'}>
+  <div class="toolbar-main-row">
+    <div class="toolbar-brand">
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <div class="brand-logo-container">
+          <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
+          {#if appModeStore.mode === 'compact'}
+            <span class="mode-badge">Compact</span>
+          {/if}
+        </div>
+      {/if}
+      <Dropdown 
+        icon={$uiStore.breakpoint === 'desktop' ? '' : '☰'} 
+        label={$uiStore.breakpoint === 'desktop' ? 'File' : ''} 
+        items={mainMenu} 
+        onSelect={handleMenuSelect} 
+        title={$uiStore.breakpoint === 'desktop' ? 'File Menu' : 'Main Menu'} 
+      />
     </div>
 
-    <div class="spacer"></div>
-    <Dropdown icon="⋯" label="Tools" title="More Tools" align="right">
-      <div class="mobile-expanded-toolbar">
-        {@render toolbarActions()}
-      </div>
-    </Dropdown>
-  {:else}
-    {@render toolbarActions()}
+    <div class="toolbar-sep"></div>
+
+    <!-- History controls always on top bar -->
+    <div class="toolbar-group">
+      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
+        if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
+      }}>
+        <span class="tool-icon">{@html undoRedoIcon}</span>
+      </button>
+      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
+        if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
+      }}>
+        <span class="tool-icon" style="transform: scaleX(-1);">{@html undoRedoIcon}</span>
+      </button>
+    </div>
+
+    <div class="toolbar-sep"></div>
+
+    <Dropdown 
+      icon={selectIcon} 
+      label="" 
+      items={[
+        { id: 'toggle-multi', label: $uiStore.multiSelectMode ? '✓ Multi-Select Mode' : '  Multi-Select Mode', keepOpenOnClick: true },
+        { id: 'divider-sel1', label: '', divider: true },
+        { id: 'select-all', label: 'Select All' },
+        { id: 'deselect-all', label: 'Deselect All' }
+      ]} 
+      onSelect={(id) => {
+        if (id === 'toggle-multi') {
+          uiStore.update(s => ({ ...s, multiSelectMode: !s.multiSelectMode }));
+        } else if (id === 'select-all') {
+          if (sceneManager) {
+            const allIds = sceneManager.getAllObjects()
+              .filter(o => o.meta.type !== 'light' && o.meta.type !== 'camera')
+              .map(o => o.id);
+            sceneManager.selectMultiple(allIds, false);
+          }
+        } else if (id === 'deselect-all') {
+          if (sceneManager) sceneManager.deselectAll();
+        }
+      }} 
+      title="Selection Tools" 
+    />
+
+    {#if $uiStore.breakpoint === 'mobile'}
+      <div class="spacer"></div>
+      <Dropdown 
+        icon={lightingIcon} 
+        label="" 
+        items={lightingMenu} 
+        onSelect={handleLightSelect} 
+        title="Environment Presets" 
+        align="right"
+      />
+      <OverlaysDropdown align="right" />
+      <ShadersDropdown align="right" />
+      <Dropdown icon="⋯" label="" title="More Tools" align="right">
+        <div class="mobile-expanded-toolbar">
+          {@render toolbarActions()}
+        </div>
+      </Dropdown>
+    {:else}
+      {@render toolbarActions()}
+    {/if}
+  </div>
+
+  {#if $uiStore.breakpoint === 'mobile'}
+    <div class="toolbar-bottom-row">
+      {#if appModeStore.mode === 'compact'}
+        <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'library'} onclick={() => toggleMobileTab('library')} title="Library">
+          <span class="tool-icon">{@html boxIcon}</span> <span class="tab-label">Library</span>
+        </button>
+        <button class="mobile-tab-btn" onclick={takeScreenshot} title="Render">
+          <span class="tool-icon">{@html exportIcon}</span> <span class="tab-label">Render</span>
+        </button>
+        <button class="mobile-tab-btn" onclick={() => window.dispatchEvent(new CustomEvent('perspx-reset-camera'))} title="Reset View">
+          <span class="tool-icon">{@html resetIcon}</span> <span class="tab-label">Reset View</span>
+        </button>
+      {:else}
+        <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'scene'} onclick={() => toggleMobileTab('scene')} title="Scene">
+          <span class="tool-icon">{@html listIcon}</span> <span class="tab-label">Scene</span>
+        </button>
+        <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'library'} onclick={() => toggleMobileTab('library')} title="Library">
+          <span class="tool-icon">{@html boxIcon}</span> <span class="tab-label">Library</span>
+        </button>
+      {/if}
+      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'properties'} onclick={() => toggleMobileTab('properties')} title="Properties">
+        <span class="tool-icon">{@html slidersIcon}</span> <span class="tab-label">Props</span>
+      </button>
+      <button class="mobile-tab-btn" class:active={$uiStore.mobileBottomSheetExpanded && $uiStore.mobileActiveTab === 'camera'} onclick={() => toggleMobileTab('camera')} title="Camera">
+        <span class="tool-icon">{@html videoIcon}</span> <span class="tab-label">Camera</span>
+      </button>
+    </div>
   {/if}
 </header>
 
@@ -504,15 +564,25 @@
 <style>
   .toolbar {
     display: flex;
+    flex-direction: column;
+    background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    z-index: 500; /* Higher than Sidebar (10) and BottomSheet (100) */
+    position: relative;
+    width: 100%;
+  }
+
+  .toolbar-main-row {
+    display: flex;
     align-items: center;
     gap: 4px;
     padding: 0 12px;
     height: 44px;
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    flex-shrink: 0;
-    z-index: 500; /* Higher than Sidebar (10) and BottomSheet (100) */
-    position: relative;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .toolbar-brand {
@@ -616,7 +686,7 @@
       padding: 6px 12px;
     }
 
-    .toolbar {
+    .toolbar-main-row {
       height: 52px;
     }
 
@@ -648,44 +718,80 @@
     align-items: center;
   }
 
-  .mobile-top-tabs {
+  .toolbar-bottom-row {
     display: flex;
     align-items: center;
-    gap: 4px;
-    flex: 1;
-    overflow-x: auto;
-    padding: 0 4px;
-    scrollbar-width: none;
-  }
-  .mobile-top-tabs::-webkit-scrollbar {
-    display: none;
+    justify-content: space-around;
+    padding: 6px 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .mobile-tab-btn {
     background: transparent;
     border: none;
-    font-size: 18px;
-    width: 36px;
-    height: 36px;
+    font-size: 11px;
+    height: 42px;
     border-radius: 8px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     cursor: pointer;
     transition: background 0.2s;
-    flex-shrink: 0;
+    flex: 1;
+    color: var(--color-text-muted);
   }
   .mobile-tab-btn:active {
     background: rgba(255, 255, 255, 0.1);
   }
   .mobile-tab-btn.active {
     background: rgba(74, 158, 255, 0.2);
-    box-shadow: inset 0 0 0 1px rgba(74, 158, 255, 0.4);
+    color: var(--color-accent);
+  }
+  .mobile-tab-btn .tool-icon :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+  .tab-label {
+    font-weight: 600;
   }
   
   @media (max-width: 767px) {
     .hide-on-mobile-dropdown {
       display: none;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 500px) {
+    .toolbar-main-row {
+      height: 34px !important;
+    }
+    .toolbar-bottom-row {
+      padding: 2px 4px !important;
+    }
+    .mobile-tab-btn {
+      height: 30px !important;
+      flex-direction: row !important;
+      gap: 6px !important;
+    }
+    .tool-btn {
+      min-height: 30px !important;
+      min-width: 30px !important;
+      padding: 4px 8px !important;
+    }
+    .toolbar-group {
+      height: 30px !important;
+    }
+    .mobile-tab-btn .tool-icon :global(svg) {
+      width: 14px !important;
+      height: 14px !important;
+    }
+    .tab-label {
+      font-size: 10px !important;
     }
   }
 </style>

@@ -32,8 +32,11 @@
 		"wait-on": "^9.0.10"
 	},
 	"dependencies": {
+		"@capacitor-community/media": "^9.1.0",
 		"@capacitor/android": "^8.4.1",
 		"@capacitor/core": "^8.4.1",
+		"@capacitor/filesystem": "^8.1.2",
+		"@capacitor/status-bar": "^8.0.3",
 		"three": "^0.185.1"
 	}
 }

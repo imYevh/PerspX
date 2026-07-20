@@ -44,7 +44,23 @@ export interface UIState {
   orientation: 'portrait' | 'landscape';
   mobileBottomSheetExpanded: boolean;
   mobileActiveTab: 'scene' | 'library' | 'properties' | 'camera';
+  multiSelectMode: boolean;
 }
+
+export function getBreakpoint(width: number, height: number): 'desktop' | 'tablet' | 'mobile' {
+  // Mobile landscape: width > height, but height is very small (e.g. < 500)
+  if (width < 768 || (width > height && height < 500)) return 'mobile';
+  if (width < 1024) return 'tablet';
+  return 'desktop';
+}
+
+export function getOrientation(width: number, height: number): 'portrait' | 'landscape' {
+  return width > height ? 'landscape' : 'portrait';
+}
+
+const isBrowser = typeof window !== 'undefined';
+const initialWidth = isBrowser ? window.innerWidth : 1024;
+const initialHeight = isBrowser ? window.innerHeight : 768;
 
 export const uiStore = writable<UIState>({
   transformMode: 'translate',
@@ -69,7 +85,7 @@ export const uiStore = writable<UIState>({
     type: null,
     item: null,
   },
-  breakpoint: 'desktop',
+  breakpoint: getBreakpoint(initialWidth, initialHeight),
   gridVisible: true,
   vanishingVisible: false,
   lightHelpersVisible: true,
@@ -82,18 +98,8 @@ export const uiStore = writable<UIState>({
     xyz: false,
     textured: false,
   },
-  orientation: 'landscape',
+  orientation: getOrientation(initialWidth, initialHeight),
   mobileBottomSheetExpanded: false,
-  mobileActiveTab: 'properties'
+  mobileActiveTab: 'properties',
+  multiSelectMode: false
 });
-
-export function getBreakpoint(width: number, height: number): 'desktop' | 'tablet' | 'mobile' {
-  // Mobile landscape: width > height, but height is very small (e.g. < 500)
-  if (width < 768 || (width > height && height < 500)) return 'mobile';
-  if (width < 1024) return 'tablet';
-  return 'desktop';
-}
-
-export function getOrientation(width: number, height: number): 'portrait' | 'landscape' {
-  return width > height ? 'landscape' : 'portrait';
-}
