@@ -20,6 +20,9 @@ let isRestoring = false;
 export function isHistoryRestoring() {
   return isRestoring;
 }
+export function setHistoryRestoring(val: boolean) {
+  isRestoring = val;
+}
 
 export function initHistory(sceneManager: SceneManager) {
   historyStore.set({

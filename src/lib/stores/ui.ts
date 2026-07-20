@@ -44,7 +44,6 @@ export interface UIState {
   orientation: 'portrait' | 'landscape';
   mobileBottomSheetExpanded: boolean;
   mobileActiveTab: 'scene' | 'library' | 'properties' | 'camera';
-  multiSelectMode: boolean;
 }
 
 export function getBreakpoint(width: number, height: number): 'desktop' | 'tablet' | 'mobile' {

@@ -243,7 +243,6 @@ export class TransformSystem {
   // --- Attach / Detach ---
 
   attachToObject(id: string): void {
-    if (!this.controls.enabled) return;
     const obj = this.sceneManager.getObject(id);
     const meta = this.sceneManager.getMeta(id);
     if (!obj || !meta || meta.locked) return;
@@ -259,10 +258,12 @@ export class TransformSystem {
     } else {
       this.controls.attach(obj);
     }
+    
+    this.controls.visible = this._currentMode !== 'select';
+    this.controls.enabled = this._currentMode !== 'select';
   }
 
   attachToMultiple(ids: string[]): void {
-    if (!this.controls.enabled) return;
     const validIds = ids.filter(id => {
       const meta = this.sceneManager.getMeta(id);
       return meta && !meta.locked;
@@ -297,6 +298,8 @@ export class TransformSystem {
     this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
 
     this.controls.attach(this.dummyPivot);
+    this.controls.visible = this._currentMode !== 'select';
+    this.controls.enabled = this._currentMode !== 'select';
   }
 
   detach(): void {

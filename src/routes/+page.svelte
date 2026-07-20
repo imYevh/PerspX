@@ -552,6 +552,7 @@
       initHistory(_sceneManager);
       _sceneManager.on('object-added', () => commitHistory(_sceneManager));
       _sceneManager.on('object-removed', () => commitHistory(_sceneManager));
+      _sceneManager.on('selection-changed', () => commitHistory(_sceneManager));
 
       // Keyboard Shortcuts for Undo/Redo & Clipboard
       const onKeyDownGlobal = async (e: KeyboardEvent) => {

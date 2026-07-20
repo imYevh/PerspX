@@ -69,17 +69,23 @@ export class LightManager {
   }
 
   async applyPreset(presetName: string): Promise<void> {
-    // Need to dynamically import to avoid circular dependency issues if any,
-    // but better yet, we can just import it at the top. Let's assume we import LIGHTING_PRESETS.
-    const { LIGHTING_PRESETS } = await import('./light-presets');
-    const existingLights = this.sceneManager.getObjectsByType('light');
-    for (const { id } of existingLights) {
-       this.removeLight(id);
-    }
-    const preset = LIGHTING_PRESETS[presetName];
-    if (!preset) return;
-    for (const config of preset.lights) {
-      this.addLight(config);
+    const { setHistoryRestoring, commitHistory } = await import('../stores/history');
+    setHistoryRestoring(true);
+
+    try {
+      const { LIGHTING_PRESETS } = await import('./light-presets');
+      const existingLights = this.sceneManager.getObjectsByType('light');
+      for (const { id } of existingLights) {
+         this.removeLight(id);
+      }
+      const preset = LIGHTING_PRESETS[presetName];
+      if (!preset) return;
+      for (const config of preset.lights) {
+        this.addLight(config);
+      }
+    } finally {
+      setHistoryRestoring(false);
+      commitHistory(this.sceneManager);
     }
   }
 

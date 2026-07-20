@@ -105,7 +105,7 @@
     }
   }
 
-  function resetSettings() {
+  async function resetSettings() {
     if (sceneManager) {
       sceneManager.deselectAll();
       const objects = sceneManager.getAllObjects();
@@ -113,15 +113,17 @@
         if (meta.type !== 'light') {
           sceneManager.removeObject(id);
         }
-      }
-      initHistory(sceneManager);
     }
     
     if (lightManager) {
-      lightManager.applyPreset('studio');
+      await lightManager.applyPreset('studio');
       lightManager.setShowHelpers(true);
     }
     resetCameraAndUI();
+
+    if (sceneManager) {
+      initHistory(sceneManager);
+    }
   }
 
   function resetCameraAndUI() {
@@ -292,7 +294,6 @@
 
   const toolsMenu = $derived([
     { id: 'h-select', label: 'Selection', header: true },
-    { id: 'toggle-multi', label: 'Multi-Select Mode', type: 'checkbox', checked: $uiStore.multiSelectMode, keepOpenOnClick: true },
     { id: 'select-all', label: 'Select All', icon: selectIcon },
     { id: 'deselect-all', label: 'Deselect All', icon: blankIcon },
     { id: 'deselect-lights', label: 'Deselect Lights', icon: blankIcon },
@@ -312,9 +313,7 @@
   ] as DropdownItem[]);
 
   function handleToolsSelect(id: string) {
-    if (id === 'toggle-multi') {
-      uiStore.update(s => ({ ...s, multiSelectMode: !s.multiSelectMode }));
-    } else if (id === 'select-all') {
+    if (id === 'select-all') {
       if (sceneManager) {
         const allIds = sceneManager.getAllObjects()
           .filter(o => o.meta.type !== 'light' && o.meta.type !== 'camera')

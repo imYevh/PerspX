@@ -106,10 +106,10 @@ export class InputSystem {
     if (this.isMarquee) {
       this.isMarquee = false;
       uiStore.update(s => ({ ...s, marquee: { ...s.marquee, active: false } }));
-      this.performBoxSelection(e, e.shiftKey || get(uiStore).multiSelectMode);
+      this.performBoxSelection(e, e.shiftKey || get(uiStore).transformMode === 'select');
     } else if (!this.isDragging) {
       // Single tap / click selection
-      this.performSelection(e, e.shiftKey || get(uiStore).multiSelectMode);
+      this.performSelection(e, e.shiftKey || get(uiStore).transformMode === 'select');
     }
   };
 
