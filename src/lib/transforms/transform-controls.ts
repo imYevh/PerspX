@@ -37,7 +37,7 @@ export class TransformSystem {
     }
     if (ctrl !== this.isCtrlDown) {
       this.isCtrlDown = ctrl;
-      if (this.isCtrlDown) this.enableGridSnap();
+      if (this.isCtrlDown || get(uiStore).snapEnabled) this.enableGridSnap();
       else this.disableSnap();
     }
     this.isShiftDown = shift;
@@ -155,6 +155,7 @@ export class TransformSystem {
           
           this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
         }
+        this.sceneManager.updateSelectionBoxes();
       }
     });
 

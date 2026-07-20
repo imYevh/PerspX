@@ -43,7 +43,15 @@
   function handleTouchMove(e: TouchEvent) {
     if (!isDragging) return;
     const dy = startY - e.touches[0].clientY;
-    currentHeight = Math.max(minHeight, Math.min(getMaxHeight(), startHeight + dy));
+    const proposedHeight = startHeight + dy;
+    
+    if (proposedHeight < 80) {
+      uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: false }));
+      isDragging = false;
+      currentHeight = 350;
+      return;
+    }
+    currentHeight = Math.max(minHeight, Math.min(getMaxHeight(), proposedHeight));
   }
 
   function handleTouchEnd() {
@@ -64,7 +72,17 @@
   function handleMouseMove(e: MouseEvent) {
     if (!isDragging) return;
     const dy = startY - e.clientY;
-    currentHeight = Math.max(minHeight, Math.min(getMaxHeight(), startHeight + dy));
+    const proposedHeight = startHeight + dy;
+    
+    if (proposedHeight < 80) {
+      uiStore.update(s => ({ ...s, mobileBottomSheetExpanded: false }));
+      isDragging = false;
+      currentHeight = 350;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      return;
+    }
+    currentHeight = Math.max(minHeight, Math.min(getMaxHeight(), proposedHeight));
   }
 
   function handleMouseUp() {

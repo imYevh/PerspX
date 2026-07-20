@@ -1,4 +1,4 @@
-import { Scene, Object3D, Raycaster, Vector2, Camera } from "three";
+import { Scene, Object3D, Raycaster, Vector2, Camera, BoxHelper } from "three";
 import { generateId } from "$lib/utils/math";
 
 export type ObjectType = "primitive" | "model" | "light" | "helper" | "group";
@@ -25,14 +25,38 @@ export class SceneManager {
   private objects: Map<string, Object3D> = new Map();
   private metadata: Map<string, SceneObjectMeta> = new Map();
   private selectedIds: Set<string> = new Set();
+  private selectionBoxes: Map<string, BoxHelper> = new Map();
   private listeners: Map<SceneEventType, SceneEventCallback[]> = new Map();
   private raycaster = new Raycaster();
-
 
   constructor(scene: Scene) {
     this.scene = scene;
     if (this.raycaster.params.Line) {
       this.raycaster.params.Line.threshold = 0.05; // Make line selection much more precise
+  }
+
+  public updateSelectionBoxes() {
+    // Remove old boxes
+    for (const [id, box] of this.selectionBoxes) {
+      if (!this.selectedIds.has(id)) {
+        this.scene.remove(box);
+        box.dispose();
+        this.selectionBoxes.delete(id);
+      }
+    }
+    // Add new boxes
+    for (const id of this.selectedIds) {
+      if (!this.selectionBoxes.has(id)) {
+        const obj = this.objects.get(id);
+        if (obj) {
+          const box = new BoxHelper(obj, 0x4a9eff);
+          box.userData.isSelectionBox = true;
+          this.scene.add(box);
+          this.selectionBoxes.set(id, box);
+        }
+      } else {
+        this.selectionBoxes.get(id)?.update();
+      }
     }
   }
 
@@ -69,9 +93,10 @@ export class SceneManager {
     this.objects.delete(id);
     this.metadata.delete(id);
 
-    const wasSelected = this.selectedIds.has(id);
-    this.selectedIds.delete(id);
-
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+      this.updateSelectionBoxes();
+    }
     // Deep dispose: traverse all descendants and clean up geometry + materials.
     // This is essential for 3D models (Groups with many child Meshes/LineSegments).
     object.traverse((child: any) => {
@@ -132,6 +157,7 @@ export class SceneManager {
   select(id: string, additive = false): void {
     if (!additive) this.selectedIds.clear();
     this.selectedIds.add(id);
+    this.updateSelectionBoxes();
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
   }
 
@@ -140,16 +166,19 @@ export class SceneManager {
     for (const id of ids) {
       this.selectedIds.add(id);
     }
+    this.updateSelectionBoxes();
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
   }
 
   deselect(id: string): void {
     this.selectedIds.delete(id);
+    this.updateSelectionBoxes();
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
   }
 
   deselectAll(): void {
     this.selectedIds.clear();
+    this.updateSelectionBoxes();
     this.emit("selection-changed", { selectedIds: [] });
   }
 
