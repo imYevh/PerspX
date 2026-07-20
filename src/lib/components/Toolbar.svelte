@@ -319,27 +319,44 @@
   ] as DropdownItem[]);
 
   function handleToolsSelect(id: string) {
+    const sm = sceneManager;
+    
     if (id === 'select-all') {
-      if (sceneManager) {
-        const allIds = sceneManager.getAllObjects()
+      if (sm) {
+        const allIds = sm.getAllObjects()
           .filter(o => o.meta.type !== 'light' && o.meta.type !== 'camera')
           .map(o => o.id);
-        sceneManager.selectMultiple(allIds, false);
+        sm.selectMultiple(allIds, false);
       }
     } else if (id === 'deselect-all') {
-      if (sceneManager) sceneManager.deselectAll();
+      if (sm) sm.deselectAll();
     } else if (id === 'deselect-lights') {
-      const currentIds = sceneManager.getSelectedIds();
-      const newIds = currentIds.filter(cid => sceneManager?.getMeta(cid)?.type !== 'light');
-      sceneManager.selectMultiple(newIds, false);
+      if (sm) {
+        const currentIds = sm.getSelectedIds();
+        const newIds = currentIds.filter(cid => {
+          const meta = sm.getMeta(cid);
+          return meta && meta.type !== 'light';
+        });
+        sm.selectMultiple(newIds, false);
+      }
     } else if (id === 'deselect-primitives') {
-      const currentIds = sceneManager.getSelectedIds();
-      const newIds = currentIds.filter(cid => sceneManager?.getMeta(cid)?.type !== 'primitive');
-      sceneManager.selectMultiple(newIds, false);
+      if (sm) {
+        const currentIds = sm.getSelectedIds();
+        const newIds = currentIds.filter(cid => {
+          const meta = sm.getMeta(cid);
+          return meta && meta.type !== 'primitive';
+        });
+        sm.selectMultiple(newIds, false);
+      }
     } else if (id === 'deselect-models') {
-      const currentIds = sceneManager.getSelectedIds();
-      const newIds = currentIds.filter(cid => sceneManager?.getMeta(cid)?.type !== 'model');
-      sceneManager.selectMultiple(newIds, false);
+      if (sm) {
+        const currentIds = sm.getSelectedIds();
+        const newIds = currentIds.filter(cid => {
+          const meta = sm.getMeta(cid);
+          return meta && meta.type !== 'model';
+        });
+        sm.selectMultiple(newIds, false);
+      }
     } else if (id === 'lock-orbit') {
       updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit });
     } else if (id === 'lock-pan') {
