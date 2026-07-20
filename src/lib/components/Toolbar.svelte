@@ -293,13 +293,18 @@
   const checkIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
   const blankIcon = `<svg viewBox="0 0 24 24" fill="none"></svg>`;
 
+  const deselectAllIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke-dasharray="2 2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>`;
+  const deselectLightIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M5 5l1.5 1.5"></path><path d="M17.5 17.5L19 19"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M5 19l1.5-1.5"></path><path d="M17.5 6.5L19 5"></path><circle cx="12" cy="12" r="3"></circle><line x1="7" y1="7" x2="17" y2="17"></line></svg>`;
+  const deselectBoxIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><line x1="8" y1="8" x2="16" y2="16"></line><line x1="16" y1="8" x2="8" y2="16"></line></svg>`;
+  const deselectModelIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline><line x1="8" y1="8" x2="16" y2="16"></line><line x1="16" y1="8" x2="8" y2="16"></line></svg>`;
+
   const toolsMenu = $derived([
     { id: 'h-select', label: 'Selection', header: true },
     { id: 'select-all', label: 'Select All', icon: selectIcon },
-    { id: 'deselect-all', label: 'Deselect All', icon: blankIcon },
-    { id: 'deselect-lights', label: 'Deselect Lights', icon: blankIcon },
-    { id: 'deselect-primitives', label: 'Deselect Primitives', icon: blankIcon },
-    { id: 'deselect-models', label: 'Deselect Models', icon: blankIcon },
+    { id: 'deselect-all', label: 'Deselect All', icon: deselectAllIcon },
+    { id: 'deselect-lights', label: 'Deselect Lights', icon: deselectLightIcon },
+    { id: 'deselect-primitives', label: 'Deselect Primitives', icon: deselectBoxIcon },
+    { id: 'deselect-models', label: 'Deselect Models', icon: deselectModelIcon },
     { id: 'divider-tools1', label: '', divider: true },
     { id: 'h-camera', label: 'Camera Controls', header: true },
     { id: 'lock-orbit', label: 'Lock Orbit', type: 'checkbox', checked: $cameraStore.lockOrbit, keepOpenOnClick: true },
