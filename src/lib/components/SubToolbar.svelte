@@ -92,12 +92,13 @@
       </button>
     </div>
 
-    <div class="toolbar-sep hide-on-mobile-dropdown"></div>
-
-    <div class="toolbar-group">
-      <OverlaysDropdown align={$uiStore.breakpoint === 'mobile' ? 'center' : 'right'} />
-      <ShadersDropdown align={$uiStore.breakpoint === 'mobile' ? 'center' : 'right'} />
-    </div>
+    {#if $uiStore.breakpoint !== 'mobile'}
+      <div class="toolbar-sep hide-on-mobile-dropdown"></div>
+      <div class="toolbar-group">
+        <OverlaysDropdown align="right" />
+        <ShadersDropdown align="right" />
+      </div>
+    {/if}
   {/snippet}
 
   {#if $uiStore.breakpoint === 'mobile'}

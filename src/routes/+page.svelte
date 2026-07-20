@@ -898,8 +898,8 @@
     <!-- Viewport -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="viewport-wrapper" ondragover={onDragOver} ondrop={onDrop}>
-      <!-- SubToolbar — hidden in compact mode and on mobile (tools are in top bar) -->
-      {#if $uiStore.panelsVisible && appModeStore.mode === 'desktop' && $uiStore.breakpoint !== 'mobile'}
+      <!-- SubToolbar contains transform tools -->
+      {#if $uiStore.panelsVisible && (appModeStore.mode === 'desktop' || $uiStore.breakpoint === 'mobile')}
         <SubToolbar {transformSystem} />
       {/if}
       {#if appModeStore.mode === 'compact' && ($uiStore.breakpoint === 'desktop' || $uiStore.breakpoint === 'tablet')}
