@@ -243,14 +243,14 @@
       { id: 'panelsVisible', label: $uiStore.panelsVisible ? 'Hide UI' : 'Show UI' },
       { id: 'divider0', label: '', divider: true }
     ] : []),
-    { id: 'leftPanel', label: 'Left Panel', icon: $uiStore.leftPanelOpen ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'rightPanel', label: 'Right Panel', icon: $uiStore.rightPanelOpen ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'leftPanel', label: 'Left Panel', type: 'checkbox', checked: $uiStore.leftPanelOpen, keepOpenOnClick: true },
+    { id: 'rightPanel', label: 'Right Panel', type: 'checkbox', checked: $uiStore.rightPanelOpen, keepOpenOnClick: true },
     { id: 'divider1', label: '', divider: true },
-    { id: 'inspector', label: 'Inspector (Left)', icon: !$uiStore.sceneCollapsed ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'library', label: 'Library (Left)', icon: !$uiStore.libraryCollapsed ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'properties', label: 'Properties (Right)', icon: !$uiStore.propertiesCollapsed ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'camera', label: 'Camera Effects (Right)', icon: !$uiStore.cameraCollapsed ? '✓' : ' ', keepOpenOnClick: true },
-    { id: 'shader', label: 'Shaders (Right)', icon: !$uiStore.shaderCollapsed ? '✓' : ' ', keepOpenOnClick: true },
+    { id: 'inspector', label: 'Inspector (Left)', type: 'checkbox', checked: !$uiStore.sceneCollapsed, keepOpenOnClick: true },
+    { id: 'library', label: 'Library (Left)', type: 'checkbox', checked: !$uiStore.libraryCollapsed, keepOpenOnClick: true },
+    { id: 'properties', label: 'Properties (Right)', type: 'checkbox', checked: !$uiStore.propertiesCollapsed, keepOpenOnClick: true },
+    { id: 'camera', label: 'Camera Effects (Right)', type: 'checkbox', checked: !$uiStore.cameraCollapsed, keepOpenOnClick: true },
+    { id: 'shader', label: 'Shaders (Right)', type: 'checkbox', checked: !$uiStore.shaderCollapsed, keepOpenOnClick: true },
     { id: 'divider2', label: '', divider: true },
     { id: 'default', label: 'Restore Default', icon: '' },
   ] as DropdownItem[]);
@@ -292,7 +292,7 @@
 
   const toolsMenu = $derived([
     { id: 'h-select', label: 'Selection', header: true },
-    { id: 'toggle-multi', label: 'Multi-Select Mode', icon: $uiStore.multiSelectMode ? checkIcon : blankIcon, keepOpenOnClick: true },
+    { id: 'toggle-multi', label: 'Multi-Select Mode', type: 'checkbox', checked: $uiStore.multiSelectMode, keepOpenOnClick: true },
     { id: 'select-all', label: 'Select All', icon: selectIcon },
     { id: 'deselect-all', label: 'Deselect All', icon: blankIcon },
     { id: 'deselect-lights', label: 'Deselect Lights', icon: blankIcon },
@@ -300,15 +300,15 @@
     { id: 'deselect-models', label: 'Deselect Models', icon: blankIcon },
     { id: 'divider-tools1', label: '', divider: true },
     { id: 'h-camera', label: 'Camera Controls', header: true },
-    { id: 'lock-orbit', label: 'Lock Orbit', icon: $cameraStore.lockOrbit ? lockIcon : orbitIcon, keepOpenOnClick: true },
-    { id: 'lock-pan', label: 'Lock Pan', icon: $cameraStore.lockPan ? lockIcon : panIcon, keepOpenOnClick: true },
+    { id: 'lock-orbit', label: 'Lock Orbit', type: 'checkbox', checked: $cameraStore.lockOrbit, keepOpenOnClick: true },
+    { id: 'lock-pan', label: 'Lock Pan', type: 'checkbox', checked: $cameraStore.lockPan, keepOpenOnClick: true },
     { id: 'reset-camera', label: 'Reset Camera Position', icon: resetIcon },
     { id: 'divider-tools2', label: '', divider: true },
     { id: 'h-viewport', label: 'Viewport', header: true },
-    { id: 'toggle-grid', label: 'Grid', icon: $uiStore.gridVisible ? checkIcon : blankIcon, keepOpenOnClick: true },
-    { id: 'toggle-vanishing', label: 'Vanishing Helper', icon: $uiStore.vanishingVisible ? checkIcon : blankIcon, keepOpenOnClick: true },
-    { id: 'cycle-guidelines', label: `Guidelines: ${$cameraStore.guidelines}`, icon: blankIcon, keepOpenOnClick: true },
-    { id: 'toggle-helpers', label: 'Light Helpers', icon: $uiStore.lightHelpersVisible ? lightsOnIcon : lightsOffIcon, keepOpenOnClick: true },
+    { id: 'toggle-grid', label: 'Grid', type: 'checkbox', checked: $uiStore.gridVisible, keepOpenOnClick: true },
+    { id: 'toggle-vanishing', label: 'Vanishing Helper', type: 'checkbox', checked: $uiStore.vanishingVisible, keepOpenOnClick: true },
+    { id: 'cycle-guidelines', label: `Guidelines: ${$cameraStore.guidelines}`, type: 'checkbox', checked: $cameraStore.guidelines !== 'disabled', keepOpenOnClick: true },
+    { id: 'toggle-helpers', label: 'Light Helpers', type: 'checkbox', checked: $uiStore.lightHelpersVisible, keepOpenOnClick: true },
   ] as DropdownItem[]);
 
   function handleToolsSelect(id: string) {

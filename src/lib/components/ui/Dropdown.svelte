@@ -12,6 +12,8 @@
     header?: boolean;
     danger?: boolean;
     keepOpenOnClick?: boolean;
+    type?: 'checkbox';
+    checked?: boolean;
   }
 
   interface Props {
@@ -174,7 +176,11 @@
             onclick={() => handleSelect(item)}
           >
             <div class="item-main">
-              {#if item.icon}
+              {#if item.type === 'checkbox'}
+                <span class="item-icon">
+                  <input type="checkbox" checked={item.checked} tabindex="-1" style="pointer-events: none;" />
+                </span>
+              {:else if item.icon}
                 <span class="item-icon">{@html item.icon}</span>
               {/if}
               <span class="item-label">{item.label}</span>
