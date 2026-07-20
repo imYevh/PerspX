@@ -9,6 +9,7 @@
     shortcut?: string;
     disabled?: boolean;
     divider?: boolean;
+    header?: boolean;
     danger?: boolean;
     keepOpenOnClick?: boolean;
   }
@@ -160,7 +161,9 @@
       {@render children()}
     {:else if items}
       {#each items as item}
-        {#if item.divider}
+        {#if item.header}
+          <div class="dropdown-header">{item.label}</div>
+        {:else if item.divider}
           <div class="dropdown-divider"></div>
         {:else}
           <button 
@@ -346,5 +349,14 @@
     height: 1px;
     background: var(--color-border);
     margin: 4px 0;
+  }
+
+  .dropdown-header {
+    padding: 6px 8px 2px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    letter-spacing: 0.5px;
   }
 </style>
