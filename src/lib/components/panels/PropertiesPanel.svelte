@@ -358,4 +358,26 @@
     border-color: rgba(255, 85, 85, 0.4);
     color: #ffaaaa;
   }
+
+  @media (max-width: 767px) {
+    .prop-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    
+    label {
+      width: auto;
+      margin-bottom: 2px;
+    }
+    
+    .link-btn, .reset-btn {
+      margin-left: 0;
+    }
+
+    label > button:first-of-type {
+      margin-left: auto;
+    }
+  }
 </style>

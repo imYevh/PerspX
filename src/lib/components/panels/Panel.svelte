@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { uiStore } from '$lib/stores/ui';
+  
   interface Props {
     title: string;
     children: import('svelte').Snippet;
@@ -12,11 +14,17 @@
 </script>
 
 <div class="panel">
-  <button class="panel-header" onclick={() => (collapsed = !collapsed)}>
+  <button 
+    class="panel-header" 
+    onclick={() => { if ($uiStore.breakpoint !== 'mobile') collapsed = !collapsed; }}
+    style:cursor={$uiStore.breakpoint === 'mobile' ? 'default' : 'pointer'}
+  >
     <span class="panel-title">{title}</span>
-    <span class="panel-chevron">{collapsed ? '▸' : '▾'}</span>
+    {#if $uiStore.breakpoint !== 'mobile'}
+      <span class="panel-chevron">{collapsed ? '▸' : '▾'}</span>
+    {/if}
   </button>
-  {#if !collapsed}
+  {#if !collapsed || $uiStore.breakpoint === 'mobile'}
     <div class="panel-content" style={maxHeight ? `max-height: ${maxHeight}; overflow-y: auto;` : ''}>
       {@render children()}
     </div>

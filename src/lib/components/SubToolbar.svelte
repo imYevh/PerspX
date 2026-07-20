@@ -102,14 +102,7 @@
 
   {#if $uiStore.breakpoint === 'mobile'}
     <div class="sub-toolbar-mobile glass">
-      <Dropdown 
-        icon={modes.find(m => m.key === $uiStore.transformMode)?.icon || selectIcon} 
-        label="Tools" 
-        align="center">
-        <div class="mobile-expanded-toolbar">
-          {@render subToolbarActions()}
-        </div>
-      </Dropdown>
+      {@render subToolbarActions()}
     </div>
   {:else}
     <div class="sub-toolbar glass">
@@ -153,6 +146,9 @@
     top: 12px;
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
     border-radius: 12px;
     background: var(--color-surface);
     backdrop-filter: blur(var(--backdrop-blur));
@@ -161,17 +157,10 @@
     box-shadow: var(--shadow-panel);
     z-index: 20;
     transition: all 0.2s ease;
-    padding: 4px;
-  }
-
-  .mobile-expanded-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px;
-    width: 260px;
-    align-items: center;
-    justify-content: center;
+    padding: 4px 8px;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    box-sizing: border-box;
   }
   
   @media (max-width: 767px) {
