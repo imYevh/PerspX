@@ -146,7 +146,7 @@
     {@const meta = selectedEntry.meta}
 
     <div class="prop-section">
-      <div class="prop-title">📐 Transform</div>
+      <div class="prop-title">Transform</div>
 
       <div class="prop-row">
         <label>
@@ -199,7 +199,7 @@
     </div>
 
     <div class="prop-section">
-      <div class="prop-title">🎨 Object</div>
+      <div class="prop-title">Object</div>
       <div class="prop-row">
         <!-- svelte-ignore a11y_label_has_associated_control -->
         <label>Name</label>
