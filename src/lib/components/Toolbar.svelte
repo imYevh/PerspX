@@ -391,15 +391,6 @@
         <div class="toolbar-sep"></div>
       {/if}
 
-      {#if $uiStore.breakpoint !== 'mobile'}
-        <Dropdown 
-          icon={lightingIcon} 
-          label="Environment" 
-          items={lightingMenu} 
-          onSelect={handleLightSelect} 
-          title="Environment Presets" 
-        />
-      {/if}
     </div>
   {/snippet}
 
@@ -442,6 +433,16 @@
     <div class="toolbar-sep"></div>
 
     <Dropdown 
+      icon={lightingIcon} 
+      label={$uiStore.breakpoint === 'mobile' ? '' : 'Environment'} 
+      items={lightingMenu} 
+      onSelect={handleLightSelect} 
+      title="Environment Presets" 
+    />
+
+    <div class="toolbar-sep"></div>
+
+    <Dropdown 
       icon="" 
       label="Tools" 
       items={toolsMenu} 
@@ -449,27 +450,19 @@
       title="Tools" 
     />
 
-    <div class="toolbar-sep"></div>
+    <div class="spacer"></div>
+
+    {#if $uiStore.breakpoint !== 'mobile'}
+      {@render toolbarActions()}
+      <div class="toolbar-sep"></div>
+    {/if}
 
     <button class="tool-btn" title="Take Render" onclick={takeScreenshot}>
       <span class="tool-icon">{@html exportIcon}</span>
+      {#if $uiStore.breakpoint !== 'mobile'}
+        <span class="tool-label">Render</span>
+      {/if}
     </button>
-
-    {#if $uiStore.breakpoint === 'mobile'}
-      <div class="spacer"></div>
-      <Dropdown 
-        icon={lightingIcon} 
-        label="" 
-        items={lightingMenu} 
-        onSelect={handleLightSelect} 
-        title="Environment Presets" 
-        align="right"
-      />
-    {:else}
-      <div class="toolbar-sep"></div>
-      <div class="spacer"></div>
-      {@render toolbarActions()}
-    {/if}
   </div>
 
   {#if $uiStore.breakpoint === 'mobile'}
