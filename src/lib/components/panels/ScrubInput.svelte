@@ -3,12 +3,15 @@
     value?: number;
     getValue?: () => number;
     step?: number;
+    min?: number;
+    max?: number;
+    slider?: boolean;
     class?: string;
     tick?: number;
     oninput: (val: number) => void;
     onchange: () => void;
   }
-  let { value, getValue, step = 1, class: className = '', tick = 0, oninput, onchange }: Props = $props();
+  let { value, getValue, step = 1, min, max, slider = false, class: className = '', tick = 0, oninput, onchange }: Props = $props();
 
   let isDragging = false;
   let isFocused = $state(false);
@@ -121,34 +124,77 @@
   }
 </script>
 
-<input 
-  bind:this={inputElement}
-  type="number"
-  class={className}
-  {step}
-  onfocus={() => isFocused = true}
-  onblur={() => isFocused = false}
-  onpointerdown={handlePointerDown}
-  oninput={handleInput}
-  onchange={handleChange}
-/>
+<div class="scrub-wrapper {className}" class:has-slider={slider}>
+  <input 
+    bind:this={inputElement}
+    type="number"
+    class="num-input"
+    {step}
+    onfocus={() => isFocused = true}
+    onblur={() => isFocused = false}
+    onpointerdown={handlePointerDown}
+    oninput={handleInput}
+    onchange={handleChange}
+  />
+  {#if slider}
+    <input 
+      type="range" 
+      class="range-input" 
+      {min} {max} {step}
+      value={getCurrentValue()}
+      oninput={handleInput}
+      onchange={handleChange}
+    />
+  {/if}
+</div>
 
 <style>
-  input {
-    cursor: ew-resize; /* Let user know they can drag */
+  .scrub-wrapper {
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
+
+  .num-input {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    width: 100%;
+    padding: 0;
+    outline: none;
+    cursor: ew-resize;
+  }
+
+  .range-input {
+    width: 100%;
+    margin: 4px 0 0 0;
+    cursor: pointer;
+    display: none; /* Hidden by default on desktop */
+  }
+
+  /* Show sliders only on touch devices/mobile */
+  @media (pointer: coarse) {
+    .range-input {
+      display: block;
+    }
+    .scrub-wrapper.has-slider {
+      padding-bottom: 6px;
+    }
+  }
+
   /* Hide the native up/down arrows */
-  input[type="number"] {
+  .num-input[type="number"] {
     -moz-appearance: textfield;
   }
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
+  .num-input[type="number"]::-webkit-outer-spin-button,
+  .num-input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
   
   /* When typing, revert cursor to text */
-  input:focus {
+  .num-input:focus {
     cursor: text;
   }
 </style>

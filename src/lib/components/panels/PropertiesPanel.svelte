@@ -169,11 +169,11 @@
           <button class="reset-btn" onclick={resetRotation} title="Reset Rotation">⟲</button>
         </label>
         <div class="xyz">
-          <ScrubInput class="pi x" step={1} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.x)}
+          <ScrubInput class="pi x" step={1} slider={true} min={-180} max={180} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.x)}
             oninput={(v) => setRotation('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi y" step={1} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.y)}
+          <ScrubInput class="pi y" step={1} slider={true} min={-180} max={180} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.y)}
             oninput={(v) => setRotation('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi z" step={1} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.z)}
+          <ScrubInput class="pi z" step={1} slider={true} min={-180} max={180} {tick} getValue={() => MathUtils.radToDeg(obj.rotation.z)}
             oninput={(v) => setRotation('z', v.toString())} onchange={commit} />
         </div>
       </div>
@@ -188,11 +188,11 @@
 
         </label>
         <div class="xyz">
-          <ScrubInput class="pi" step={0.1} {tick} getValue={() => obj.scale.x}
+          <ScrubInput class="pi" step={0.1} slider={true} min={0.1} max={10} {tick} getValue={() => obj.scale.x}
             oninput={(v) => setScale('x', v.toString())} onchange={commit} />
-          <ScrubInput class="pi" step={0.1} {tick} getValue={() => obj.scale.y}
+          <ScrubInput class="pi" step={0.1} slider={true} min={0.1} max={10} {tick} getValue={() => obj.scale.y}
             oninput={(v) => setScale('y', v.toString())} onchange={commit} />
-          <ScrubInput class="pi" step={0.1} {tick} getValue={() => obj.scale.z}
+          <ScrubInput class="pi" step={0.1} slider={true} min={0.1} max={10} {tick} getValue={() => obj.scale.z}
             oninput={(v) => setScale('z', v.toString())} onchange={commit} />
         </div>
       </div>
@@ -216,7 +216,7 @@
         <div class="prop-row">
           <!-- svelte-ignore a11y_label_has_associated_control -->
           <label>Intensity</label>
-          <ScrubInput class="pi full" step={0.1} {tick} getValue={() => (obj as any).intensity}
+          <ScrubInput class="pi full" step={0.1} slider={true} min={0} max={10} {tick} getValue={() => (obj as any).intensity}
             oninput={(v) => setIntensity(v.toString())} onchange={commit} />
         </div>
       {/if}
