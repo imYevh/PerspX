@@ -331,7 +331,16 @@
   .item-icon {
     font-size: 14px;
     width: 16px;
-    text-align: center;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-icon :global(svg) {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
   }
 
   .item-shortcut {

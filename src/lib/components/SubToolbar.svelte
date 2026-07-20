@@ -144,7 +144,7 @@
 
   .sub-toolbar-mobile {
     position: absolute;
-    top: 12px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
