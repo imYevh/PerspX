@@ -233,6 +233,7 @@
     position: fixed;
     min-width: 180px;
     max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 80px);
     overflow-y: auto;
     background: var(--color-dropdown-bg, var(--color-surface-hover));
     backdrop-filter: blur(var(--backdrop-blur));

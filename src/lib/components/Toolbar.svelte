@@ -296,7 +296,8 @@
     { id: 'select-all', label: 'Select All', icon: selectIcon },
     { id: 'deselect-all', label: 'Deselect All', icon: blankIcon },
     { id: 'deselect-lights', label: 'Deselect Lights', icon: blankIcon },
-    { id: 'deselect-cameras', label: 'Deselect Cameras', icon: blankIcon },
+    { id: 'deselect-primitives', label: 'Deselect Primitives', icon: blankIcon },
+    { id: 'deselect-models', label: 'Deselect Models', icon: blankIcon },
     { id: 'divider-tools1', label: '', divider: true },
     { id: 'h-camera', label: 'Camera Controls', header: true },
     { id: 'lock-orbit', label: 'Lock Orbit', icon: $cameraStore.lockOrbit ? lockIcon : orbitIcon, keepOpenOnClick: true },
@@ -323,17 +324,17 @@
     } else if (id === 'deselect-all') {
       if (sceneManager) sceneManager.deselectAll();
     } else if (id === 'deselect-lights') {
-      if (sceneManager) {
-        const currentIds = sceneManager.getSelectedIds();
-        const newIds = currentIds.filter(id => sceneManager?.getMeta(id)?.type !== 'light');
-        sceneManager.selectMultiple(newIds, false);
-      }
-    } else if (id === 'deselect-cameras') {
-      if (sceneManager) {
-        const currentIds = sceneManager.getSelectedIds();
-        const newIds = currentIds.filter(id => sceneManager?.getMeta(id)?.type !== 'camera');
-        sceneManager.selectMultiple(newIds, false);
-      }
+      const currentIds = sceneManager.getSelectedIds();
+      const newIds = currentIds.filter(cid => sceneManager?.getMeta(cid)?.type !== 'light');
+      sceneManager.selectMultiple(newIds, false);
+    } else if (id === 'deselect-primitives') {
+      const currentIds = sceneManager.getSelectedIds();
+      const newIds = currentIds.filter(cid => sceneManager?.getMeta(cid)?.type !== 'primitive');
+      sceneManager.selectMultiple(newIds, false);
+    } else if (id === 'deselect-models') {
+      const currentIds = sceneManager.getSelectedIds();
+      const newIds = currentIds.filter(cid => sceneManager?.getMeta(cid)?.type !== 'model');
+      sceneManager.selectMultiple(newIds, false);
     } else if (id === 'lock-orbit') {
       updateCameraStore({ lockOrbit: !$cameraStore.lockOrbit });
     } else if (id === 'lock-pan') {
@@ -464,8 +465,6 @@
         title="Environment Presets" 
         align="right"
       />
-      <OverlaysDropdown align="right" />
-      <ShadersDropdown align="right" />
     {:else}
       <div class="toolbar-sep"></div>
       <div class="spacer"></div>
