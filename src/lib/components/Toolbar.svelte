@@ -287,26 +287,27 @@
     }
   }
 
+  const checkIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+  const blankIcon = `<svg viewBox="0 0 24 24" fill="none"></svg>`;
+
   const toolsMenu = $derived([
     { id: 'h-select', label: 'Selection', header: true },
-    { id: 'toggle-multi', label: $uiStore.multiSelectMode ? '✓ Multi-Select Mode' : '  Multi-Select Mode', keepOpenOnClick: true },
-    { id: 'select-all', label: 'Select All' },
-    { id: 'deselect-all', label: 'Deselect All' },
-    { id: 'deselect-lights', label: 'Deselect Lights' },
-    { id: 'deselect-cameras', label: 'Deselect Cameras' },
+    { id: 'toggle-multi', label: 'Multi-Select Mode', icon: $uiStore.multiSelectMode ? checkIcon : blankIcon, keepOpenOnClick: true },
+    { id: 'select-all', label: 'Select All', icon: selectIcon },
+    { id: 'deselect-all', label: 'Deselect All', icon: blankIcon },
+    { id: 'deselect-lights', label: 'Deselect Lights', icon: blankIcon },
+    { id: 'deselect-cameras', label: 'Deselect Cameras', icon: blankIcon },
     { id: 'divider-tools1', label: '', divider: true },
     { id: 'h-camera', label: 'Camera Controls', header: true },
-    { id: 'lock-orbit', label: $cameraStore.lockOrbit ? '✓ Lock Orbit' : '  Lock Orbit', keepOpenOnClick: true },
-    { id: 'lock-pan', label: $cameraStore.lockPan ? '✓ Lock Pan' : '  Lock Pan', keepOpenOnClick: true },
-    { id: 'reset-camera', label: 'Reset Camera Position' },
+    { id: 'lock-orbit', label: 'Lock Orbit', icon: $cameraStore.lockOrbit ? lockIcon : orbitIcon, keepOpenOnClick: true },
+    { id: 'lock-pan', label: 'Lock Pan', icon: $cameraStore.lockPan ? lockIcon : panIcon, keepOpenOnClick: true },
+    { id: 'reset-camera', label: 'Reset Camera Position', icon: resetIcon },
     { id: 'divider-tools2', label: '', divider: true },
     { id: 'h-viewport', label: 'Viewport', header: true },
-    { id: 'toggle-grid', label: $uiStore.gridVisible ? '✓ Infinite Grid' : '  Infinite Grid', keepOpenOnClick: true },
-    { id: 'toggle-vanishing', label: $uiStore.vanishingVisible ? '✓ Vanishing Helper' : '  Vanishing Helper', keepOpenOnClick: true },
-    { id: 'cycle-guidelines', label: `Guidelines: ${$cameraStore.guidelines}`, keepOpenOnClick: true },
-    { id: 'toggle-helpers', label: $uiStore.lightHelpersVisible ? '✓ Light Helpers' : '  Light Helpers', keepOpenOnClick: true },
-    { id: 'divider-tools3', label: '', divider: true },
-    { id: 'take-render', label: 'Take Render' }
+    { id: 'toggle-grid', label: 'Grid', icon: $uiStore.gridVisible ? checkIcon : blankIcon, keepOpenOnClick: true },
+    { id: 'toggle-vanishing', label: 'Vanishing Helper', icon: $uiStore.vanishingVisible ? checkIcon : blankIcon, keepOpenOnClick: true },
+    { id: 'cycle-guidelines', label: `Guidelines: ${$cameraStore.guidelines}`, icon: blankIcon, keepOpenOnClick: true },
+    { id: 'toggle-helpers', label: 'Light Helpers', icon: $uiStore.lightHelpersVisible ? lightsOnIcon : lightsOffIcon, keepOpenOnClick: true },
   ] as DropdownItem[]);
 
   function handleToolsSelect(id: string) {
@@ -351,8 +352,6 @@
         const isVisible = lightManager.toggleHelpers();
         uiStore.update(s => ({ ...s, lightHelpersVisible: isVisible }));
       }
-    } else if (id === 'take-render') {
-      takeScreenshot();
     }
   }
 
@@ -448,6 +447,12 @@
       onSelect={handleToolsSelect} 
       title="Tools" 
     />
+
+    <div class="toolbar-sep"></div>
+
+    <button class="tool-btn" title="Take Render" onclick={takeScreenshot}>
+      <span class="tool-icon">{@html exportIcon}</span>
+    </button>
 
     {#if $uiStore.breakpoint === 'mobile'}
       <div class="spacer"></div>
