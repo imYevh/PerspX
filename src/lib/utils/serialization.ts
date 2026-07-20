@@ -33,6 +33,12 @@ export function serializeScene(sceneManager: SceneManager, cameraState?: CameraS
     itemType: object.userData.itemType,
     intensity: 'intensity' in object ? (object as any).intensity : undefined,
     color: 'color' in object ? (object as any).color.getHexString() : undefined,
+    distance: 'distance' in object ? (object as any).distance : undefined,
+    decay: 'decay' in object ? (object as any).decay : undefined,
+    angle: 'angle' in object ? (object as any).angle : undefined,
+    penumbra: 'penumbra' in object ? (object as any).penumbra : undefined,
+    groundColor: 'groundColor' in object ? (object as any).groundColor.getHexString() : undefined,
+    castShadow: 'castShadow' in object ? (object as any).castShadow : undefined,
     // Models store their original filename so users know which file to re-import
     originalFileName: meta.type === 'model' ? (object.userData.originalFileName as string | undefined) : undefined,
   }));
@@ -54,10 +60,6 @@ export function serializeScene(sceneManager: SceneManager, cameraState?: CameraS
   };
 }
 
-/**
- * Apply a scene snapshot. Returns an array of skipped model filenames
- * (models cannot be restored from JSON — the user must re-import them).
- */
 export function applySceneSnapshot(
   snapshot: SceneSnapshot,
   sceneManager: SceneManager,
@@ -66,46 +68,89 @@ export function applySceneSnapshot(
   updateCameraStore?: (updates: Partial<CameraState>) => void,
   cameraController?: any
 ): string[] {
-  sceneManager.clearAll();
-
   const skippedModels: string[] = [];
 
-  for (const snapObj of snapshot.objects) {
-    let id: string | null = null;
+  const snapshotIds = new Set(snapshot.objects.map(o => o.meta.id));
+  const existingObjects = sceneManager.getAllObjects();
 
-    if (snapObj.meta.type === 'model') {
-      // Models cannot be restored from JSON — geometry is not embedded.
-      const label = snapObj.originalFileName ?? snapObj.meta.name;
-      skippedModels.push(label);
-      console.warn(`[PerspX] Skipping model "${label}" — re-import the file to restore it.`);
-      continue;
-    } else if (snapObj.meta.type === 'primitive' && snapObj.itemType) {
-      id = objectManager.addPrimitive(snapObj.itemType as any, snapObj.meta.id, snapObj.meta);
-    } else if (snapObj.meta.type === 'light' && snapObj.itemType) {
-      id = lightManager.addLight({
-        type: snapObj.itemType as any,
-        intensity: snapObj.intensity ?? 1,
-        color: snapObj.color ? parseInt(snapObj.color, 16) : 0xffffff,
-        explicitId: snapObj.meta.id,
-        explicitMeta: snapObj.meta
-      });
+  // 1. Remove objects that are not in the snapshot
+  for (const { id } of existingObjects) {
+    if (!snapshotIds.has(id)) {
+      sceneManager.removeObject(id);
     }
+  }
 
-    if (id) {
-      const obj = sceneManager.getObject(id);
-      if (obj) {
-        obj.position.fromArray(snapObj.position);
-        obj.rotation.fromArray(snapObj.rotation);
-        obj.scale.fromArray(snapObj.scale);
-        if ('color' in obj && snapObj.color !== undefined) {
-          (obj as any).color.setHex(parseInt(snapObj.color, 16));
+  // 2. Add or update objects from the snapshot
+  for (const snapObj of snapshot.objects) {
+    let id = snapObj.meta.id;
+    const existing = sceneManager.getObject(id);
+
+    if (existing) {
+      // Update existing object
+      existing.position.fromArray(snapObj.position);
+      existing.rotation.fromArray(snapObj.rotation);
+      existing.scale.fromArray(snapObj.scale);
+      
+      if ('color' in existing && snapObj.color !== undefined) {
+        (existing as any).color.setHex(parseInt(snapObj.color, 16));
+      }
+      if ('intensity' in existing && snapObj.intensity !== undefined) {
+        (existing as any).intensity = snapObj.intensity;
+      }
+      
+      existing.updateMatrixWorld();
+      
+      // Update metadata
+      const existingMeta = sceneManager.getMeta(id);
+      if (existingMeta) {
+         existingMeta.name = snapObj.meta.name;
+         existingMeta.visible = snapObj.meta.visible;
+         existingMeta.locked = snapObj.meta.locked;
+      }
+    } else {
+      // Add new object
+      if (snapObj.meta.type === 'model') {
+        const label = snapObj.originalFileName ?? snapObj.meta.name;
+        skippedModels.push(label);
+        console.warn(`[PerspX] Skipping model "${label}" — re-import the file to restore it.`);
+        continue;
+      } else if (snapObj.meta.type === 'primitive' && snapObj.itemType) {
+        const newId = objectManager.addPrimitive(snapObj.itemType as any, id, snapObj.meta);
+        if (newId) id = newId;
+      } else if (snapObj.meta.type === 'light' && snapObj.itemType) {
+        const newId = lightManager.addLight({
+          type: snapObj.itemType as any,
+          intensity: snapObj.intensity ?? 1,
+          color: snapObj.color ? parseInt(snapObj.color, 16) : 0xffffff,
+          distance: snapObj.distance,
+          decay: snapObj.decay,
+          angle: snapObj.angle,
+          penumbra: snapObj.penumbra,
+          groundColor: snapObj.groundColor ? parseInt(snapObj.groundColor, 16) : undefined,
+          castShadow: snapObj.castShadow,
+          explicitId: id,
+          explicitMeta: snapObj.meta
+        });
+        if (newId) id = newId;
+      }
+
+      if (id) {
+        const obj = sceneManager.getObject(id);
+        if (obj) {
+          obj.position.fromArray(snapObj.position);
+          obj.rotation.fromArray(snapObj.rotation);
+          obj.scale.fromArray(snapObj.scale);
+          if ('color' in obj && snapObj.color !== undefined) {
+            (obj as any).color.setHex(parseInt(snapObj.color, 16));
+          }
+          obj.updateMatrixWorld();
         }
-        obj.updateMatrixWorld();
       }
     }
   }
 
-  // Restore selection (filter out any model IDs that were skipped)
+  // Restore selection
+  sceneManager.deselectAll();
   if (snapshot.selectedIds.length > 0) {
     sceneManager.selectMultiple(snapshot.selectedIds, false);
   }

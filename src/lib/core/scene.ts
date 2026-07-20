@@ -156,16 +156,34 @@ export class SceneManager {
   // --- Selection ---
 
   select(id: string, additive = false): void {
-    if (!additive) this.selectedIds.clear();
-    this.selectedIds.add(id);
+    if (!additive) {
+      this.selectedIds.clear();
+      this.selectedIds.add(id);
+    } else {
+      if (this.selectedIds.has(id)) {
+        this.selectedIds.delete(id);
+      } else {
+        this.selectedIds.add(id);
+      }
+    }
     this.updateSelectionBoxes();
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });
   }
 
   selectMultiple(ids: string[], additive = false): void {
-    if (!additive) this.selectedIds.clear();
-    for (const id of ids) {
-      this.selectedIds.add(id);
+    if (!additive) {
+      this.selectedIds.clear();
+      for (const id of ids) {
+        this.selectedIds.add(id);
+      }
+    } else {
+      for (const id of ids) {
+        if (this.selectedIds.has(id)) {
+          this.selectedIds.delete(id);
+        } else {
+          this.selectedIds.add(id);
+        }
+      }
     }
     this.updateSelectionBoxes();
     this.emit("selection-changed", { selectedIds: [...this.selectedIds] });

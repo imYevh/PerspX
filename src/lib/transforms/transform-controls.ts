@@ -15,6 +15,9 @@ export class TransformSystem {
   public controls: TransformControls;
   private activeObjectIds: string[] = [];
   private dummyPivot = new Object3D();
+  private previousPivotPosition = new Vector3();
+  private previousPivotQuaternion = new Quaternion();
+  private previousPivotScale = new Vector3();
   private previousPivotMatrix = new Matrix4();
   private singleScaleData: {
     initScale: Vector3;
@@ -146,14 +149,49 @@ export class TransformSystem {
             }
           }
         } else if (this.activeObjectIds.length > 1) {
-          const deltaMatrix = this.dummyPivot.matrixWorld.clone().multiply(this.previousPivotMatrix.clone().invert());
-          
-          for (const id of this.activeObjectIds) {
-            const obj = this.sceneManager.getObject(id);
-            if (obj) obj.applyMatrix4(deltaMatrix);
+          if (!this.dummyPivot.matrixWorld.equals(this.previousPivotMatrix)) {
+            const currentMode = this._currentMode;
+            
+            if (currentMode === 'translate') {
+              const deltaPos = this.dummyPivot.position.clone().sub(this.previousPivotPosition);
+              for (const id of this.activeObjectIds) {
+                const obj = this.sceneManager.getObject(id);
+                if (obj) {
+                  obj.position.add(deltaPos);
+                  obj.updateMatrixWorld(true);
+                }
+              }
+            } else if (currentMode === 'rotate') {
+              const deltaQuat = this.dummyPivot.quaternion.clone().multiply(this.previousPivotQuaternion.clone().invert());
+              for (const id of this.activeObjectIds) {
+                const obj = this.sceneManager.getObject(id);
+                if (obj) {
+                  obj.quaternion.premultiply(deltaQuat);
+                  obj.updateMatrixWorld(true);
+                }
+              }
+            } else if (currentMode === 'scale') {
+              const currentScale = this.dummyPivot.scale;
+              const prevScale = this.previousPivotScale;
+              const deltaScale = new Vector3(
+                prevScale.x === 0 ? 1 : currentScale.x / prevScale.x,
+                prevScale.y === 0 ? 1 : currentScale.y / prevScale.y,
+                prevScale.z === 0 ? 1 : currentScale.z / prevScale.z
+              );
+              for (const id of this.activeObjectIds) {
+                const obj = this.sceneManager.getObject(id);
+                if (obj) {
+                  obj.scale.multiply(deltaScale);
+                  obj.updateMatrixWorld(true);
+                }
+              }
+            }
+            
+            this.previousPivotPosition.copy(this.dummyPivot.position);
+            this.previousPivotQuaternion.copy(this.dummyPivot.quaternion);
+            this.previousPivotScale.copy(this.dummyPivot.scale);
+            this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
           }
-          
-          this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
         }
         this.sceneManager.updateSelectionBoxes();
       }
@@ -292,9 +330,12 @@ export class TransformSystem {
     center.divideScalar(validIds.length);
 
     this.dummyPivot.position.copy(center);
-    this.dummyPivot.rotation.set(0, 0, 0);
+    this.dummyPivot.quaternion.identity();
     this.dummyPivot.scale.set(1, 1, 1);
     this.dummyPivot.updateMatrixWorld(true);
+    this.previousPivotPosition.copy(this.dummyPivot.position);
+    this.previousPivotQuaternion.copy(this.dummyPivot.quaternion);
+    this.previousPivotScale.copy(this.dummyPivot.scale);
     this.previousPivotMatrix.copy(this.dummyPivot.matrixWorld);
 
     this.controls.attach(this.dummyPivot);
@@ -330,6 +371,16 @@ export class TransformSystem {
     if (this.activeObjectIds.length === 1) {
       if ((mode === 'scale' && oldMode !== 'scale') || (mode !== 'scale' && oldMode === 'scale')) {
         this.attachToObject(this.activeObjectIds[0]);
+      }
+    }
+    
+    // If we have selected objects but the gizmo is detached or invisible because we were in 'select' mode,
+    // we need to re-attach it to show the gizmo.
+    if (mode !== 'select' && this.activeObjectIds.length > 0) {
+      if (this.activeObjectIds.length === 1) {
+        this.attachToObject(this.activeObjectIds[0]);
+      } else {
+        this.attachToMultiple(this.activeObjectIds);
       }
     }
   }
