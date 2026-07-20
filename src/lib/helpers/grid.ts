@@ -10,8 +10,8 @@ export function createInfiniteGrid(options?: {
   color1?: number;
   color2?: number;
 }): Group {
-  const size = options?.size ?? 1000;
-  const divisions = options?.divisions ?? 1000;
+  const size = options?.size ?? 100;
+  const divisions = options?.divisions ?? 100;
   const color1 = options?.color1 ?? 0x444455; // Major lines
   const color2 = options?.color2 ?? 0x333344; // Minor lines
 
@@ -43,9 +43,9 @@ export function createVerticalGuidelines(options?: {
   divisions?: number;
   color?: number;
 }): Group {
-  const size = options?.size ?? 1000;
-  const height = options?.height ?? 1000;
-  const divisions = options?.divisions ?? 100;
+  const size = options?.size ?? 100;
+  const height = options?.height ?? size;
+  const divisions = options?.divisions ?? 10;
   const color = options?.color ?? 0x555566;
 
   const group = new Group();
