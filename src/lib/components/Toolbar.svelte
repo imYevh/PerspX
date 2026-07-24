@@ -5,7 +5,7 @@
   import type { Renderer } from '$lib/core/renderer';
   import { uiStore } from '$lib/stores/ui';
   import { cameraStore, updateCameraStore } from '$lib/stores/camera';
-  import { undo, redo, initHistory } from '$lib/stores/history';
+  import { undo, redo, initHistory, historyStore } from '$lib/stores/history';
   import { serializeScene, applySceneSnapshot } from '$lib/utils/serialization';
   import { appModeStore } from '$lib/stores/appMode.svelte';
   import { shaderStore, SHADER_DEFS, SHADER_ORDER, setShader, resetShaders, type ShaderType } from '$lib/stores/shader.svelte';
@@ -20,8 +20,7 @@
   import resetIcon from '$lib/assets/reset.svg?raw';
   import undoRedoIcon from '$lib/assets/undo redo.svg?raw';
   import lightingIcon from '$lib/assets/lighting.svg?raw';
-  import lightsOnIcon from '$lib/assets/lights-on.svg?raw';
-  import lightsOffIcon from '$lib/assets/lights-off.svg?raw';
+  import lightsIcon from '$lib/assets/lights.svg?raw';
   import selectIcon from '$lib/assets/select.svg?raw';
   import overlaysIcon from '$lib/assets/overlays.svg?raw';
   import focusCamIcon from '$lib/assets/focus cam.svg?raw';
@@ -440,13 +439,13 @@
 
     <!-- History controls always on top bar -->
     <div class="toolbar-group">
-      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
-        if (sceneManager && objectManager && lightManager) undo(sceneManager, objectManager, lightManager);
+      <button class="tool-btn" class:disabled={$historyStore.past.length <= 1} title={$uiStore.breakpoint === 'mobile' ? "Undo" : "Undo (Ctrl+Z)"} onclick={() => {
+        if (sceneManager && objectManager && lightManager && $historyStore.past.length > 1) undo(sceneManager, objectManager, lightManager);
       }}>
         <span class="tool-icon">{@html undoRedoIcon}</span>
       </button>
-      <button class="tool-btn" title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
-        if (sceneManager && objectManager && lightManager) redo(sceneManager, objectManager, lightManager);
+      <button class="tool-btn" class:disabled={$historyStore.future.length === 0} title={$uiStore.breakpoint === 'mobile' ? "Redo" : "Redo (Ctrl+Y)"} onclick={() => {
+        if (sceneManager && objectManager && lightManager && $historyStore.future.length > 0) redo(sceneManager, objectManager, lightManager);
       }}>
         <span class="tool-icon" style="transform: scaleX(-1);">{@html undoRedoIcon}</span>
       </button>
@@ -624,6 +623,15 @@
   .tool-btn:hover {
     background: var(--color-surface-hover);
     color: var(--color-text);
+  }
+
+  .tool-btn.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .tool-btn.disabled:hover {
+    background: transparent;
+    color: var(--color-text-muted);
   }
 
   .tool-btn.active {
