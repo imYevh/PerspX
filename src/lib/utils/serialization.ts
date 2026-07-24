@@ -198,7 +198,8 @@ export function pasteObjects(
   objects: SnapshotObject[],
   sceneManager: SceneManager,
   objectManager: ObjectManager,
-  lightManager: LightManager
+  lightManager: LightManager,
+  isCut = false
 ): string[] {
   const newIds: string[] = [];
 
@@ -206,9 +207,11 @@ export function pasteObjects(
     let id: string | null = null;
     
     // We create a fresh meta without the old ID to let the managers assign a new UUID.
-    // We also append "(Copy)" to the name.
+    // We also append "(Copy)" to the name if it wasn't cut.
     const { id: _discarded, ...newMeta } = snapObj.meta as any;
-    newMeta.name = `${newMeta.name} (Copy)`;
+    if (!isCut) {
+      newMeta.name = `${newMeta.name} (Copy)`;
+    }
 
     if (newMeta.type === 'primitive' && snapObj.itemType) {
       id = objectManager.addPrimitive(snapObj.itemType as any, undefined, newMeta);
@@ -225,10 +228,13 @@ export function pasteObjects(
       newIds.push(id);
       const obj = sceneManager.getObject(id);
       if (obj) {
-        // Offset slightly to make the paste obvious
         obj.position.fromArray(snapObj.position);
-        obj.position.x += 0.5;
-        obj.position.z += 0.5;
+        
+        // Offset slightly to make the paste obvious, unless it was cut
+        if (!isCut) {
+          obj.position.x += 0.5;
+          obj.position.z += 0.5;
+        }
         
         obj.rotation.fromArray(snapObj.rotation);
         obj.scale.fromArray(snapObj.scale);

@@ -8,7 +8,7 @@
   import visibleSvg from '$lib/assets/visible.svg?raw';
   import invisibleSvg from '$lib/assets/invisible.svg?raw';
   import trashSvg from '$lib/assets/trashbin.svg?raw';
-  import lightsOffSvg from '$lib/assets/lights-off.svg?raw';
+  import lightsSvg from '$lib/assets/lights.svg?raw';
   import renameSvg from '$lib/assets/rename.svg?raw';
   import duplicateSvg from '$lib/assets/duplicate.svg?raw';
   import { tick } from 'svelte';
@@ -96,7 +96,7 @@
 
   function getIcon(type: string): string {
     switch (type) {
-      case 'light': return lightsOffSvg;
+      case 'light': return lightsSvg;
       case 'model': return '⬡';
       default: return '⬡';
     }

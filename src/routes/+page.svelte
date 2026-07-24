@@ -583,7 +583,12 @@
       // History tracking
       initHistory(_sceneManager);
       _sceneManager.on('object-added', () => commitHistory(_sceneManager));
-      _sceneManager.on('object-removed', () => commitHistory(_sceneManager));
+      _sceneManager.on('object-removed', (data: { id: string }) => {
+        // Keep hiddenByCompactMode in sync: if an object was removed externally
+        // (e.g. compact-mode replace), remove its stale ID so desktop restore doesn't error.
+        hiddenByCompactMode.delete(data.id);
+        commitHistory(_sceneManager);
+      });
       // Keyboard Shortcuts for Undo/Redo & Clipboard
       const onKeyDownGlobal = async (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;

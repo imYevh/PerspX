@@ -180,6 +180,7 @@
   .item-icon :global(svg) {
     width: 14px;
     height: 14px;
+    fill: currentColor;
   }
 
   .item-label {

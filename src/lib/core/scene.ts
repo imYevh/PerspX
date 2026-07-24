@@ -78,7 +78,8 @@ export class SceneManager {
     this.objects.delete(id);
     this.metadata.delete(id);
 
-    if (this.selectedIds.has(id)) {
+    const wasSelected = this.selectedIds.has(id);
+    if (wasSelected) {
       this.selectedIds.delete(id);
       this.updateSelectionBoxes();
     }

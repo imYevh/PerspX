@@ -5,6 +5,7 @@
   import type { LightManager } from '$lib/lighting/light-manager';
   import { uiStore } from '$lib/stores/ui';
   import { MODEL_MAX_FILE_SIZE } from '$lib/objects/model-loader';
+  import lightsSvg from '$lib/assets/lights.svg?raw';
 
   interface Props {
     objectManager: ObjectManager | undefined;
@@ -143,7 +144,7 @@
   <button class="accordion-header" class:open={accordions.lights} onclick={() => toggleAccordion('lights')}>
     <div class="accordion-title-wrap">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-chevron"><path d="m9 18 6-6-6-6"/></svg>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="accordion-icon"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+      <span class="accordion-icon">{@html lightsSvg}</span>
       <span>Lights</span>
     </div>
     <span class="accordion-badge">[3]</span>
@@ -291,6 +292,13 @@
   
   .accordion-icon {
     opacity: 0.8;
+    display: inline-flex;
+    align-items: center;
+  }
+  .accordion-icon :global(svg) {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
   }
 
   .accordion-badge {
