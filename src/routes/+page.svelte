@@ -688,6 +688,7 @@
         _transformSystem.updateCamera(_cameraController.camera);
         inputSystem.updateCamera(_cameraController.camera);
         if (lightManager) lightManager.updateHelpers();
+        _sceneManager.tickSelectionBoxes();
 
         // Apply camera effects
         loop.setFisheye($cameraStore.fisheye, $cameraStore.fisheyeIntensity);

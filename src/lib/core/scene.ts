@@ -37,28 +37,12 @@ export class SceneManager {
   }
 
   public updateSelectionBoxes() {
-    // Remove old boxes
-    for (const [id, box] of this.selectionBoxes) {
-      if (!this.selectedIds.has(id)) {
-        this.scene.remove(box);
-        box.dispose();
-        this.selectionBoxes.delete(id);
-      }
-    }
-    // Add new boxes
-    for (const id of this.selectedIds) {
-      if (!this.selectionBoxes.has(id)) {
-        const obj = this.objects.get(id);
-        if (obj) {
-          const box = new BoxHelper(obj, 0x4a9eff);
-          box.userData.isSelectionBox = true;
-          this.scene.add(box);
-          this.selectionBoxes.set(id, box);
-        }
-      } else {
-        this.selectionBoxes.get(id)?.update();
-      }
-    }
+    // Disabled: removed blue selection boxes.
+  }
+
+  /** Call every frame to keep box outlines in sync without adding/removing boxes. */
+  public tickSelectionBoxes() {
+    // Disabled: removed blue selection boxes.
   }
 
   // --- Object Lifecycle ---
