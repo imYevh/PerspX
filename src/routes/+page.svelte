@@ -18,6 +18,8 @@
   import { applyRenderMode } from '$lib/objects/model-loader';
   import { initAppMode, appModeStore } from '$lib/stores/appMode.svelte';
   import { initShader, shaderStore, resetShaders } from '$lib/stores/shader.svelte';
+  import { fade } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
   import { matchShortcut } from '$lib/stores/shortcuts.svelte';
   import { serializeObjects, pasteObjects } from '$lib/utils/serialization';
 
@@ -48,6 +50,21 @@
   let hiddenByCompactMode = new Set<string>();
   // Compact mode: track last lighting preset for restore
   let lastDesktopLightPreset = 'studio';
+  interface ToastMessage {
+    id: number;
+    message: string;
+  }
+  let toasts = $state<ToastMessage[]>([]);
+  let toastId = 0;
+  let internalClipboard = '';
+
+  function showToast(message: string) {
+    const id = toastId++;
+    toasts = [...toasts, { id, message }].slice(-4);
+    setTimeout(() => {
+      toasts = toasts.filter(t => t.id !== id);
+    }, 3000);
+  }
 
   function onDragOver(e: DragEvent) {
     e.preventDefault();
@@ -426,7 +443,9 @@
             const { Media } = await import('@capacitor-community/media');
             
             try {
-              await Media.requestPermissions();
+              if (typeof (Media as any).requestPermissions === 'function') {
+                await (Media as any).requestPermissions();
+              }
               
               const base64Data = dataUrl.split(',')[1];
               const savedFile = await Filesystem.writeFile({
@@ -435,22 +454,34 @@
                 directory: Directory.Cache
               });
               
-              let album;
+              let albumIdentifier: string | undefined;
               try {
-                album = await Media.createAlbum({ name: 'PerspX' });
+                let { albums } = await Media.getAlbums();
+                let existing = albums.find((a: any) => a.name === 'PerspX');
+                if (existing) {
+                  albumIdentifier = existing.identifier;
+                } else {
+                  await Media.createAlbum({ name: 'PerspX' });
+                  albums = (await Media.getAlbums()).albums;
+                  existing = albums.find((a: any) => a.name === 'PerspX');
+                  if (existing) {
+                    albumIdentifier = existing.identifier;
+                  }
+                }
               } catch (albumErr) {
-                console.warn('Could not create album, saving to default', albumErr);
+                console.warn('Could not get/create album', albumErr);
               }
               
-              await Media.savePhoto({
-                path: savedFile.uri,
-                albumIdentifier: album ? album.identifier : undefined
-              });
+              const saveOptions: any = { path: savedFile.uri };
+              if (albumIdentifier) {
+                saveOptions.albumIdentifier = albumIdentifier;
+              }
+              await Media.savePhoto(saveOptions);
               
-              alert('Image successfully saved to gallery!');
+              showToast('Saved to gallery');
             } catch(e: any) {
               console.error('Capacitor save failed', e);
-              alert('Failed to save image to gallery: ' + (e.message || 'Unknown error'));
+              showToast('Failed to save image to gallery');
             }
             return;
           }
@@ -503,6 +534,7 @@
                 URL.revokeObjectURL(objectUrl);
               }, 100);
             }
+            showToast('Image saved successfully!');
           }
         } catch (err) {
           console.log('User cancelled screenshot save or failed', err);
@@ -552,8 +584,6 @@
       initHistory(_sceneManager);
       _sceneManager.on('object-added', () => commitHistory(_sceneManager));
       _sceneManager.on('object-removed', () => commitHistory(_sceneManager));
-      _sceneManager.on('selection-changed', () => commitHistory(_sceneManager));
-
       // Keyboard Shortcuts for Undo/Redo & Clipboard
       const onKeyDownGlobal = async (e: KeyboardEvent) => {
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
@@ -565,46 +595,90 @@
             for (const id of selectedIds) {
               _sceneManager.duplicateObject(id);
             }
+            showToast('Duplicated');
           }
         } else if (matchShortcut(e, 'undo')) {
           e.preventDefault();
-          if (objectManager && lightManager) undo(_sceneManager, objectManager, lightManager);
+          if (objectManager && lightManager) {
+            const success = undo(_sceneManager, objectManager, lightManager);
+            if (success) showToast('Undo');
+            else showToast('Nothing to undo');
+          }
         } else if (matchShortcut(e, 'redo')) {
           e.preventDefault();
-          if (objectManager && lightManager) redo(_sceneManager, objectManager, lightManager);
+          if (objectManager && lightManager) {
+            const success = redo(_sceneManager, objectManager, lightManager);
+            if (success) showToast('Redo');
+            else showToast('Nothing to redo');
+          }
         } else if (matchShortcut(e, 'copy') || matchShortcut(e, 'cut')) {
           e.preventDefault();
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
             const objects = serializeObjects(_sceneManager, selectedIds);
-            const data = JSON.stringify({ type: 'perspx-clipboard', objects });
-            await navigator.clipboard.writeText(data);
+            const isCut = matchShortcut(e, 'cut');
+            const data = JSON.stringify({ type: 'perspx-clipboard', objects, isCut });
             
-            if (matchShortcut(e, 'cut')) {
+            internalClipboard = data;
+            try {
+              if (window.Capacitor?.isNativePlatform()) {
+                const { Clipboard } = await import('@capacitor/clipboard');
+                await Clipboard.write({ string: data });
+              } else {
+                await navigator.clipboard.writeText(data);
+              }
+            } catch (err) {
+              console.warn('Clipboard write failed, using internal fallback', err);
+            }
+            
+            if (isCut) {
               for (const id of selectedIds) {
                 _sceneManager.removeObject(id);
               }
               commitHistory(_sceneManager);
+              showToast('Cut');
+            } else {
+              showToast('Copied');
             }
+          } else {
+            showToast('Nothing selected');
           }
         } else if (matchShortcut(e, 'paste')) {
           e.preventDefault();
+          let text = internalClipboard;
           try {
-            const text = await navigator.clipboard.readText();
-            if (text) {
+            let externalText = '';
+            if (window.Capacitor?.isNativePlatform()) {
+              const { Clipboard } = await import('@capacitor/clipboard');
+              const { value } = await Clipboard.read();
+              externalText = value;
+            } else {
+              externalText = await navigator.clipboard.readText();
+            }
+            
+            if (externalText && externalText.includes('perspx-clipboard')) {
+              text = externalText;
+            }
+          } catch (err) {
+            console.warn('Clipboard read failed, using internal fallback', err);
+          }
+
+          if (text) {
+            try {
               const data = JSON.parse(text);
               if (data.type === 'perspx-clipboard' && Array.isArray(data.objects)) {
                 if (objectManager && lightManager) {
-                  const newIds = pasteObjects(data.objects, _sceneManager, objectManager, lightManager);
+                  const newIds = pasteObjects(data.objects, _sceneManager, objectManager, lightManager, !!data.isCut);
                   if (newIds.length > 0) {
                     _sceneManager.selectMultiple(newIds, false);
                     commitHistory(_sceneManager);
+                    showToast('Pasted');
                   }
                 }
               }
+            } catch (e) {
+              console.warn('Invalid clipboard data', e);
             }
-          } catch (err) {
-            console.warn('Clipboard read failed or invalid data', err);
           }
         }
       };
@@ -911,6 +985,19 @@
       <ViewportOverlay />
       <FloatingShaderPanel />
 
+      {#if toasts.length > 0}
+        <div class="absolute top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none">
+          {#each toasts as toast (toast.id)}
+            <div 
+              class="bg-zinc-800/50 text-white/75 text-xs px-3 py-1.5 rounded-none shadow-xl border border-zinc-700/50 w-fit backdrop-blur-sm" 
+              transition:fade={{ duration: 300 }}
+              animate:flip={{ duration: 300 }}
+            >
+              {toast.message}
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
 
     <!-- Right Panel — hidden in compact mode -->
