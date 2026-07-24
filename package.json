@@ -11,10 +11,12 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"tauri": "tauri",
-		"build:android": "npx cap sync android && cd android && gradlew assembleDebug"
+		"build:android": "npx cap sync android && cd android && gradlew assembleDebug",
+		"android": "cross-env JAVA_HOME=\"C:\\Program Files\\Java\\jdk-20\" npx cap run android"
 	},
 	"devDependencies": {
 		"@capacitor/cli": "^8.4.1",
+		"@playwright/test": "^1.61.1",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.63.0",
@@ -24,6 +26,7 @@
 		"@tauri-apps/cli": "^2.11.4",
 		"@types/three": "^0.185.0",
 		"concurrently": "^10.0.3",
+		"cross-env": "^10.1.0",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",
@@ -34,6 +37,7 @@
 	"dependencies": {
 		"@capacitor-community/media": "^9.1.0",
 		"@capacitor/android": "^8.4.1",
+		"@capacitor/clipboard": "^8.0.1",
 		"@capacitor/core": "^8.4.1",
 		"@capacitor/filesystem": "^8.1.2",
 		"@capacitor/status-bar": "^8.0.3",
