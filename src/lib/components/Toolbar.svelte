@@ -252,7 +252,6 @@
     { id: 'library', label: 'Library (Left)', type: 'checkbox', checked: !$uiStore.libraryCollapsed, keepOpenOnClick: true },
     { id: 'properties', label: 'Properties (Right)', type: 'checkbox', checked: !$uiStore.propertiesCollapsed, keepOpenOnClick: true },
     { id: 'camera', label: 'Camera Effects (Right)', type: 'checkbox', checked: !$uiStore.cameraCollapsed, keepOpenOnClick: true },
-    { id: 'shader', label: 'Shaders (Right)', type: 'checkbox', checked: !$uiStore.shaderCollapsed, keepOpenOnClick: true },
     { id: 'divider2', label: '', divider: true },
     { id: 'default', label: 'Restore Default', icon: '' },
   ] as DropdownItem[]);
@@ -272,8 +271,6 @@
       uiStore.update(s => ({ ...s, propertiesCollapsed: !s.propertiesCollapsed }));
     } else if (id === 'camera') {
       uiStore.update(s => ({ ...s, cameraCollapsed: !s.cameraCollapsed }));
-    } else if (id === 'shader') {
-      uiStore.update(s => ({ ...s, shaderCollapsed: !s.shaderCollapsed }));
     } else if (id === 'default') {
       uiStore.update(s => ({
         ...s,
@@ -283,7 +280,6 @@
         libraryCollapsed: false,
         propertiesCollapsed: false,
         cameraCollapsed: false,
-        shaderCollapsed: false,
         panelsVisible: true
       }));
     }
