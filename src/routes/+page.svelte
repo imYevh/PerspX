@@ -350,7 +350,6 @@
           _cameraController.applyState(new Vector3(5, 4, 5), new Vector3(0, 0, 0));
           _cameraController.setRoll(0);
           _cameraController.setFOV(50, false);
-          _cameraController.mode = 'perspective';
           _cameraController.update();
         }
         
@@ -363,7 +362,6 @@
         
         // Reset every camera effect and setting to default values
         updateCameraStore({
-          mode: 'perspective',
           fov: 50,
           roll: 0,
           zolly: false,

@@ -265,11 +265,24 @@ export class CameraController {
       this.perspCamera.rotateZ(this.roll * MathUtils.DEG2RAD);
     }
 
-    this.orthoCamera.position.copy(newPos);
+    // For orthographic camera, keep the position far away (at maxDist) so it doesn't clip geometry
+    const orthoOffset = offset.clone().normalize().multiplyScalar(this.maxDist);
+    const orthoPos = this.target.clone().add(orthoOffset);
+
+    this.orthoCamera.position.copy(orthoPos);
     this.orthoCamera.lookAt(this.target);
     if (this.roll !== 0) {
       this.orthoCamera.rotateZ(this.roll * MathUtils.DEG2RAD);
     }
+
+    // Dynamically update the ortho frustum based on the radius for zooming
+    const frustum = this.spherical.radius * 0.5;
+    const aspect = this.perspCamera.aspect;
+    this.orthoCamera.left = -frustum * aspect;
+    this.orthoCamera.right = frustum * aspect;
+    this.orthoCamera.top = frustum;
+    this.orthoCamera.bottom = -frustum;
+    this.orthoCamera.updateProjectionMatrix();
   }
 
   handleResize(aspect: number): void {
