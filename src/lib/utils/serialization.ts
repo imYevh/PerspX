@@ -3,6 +3,9 @@ import type { ObjectManager } from '$lib/objects/object-manager';
 import type { LightManager } from '$lib/lighting/light-manager';
 import type { CameraState } from '$lib/stores/camera';
 import { Vector3 } from 'three';
+import { get } from 'svelte/store';
+import { uiStore } from '$lib/stores/ui';
+import { shaderStore, setShader, setShaderParam, type ShaderType, type ShaderParams } from '$lib/stores/shader.svelte';
 
 export interface SnapshotObject {
   meta: SceneObjectMeta;
@@ -22,6 +25,8 @@ export interface SceneSnapshot {
   camera?: CameraState;
   cameraPosition?: [number, number, number];
   cameraTarget?: [number, number, number];
+  overlays?: any;
+  shader?: { active: ShaderType, params: Record<string, number> };
 }
 
 export function serializeScene(sceneManager: SceneManager, cameraState?: CameraState, cameraController?: any): SceneSnapshot {
@@ -56,7 +61,12 @@ export function serializeScene(sceneManager: SceneManager, cameraState?: CameraS
     selectedIds: sceneManager.getSelectedIds(),
     camera: cameraState,
     cameraPosition,
-    cameraTarget
+    cameraTarget,
+    overlays: get(uiStore).overlays,
+    shader: {
+      active: shaderStore.active,
+      params: { ...shaderStore.params[shaderStore.active] }
+    }
   };
 }
 
@@ -169,6 +179,29 @@ export function applySceneSnapshot(
     const target = new Vector3().fromArray(snapshot.cameraTarget);
     cameraController.applyState(pos, target);
     cameraController.update();
+  }
+
+  // Restore overlays
+  if (snapshot.overlays) {
+    uiStore.update(s => ({ ...s, overlays: snapshot.overlays }));
+  }
+
+  // Restore shader
+  if (snapshot.shader) {
+    if (shaderStore.active !== snapshot.shader.active) {
+      setShader(snapshot.shader.active);
+    }
+    if (snapshot.shader.active !== 'none' && snapshot.shader.params) {
+      for (const [key, value] of Object.entries(snapshot.shader.params)) {
+        setShaderParam(key, value);
+      }
+    }
+    
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('perspx-shader-changed', {
+        detail: { type: snapshot.shader.active, params: snapshot.shader.params }
+      }));
+    }
   }
 
   return skippedModels;

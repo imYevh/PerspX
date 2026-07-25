@@ -29,6 +29,7 @@
         [key]: !s.overlays[key]
       }
     }));
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('perspx-history-commit'));
   }
 </script>
 

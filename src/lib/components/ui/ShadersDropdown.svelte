@@ -34,6 +34,7 @@ import { onMount } from 'svelte';
           params: shaderStore.params[shaderStore.active] ?? {}
         }
       }));
+      window.dispatchEvent(new CustomEvent('perspx-history-commit'));
     }
   }
 

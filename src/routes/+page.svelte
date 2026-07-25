@@ -572,12 +572,19 @@
       window.addEventListener('perspx-reset-camera', onResetCamera);
       window.addEventListener('perspx-take-screenshot', onTakeScreenshot);
 
+      const onHistoryCommit = () => { if (_sceneManager) commitHistory(_sceneManager); };
+      const onHistoryCommitReplace = () => { if (_sceneManager) commitHistory(_sceneManager, true); };
+      window.addEventListener('perspx-history-commit', onHistoryCommit);
+      window.addEventListener('perspx-history-commit-replace', onHistoryCommitReplace);
+
       cleanupKeys = () => {
         unsubscribeUI();
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('perspx-reset-camera', onResetCamera);
         window.removeEventListener('perspx-take-screenshot', onTakeScreenshot);
         window.removeEventListener('contextmenu', preventContextMenu);
+        window.removeEventListener('perspx-history-commit', onHistoryCommit);
+        window.removeEventListener('perspx-history-commit-replace', onHistoryCommitReplace);
       };
 
       // History tracking

@@ -116,7 +116,7 @@
                 <button
                   class="reset-btn"
                   title="Reset to default"
-                  onclick={(e) => { e.stopPropagation(); onShaderParamInput(key, paramDef.default); }}
+                  onclick={(e) => { e.stopPropagation(); onShaderParamInput(key, paramDef.default); window.dispatchEvent(new CustomEvent('perspx-history-commit')); }}
                 >
                   ⟲
                 </button>
@@ -126,7 +126,8 @@
                   max={paramDef.max}
                   step={paramDef.step}
                   value={Number(activeParams[key]).toFixed(paramDef.step < 1 ? 2 : 0)}
-                  oninput={(e) => onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value))}
+                  oninput={(e) => { onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value)); window.dispatchEvent(new CustomEvent('perspx-history-commit-replace')); }}
+                  onchange={() => window.dispatchEvent(new CustomEvent('perspx-history-commit'))}
                   onclick={(e) => e.stopPropagation()}
                   class="num-input"
                 />
@@ -138,8 +139,9 @@
               max={paramDef.max}
               step={paramDef.step}
               value={activeParams[key]}
-              ondblclick={(e) => { e.stopPropagation(); onShaderParamInput(key, paramDef.default); }}
-              oninput={(e) => onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value))}
+              ondblclick={(e) => { e.stopPropagation(); onShaderParamInput(key, paramDef.default); window.dispatchEvent(new CustomEvent('perspx-history-commit')); }}
+              oninput={(e) => { onShaderParamInput(key, parseFloat((e.target as HTMLInputElement).value)); window.dispatchEvent(new CustomEvent('perspx-history-commit-replace')); }}
+              onpointerup={() => window.dispatchEvent(new CustomEvent('perspx-history-commit'))}
               onclick={(e) => e.stopPropagation()}
               class="slider"
             />
