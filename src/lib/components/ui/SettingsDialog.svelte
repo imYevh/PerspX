@@ -404,6 +404,26 @@
     flex: 1;
     overflow-y: auto;
     padding-right: 4px; /* Space for scrollbar */
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  .content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .content::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+
+  .content::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-dim);
   }
 
   .tabs {
