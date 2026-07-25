@@ -57,6 +57,8 @@ let mode = $state<ThemeMode>(DEFAULT_THEME);
 let accentHue = $state<number>(DEFAULT_ACCENT_HUE);
 let accentSaturation = $state<number | null>(null);
 let accentLightness = $state<number | null>(null);
+let nightMode = $state<boolean>(false);
+let nightModeIntensity = $state<number>(10);
 
 // ---------------------------------------------------------------------------
 // DOM Helpers
@@ -106,6 +108,8 @@ function loadFromStorage(): { theme: ThemeMode; hue: number } {
 	return {
 		theme: storedTheme && THEME_MODES.includes(storedTheme) ? storedTheme : DEFAULT_THEME,
 		hue: storedHue ? Number(storedHue) : DEFAULT_ACCENT_HUE,
+		nightMode: localStorage.getItem('perspx-night-mode') === 'true',
+		nightModeIntensity: localStorage.getItem('perspx-night-intensity') ? Number(localStorage.getItem('perspx-night-intensity')) : 10,
 	};
 }
 
@@ -137,6 +141,12 @@ export const themeStore = {
 	get accentLightness() {
 		return accentLightness;
 	},
+	get nightMode() {
+		return nightMode;
+	},
+	get nightModeIntensity() {
+		return nightModeIntensity;
+	},
 };
 
 /** Initialize the theme system. Call once on app mount. */
@@ -151,6 +161,8 @@ export function initTheme(): void {
 		accentSaturation = sat ? Number(sat) : null;
 		accentLightness = lit ? Number(lit) : null;
 	}
+	nightMode = stored.nightMode;
+	nightModeIntensity = stored.nightModeIntensity;
 
 	applyThemeToDOM(mode);
 	applyAccentToDOM(accentHue);
@@ -232,4 +244,18 @@ export function cycleTheme(): void {
 	const currentIndex = THEME_MODES.indexOf(mode);
 	const nextIndex = (currentIndex + 1) % THEME_MODES.length;
 	setTheme(THEME_MODES[nextIndex]);
+}
+
+export function setNightMode(enabled: boolean): void {
+	nightMode = enabled;
+	if (typeof localStorage !== 'undefined') {
+		localStorage.setItem('perspx-night-mode', String(enabled));
+	}
+}
+
+export function setNightModeIntensity(intensity: number): void {
+	nightModeIntensity = intensity;
+	if (typeof localStorage !== 'undefined') {
+		localStorage.setItem('perspx-night-intensity', String(intensity));
+	}
 }

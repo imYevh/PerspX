@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade, fly } from 'svelte/transition';
-  import { themeStore, setTheme, setAccent, setAccentHue, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
+  import { themeStore, setTheme, setAccent, setAccentHue, setNightMode, setNightModeIntensity, THEME_MODES, ACCENT_PRESETS } from '$lib/stores/theme.svelte';
   import { appModeStore, setAppMode, APP_MODES, APP_MODE_LABELS, APP_MODE_DESCRIPTIONS } from '$lib/stores/appMode.svelte';
   import { shaderStore, setUse3DPreviews } from '$lib/stores/shader.svelte';
   import ConfirmDialog from './ConfirmDialog.svelte';
@@ -304,6 +304,36 @@
           <span class="slider round"></span>
         </label>
       </div>
+
+      <div class="setting-divider"></div>
+
+      <!-- Night Mode Toggle -->
+      <div class="setting-group toggle-group">
+        <div class="toggle-info">
+          <label for="night-mode-toggle">Night Mode (Blue Light Filter)</label>
+          <p class="setting-hint">Reduces blue light emission by applying a yellow overlay.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="night-mode-toggle" checked={themeStore.nightMode} onchange={(e) => setNightMode((e.target as HTMLInputElement).checked)}>
+          <span class="slider round"></span>
+        </label>
+      </div>
+      
+      {#if themeStore.nightMode}
+        <div class="setting-group">
+          <label for="night-intensity-slider">Filter Intensity ({themeStore.nightModeIntensity}%)</label>
+          <input 
+            id="night-intensity-slider"
+            type="range" 
+            min="10" 
+            max="100" 
+            step="10"
+            value={themeStore.nightModeIntensity} 
+            oninput={(e) => setNightModeIntensity(parseFloat((e.target as HTMLInputElement).value))}
+            class="hue-slider"
+          />
+        </div>
+      {/if}
       {/if}
 
       {#if activeTab === 'keybinds'}
