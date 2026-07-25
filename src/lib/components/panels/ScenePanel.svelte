@@ -125,10 +125,10 @@
     const items: { id: string; label: string; icon?: string; shortcut?: string; divider?: boolean; danger?: boolean }[] = [];
     if (!isMulti) {
       items.push({ id: 'rename',    label: 'Rename',    icon: renameSvg, shortcut: formatShortcut('rename') });
-      items.push({ id: 'duplicate', label: 'Duplicate', icon: duplicateSvg, shortcut: formatShortcut('duplicate') });
-      items.push({ id: '__div__',   label: '',          divider: true });
     }
     const n = $sceneStore.selectedIds.length;
+    items.push({ id: 'duplicate', label: isMulti ? `Duplicate ${n} objects` : 'Duplicate', icon: duplicateSvg, shortcut: formatShortcut('duplicate') });
+    items.push({ id: '__div__',   label: '',          divider: true });
     items.push({ id: 'delete', label: isMulti ? `Delete ${n} objects` : 'Delete', icon: trashSvg, danger: true });
     return items;
   }
@@ -142,9 +142,18 @@
       case 'rename':
         startRename(id);
         break;
-      case 'duplicate':
-        sceneManager?.duplicateObject(id);
+      case 'duplicate': {
+        const selectedIds = $sceneStore.selectedIds;
+        const targetIds = selectedIds.includes(id) ? selectedIds : [id];
+        const newIds: string[] = [];
+        for (const tid of targetIds) {
+          const newId = sceneManager?.duplicateObject(tid);
+          if (newId) newIds.push(newId);
+        }
+        if (newIds.length > 0) sceneManager?.selectMultiple(newIds, false);
+        window.dispatchEvent(new CustomEvent('perspx-history-commit'));
         break;
+      }
       case 'delete': {
         // Delete all selected items
         const toDelete = [...$sceneStore.selectedIds];

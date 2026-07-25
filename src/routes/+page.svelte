@@ -602,9 +602,15 @@
           e.preventDefault();
           const selectedIds = _sceneManager.getSelectedIds();
           if (selectedIds.length > 0) {
+            const newIds: string[] = [];
             for (const id of selectedIds) {
-              _sceneManager.duplicateObject(id);
+              const newId = _sceneManager.duplicateObject(id);
+              if (newId) newIds.push(newId);
             }
+            if (newIds.length > 0) {
+              _sceneManager.selectMultiple(newIds, false);
+            }
+            commitHistory(_sceneManager);
             showToast('Duplicated');
           }
         } else if (matchShortcut(e, 'undo')) {
