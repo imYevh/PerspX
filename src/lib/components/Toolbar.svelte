@@ -466,10 +466,10 @@
 
     <Dropdown 
       icon={$uiStore.breakpoint === 'mobile' ? lightingIcon : ""} 
-      label={$uiStore.breakpoint === 'mobile' ? '' : 'Environment'} 
+      label={$uiStore.breakpoint === 'mobile' ? '' : 'World'} 
       items={lightingMenu} 
       onSelect={handleLightSelect} 
-      title="Environment Presets" 
+      title="World Presets" 
     />
 
     <div class="toolbar-sep"></div>
