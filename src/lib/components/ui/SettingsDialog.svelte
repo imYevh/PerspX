@@ -290,6 +290,20 @@
           class="hue-slider"
         />
       </div>
+
+      <div class="setting-divider"></div>
+
+      <!-- Show Logo Toggle -->
+      <div class="setting-group toggle-group">
+        <div class="toggle-info">
+          <label for="show-logo-toggle">Show App Logo</label>
+          <p class="setting-hint">Display the PerspX logo in the top toolbar.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="show-logo-toggle" bind:checked={$uiStore.showLogo}>
+          <span class="slider round"></span>
+        </label>
+      </div>
       {/if}
 
       {#if activeTab === 'keybinds'}

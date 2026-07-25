@@ -44,6 +44,7 @@ export interface UIState {
   orientation: 'portrait' | 'landscape';
   mobileBottomSheetExpanded: boolean;
   mobileActiveTab: 'scene' | 'library' | 'properties' | 'camera';
+  showLogo: boolean;
 }
 
 export function getBreakpoint(width: number, height: number): 'desktop' | 'tablet' | 'mobile' {
@@ -100,5 +101,6 @@ export const uiStore = writable<UIState>({
   orientation: getOrientation(initialWidth, initialHeight),
   mobileBottomSheetExpanded: false,
   mobileActiveTab: 'properties',
-  multiSelectMode: false
+  multiSelectMode: false,
+  showLogo: true
 });

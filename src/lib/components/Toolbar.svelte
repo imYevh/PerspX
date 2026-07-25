@@ -419,10 +419,12 @@
 
 <header class="toolbar" class:mobile-layout={$uiStore.breakpoint === 'mobile'}>
   <div class="toolbar-main-row">
-    <div class="toolbar-brand">
-      {#if $uiStore.breakpoint !== 'mobile'}
+    <div class="toolbar-brand" style={!$uiStore.showLogo && appModeStore.mode !== 'compact' && $uiStore.breakpoint !== 'mobile' ? 'margin-left: -2px;' : ''}>
+      {#if $uiStore.breakpoint !== 'mobile' && ($uiStore.showLogo || appModeStore.mode === 'compact')}
         <div class="brand-logo-container">
-          <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
+          {#if $uiStore.showLogo}
+            <a href="https://github.com/imYevh/PerspX" target="_blank" rel="noopener noreferrer" class="brand-logo" title="View on GitHub">P</a>
+          {/if}
           {#if appModeStore.mode === 'compact'}
             <span class="mode-badge">Compact</span>
           {/if}
