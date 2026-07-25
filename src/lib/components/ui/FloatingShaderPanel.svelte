@@ -72,6 +72,20 @@
       }));
     }
   }
+
+  function resetActiveShaderParams() {
+    if (shaderStore.active === 'none') return;
+    const activeDef = SHADER_DEFS[shaderStore.active];
+    for (const [key, paramDef] of Object.entries(activeDef.params)) {
+      setShaderParam(key, paramDef.default);
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('perspx-shader-params-changed', {
+        detail: { params: shaderStore.params[shaderStore.active] ?? {} }
+      }));
+      window.dispatchEvent(new CustomEvent('perspx-history-commit'));
+    }
+  }
 </script>
 
 {#if shaderStore.active !== 'none' && visible}
@@ -101,6 +115,7 @@
         <span class="shader-name">{activeDef.label} Settings</span>
       </div>
       <div class="header-actions">
+        <button class="header-btn" title="Reset all parameters" onclick={(e) => { e.stopPropagation(); resetActiveShaderParams(); }}>⟲</button>
         <button class="header-btn collapse-btn" onclick={() => collapsed = !collapsed}>{collapsed ? '▲' : '▼'}</button>
         <button class="header-btn close-btn" onclick={() => visible = false}>✕</button>
       </div>
