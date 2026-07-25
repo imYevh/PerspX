@@ -330,7 +330,7 @@
             step="10"
             value={themeStore.nightModeIntensity} 
             oninput={(e) => setNightModeIntensity(parseFloat((e.target as HTMLInputElement).value))}
-            class="hue-slider"
+            class="normal-slider"
           />
         </div>
       {/if}
@@ -725,6 +725,26 @@
   }
 
   .hue-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    border: 2px solid white;
+  }
+
+  .normal-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-border);
+    outline: none;
+  }
+
+  .normal-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 16px;
     height: 16px;
