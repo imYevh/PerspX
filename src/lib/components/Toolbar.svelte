@@ -297,24 +297,36 @@
   const deselectBoxIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><line x1="8" y1="8" x2="16" y2="16"></line><line x1="16" y1="8" x2="8" y2="16"></line></svg>`;
   const deselectModelIcon = `<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline><line x1="8" y1="8" x2="16" y2="16"></line><line x1="16" y1="8" x2="8" y2="16"></line></svg>`;
 
-  const toolsMenu = $derived([
-    { id: 'h-select', label: 'Selection', header: true },
+  const selectionMenu = $derived([
     { id: 'select-all', label: 'Select All', icon: selectIcon },
     { id: 'deselect-all', label: 'Deselect All', icon: deselectAllIcon },
     { id: 'deselect-lights', label: 'Deselect Lights', icon: deselectLightIcon },
     { id: 'deselect-primitives', label: 'Deselect Primitives', icon: deselectBoxIcon },
     { id: 'deselect-models', label: 'Deselect Models', icon: deselectModelIcon },
-    { id: 'divider-tools1', label: '', divider: true },
-    { id: 'h-camera', label: 'Camera Controls', header: true },
+  ] as DropdownItem[]);
+
+  const cameraControlsMenu = $derived([
     { id: 'lock-orbit', label: 'Lock Orbit', type: 'checkbox', checked: $cameraStore.lockOrbit, keepOpenOnClick: true },
     { id: 'lock-pan', label: 'Lock Pan', type: 'checkbox', checked: $cameraStore.lockPan, keepOpenOnClick: true },
     { id: 'reset-camera', label: 'Reset Camera Position', icon: resetIcon },
-    { id: 'divider-tools2', label: '', divider: true },
-    { id: 'h-viewport', label: 'Viewport', header: true },
+  ] as DropdownItem[]);
+
+  const viewportMenu = $derived([
     { id: 'toggle-grid', label: 'Grid', type: 'checkbox', checked: $uiStore.gridVisible, keepOpenOnClick: true },
     { id: 'toggle-vanishing', label: 'Vanishing Helper', type: 'checkbox', checked: $uiStore.vanishingVisible, keepOpenOnClick: true },
     { id: 'cycle-guidelines', label: `Guidelines: ${$cameraStore.guidelines}`, type: 'checkbox', checked: $cameraStore.guidelines !== 'disabled', keepOpenOnClick: true },
     { id: 'toggle-helpers', label: 'Light Helpers', type: 'checkbox', checked: $uiStore.lightHelpersVisible, keepOpenOnClick: true },
+  ] as DropdownItem[]);
+
+  const toolsMenu = $derived([
+    { id: 'h-select', label: 'Selection', header: true },
+    ...selectionMenu,
+    { id: 'divider-tools1', label: '', divider: true },
+    { id: 'h-camera', label: 'Camera Controls', header: true },
+    ...cameraControlsMenu,
+    { id: 'divider-tools2', label: '', divider: true },
+    { id: 'h-viewport', label: 'Viewport', header: true },
+    ...viewportMenu,
   ] as DropdownItem[]);
 
   function handleToolsSelect(id: string) {
@@ -394,16 +406,6 @@
   {#snippet toolbarActions()}
     <!-- Central actions — some hidden in compact mode -->
     <div class="toolbar-group">
-      {#if appModeStore.mode === 'desktop' && $uiStore.breakpoint !== 'mobile'}
-        <Dropdown 
-          icon="" 
-          label="View" 
-          items={viewMenu} 
-          onSelect={handleViewSelect} 
-          title="View Options" 
-        />
-        <div class="toolbar-sep"></div>
-      {/if}
       {#if $uiStore.breakpoint === 'tablet' && appModeStore.mode === 'desktop'}
         <button class="tool-btn" title="Toggle UI Panels" onclick={() => uiStore.update(s => ({ ...s, panelsVisible: !s.panelsVisible }))}>
           <span class="tool-icon">{@html $uiStore.panelsVisible ? invisibleIcon : visibleIcon}</span>
@@ -453,8 +455,19 @@
 
     <div class="toolbar-sep"></div>
 
+    {#if appModeStore.mode === 'desktop' && $uiStore.breakpoint !== 'mobile'}
+      <Dropdown 
+        icon="" 
+        label="View" 
+        items={viewMenu} 
+        onSelect={handleViewSelect} 
+        title="View Options" 
+      />
+      <div class="toolbar-sep"></div>
+    {/if}
+
     <Dropdown 
-      icon={lightingIcon} 
+      icon={$uiStore.breakpoint === 'mobile' ? lightingIcon : ""} 
       label={$uiStore.breakpoint === 'mobile' ? '' : 'Environment'} 
       items={lightingMenu} 
       onSelect={handleLightSelect} 
@@ -463,13 +476,39 @@
 
     <div class="toolbar-sep"></div>
 
-    <Dropdown 
-      icon="" 
-      label="Tools" 
-      items={toolsMenu} 
-      onSelect={handleToolsSelect} 
-      title="Tools" 
-    />
+    {#if $uiStore.breakpoint === 'desktop'}
+      <Dropdown 
+        icon="" 
+        label="Selection" 
+        items={selectionMenu} 
+        onSelect={handleToolsSelect} 
+        title="Selection Tools" 
+      />
+      <div class="toolbar-sep"></div>
+      <Dropdown 
+        icon="" 
+        label="Camera" 
+        items={cameraControlsMenu} 
+        onSelect={handleToolsSelect} 
+        title="Camera Controls" 
+      />
+      <div class="toolbar-sep"></div>
+      <Dropdown 
+        icon="" 
+        label="Viewport" 
+        items={viewportMenu} 
+        onSelect={handleToolsSelect} 
+        title="Viewport Settings" 
+      />
+    {:else}
+      <Dropdown 
+        icon="" 
+        label="Tools" 
+        items={toolsMenu} 
+        onSelect={handleToolsSelect} 
+        title="Tools" 
+      />
+    {/if}
 
     <div class="spacer"></div>
 
