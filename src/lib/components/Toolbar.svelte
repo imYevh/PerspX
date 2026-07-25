@@ -477,7 +477,7 @@
     {#if $uiStore.breakpoint === 'desktop'}
       <Dropdown 
         icon="" 
-        label="Selection" 
+        label="Select" 
         items={selectionMenu} 
         onSelect={handleToolsSelect} 
         title="Selection Tools" 
