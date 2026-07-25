@@ -80,9 +80,9 @@ export const CAMERA_PRESETS: Record<string, CameraPreset> = {
     fov: 50,
   },
   thirdPersonSide: {
-    name: 'Third Person (Side)',
-    position: new Vector3(6, 2, 6),
-    target: new Vector3(0, 1, 0),
+    name: 'Third Person (Shoulder)',
+    position: new Vector3(0.7, 1.65, 2.2),
+    target: new Vector3(0.7, 1.4, 0),
     fov: 50,
   },
   secondPerson: {
