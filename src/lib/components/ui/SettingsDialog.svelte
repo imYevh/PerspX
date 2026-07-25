@@ -656,36 +656,24 @@
 
   .presets {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 6px;
-    overflow-x: auto;
+    justify-content: space-between;
+    gap: 4px;
     padding: 4px;
     margin: -4px;
   }
 
   .preset-btn {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    min-height: 24px;
-    flex: none;
+    flex: 1;
+    max-width: 24px;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
     transition: transform 0.1s;
     padding: 0;
-    flex-shrink: 0;
-    box-sizing: content-box;
-  }
-
-  @media (max-width: 768px), (max-height: 500px) {
-    .preset-btn {
-      width: 18px;
-      height: 18px;
-      min-width: 18px;
-      min-height: 18px;
-    }
+    box-sizing: border-box;
   }
 
   .preset-btn:hover {

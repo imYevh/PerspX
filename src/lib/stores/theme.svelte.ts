@@ -45,6 +45,7 @@ export const ACCENT_PRESETS: AccentPreset[] = [
 	{ name: 'Blue', hue: 217 },
 	{ name: 'Purple', hue: 270 },
 	{ name: 'Rose', hue: 345 },
+	{ name: 'Grey', hue: 0, saturation: 0, lightness: 50 },
 	{ name: 'Black', hue: 0, saturation: 0, lightness: 15 },
 ];
 
