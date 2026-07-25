@@ -315,7 +315,7 @@
   ] as DropdownItem[]);
 
   const toolsMenu = $derived([
-    { id: 'h-select', label: 'Selection', header: true },
+    { id: 'h-select', label: 'Select', header: true },
     ...selectionMenu,
     { id: 'divider-tools1', label: '', divider: true },
     { id: 'h-camera', label: 'Camera Controls', header: true },
