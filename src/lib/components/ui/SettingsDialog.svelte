@@ -125,6 +125,53 @@
     isThemeDropdownOpen = false;
     isModeDropdownOpen = false;
   }
+
+  function fixedDropdown(node: HTMLElement, anchorId: string) {
+    const anchor = document.getElementById(anchorId);
+    if (!anchor) return;
+    
+    // Move to body to escape transform/backdrop-filter containing blocks
+    document.body.appendChild(node);
+    
+    function updatePosition() {
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      node.style.position = 'fixed';
+      node.style.top = `${rect.bottom + 4}px`;
+      node.style.left = `${rect.left}px`;
+      node.style.width = `${rect.width}px`;
+      // Ensure it stays above other fixed elements
+      node.style.zIndex = '9999';
+    }
+
+    // Delay first update slightly to ensure DOM is settled
+    requestAnimationFrame(updatePosition);
+    
+    // Update on scroll of any scrollable parent
+    const scrollParents: HTMLElement[] = [];
+    let parent = anchor.parentElement;
+    while (parent) {
+      const style = window.getComputedStyle(parent);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        scrollParents.push(parent);
+        parent.addEventListener('scroll', updatePosition);
+      }
+      parent = parent.parentElement;
+    }
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition);
+
+    return {
+      destroy() {
+        scrollParents.forEach(p => p.removeEventListener('scroll', updatePosition));
+        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updatePosition);
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }
+    };
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -163,7 +210,7 @@
             <span class="chevron">▼</span>
           </button>
           {#if isModeDropdownOpen}
-            <div class="select-menu" transition:fade={{ duration: 100 }}>
+            <div class="select-menu" use:fixedDropdown={"mode-select-btn"} transition:fade={{ duration: 100 }}>
               {#each APP_MODES as m}
                 <button class="select-item" class:active={appModeStore.mode === m} onclick={() => selectMode(m)}>
                   <span class="mode-label">{APP_MODE_LABELS[m]}</span>
@@ -198,12 +245,12 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div class="custom-select" onclick={(e) => e.stopPropagation()}>
-          <button class="select-btn" onclick={() => { isThemeDropdownOpen = !isThemeDropdownOpen; isModeDropdownOpen = false; }}>
+          <button class="select-btn" id="theme-select-btn" onclick={() => { isThemeDropdownOpen = !isThemeDropdownOpen; isModeDropdownOpen = false; }}>
             {themeStore.mode.charAt(0).toUpperCase() + themeStore.mode.slice(1)}
             <span class="chevron">▼</span>
           </button>
           {#if isThemeDropdownOpen}
-            <div class="select-menu" transition:fade={{ duration: 100 }}>
+            <div class="select-menu" use:fixedDropdown={"theme-select-btn"} transition:fade={{ duration: 100 }}>
               {#each THEME_MODES as mode}
                 <button class="select-item" class:active={themeStore.mode === mode} onclick={() => selectTheme(mode)}>
                   {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -313,6 +360,7 @@
     padding: 20px;
     width: calc(100% - 32px);
     max-width: 380px;
+    min-height: 450px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -532,10 +580,7 @@
   }
 
   .select-menu {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
+    position: fixed;
     background: var(--color-dropdown-bg, var(--color-surface-hover));
     backdrop-filter: blur(var(--backdrop-blur));
     -webkit-backdrop-filter: blur(var(--backdrop-blur));
@@ -546,8 +591,6 @@
     display: flex;
     flex-direction: column;
     padding: 4px;
-    max-height: 200px;
-    overflow-y: auto;
   }
 
   .select-item {
