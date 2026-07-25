@@ -16,8 +16,8 @@
 <style>
   .marquee-box {
     position: fixed;
-    border: 1px solid rgba(74, 158, 255, 0.8);
-    background: rgba(74, 158, 255, 0.15);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 80%, transparent);
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
     pointer-events: none;
     z-index: 20;
   }
