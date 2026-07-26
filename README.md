@@ -23,21 +23,6 @@
 
 ---
 
-## 📸 Walkthrough & Demonstration
-
-*(Replace the placeholder links below with your actual screenshots or GIFs showing the app in action!)*
-
-### Workspace & Drawing
-![Workspace Overview](https://placehold.co/800x400/222222/FFFFFF/png?text=Showcase+your+workspace+and+viewport+here)
-
-### Vanishing Points & Snapping
-![Vanishing Points Demo](https://placehold.co/800x400/222222/FFFFFF/png?text=GIF+of+Vanishing+Points+and+Snapping)
-
-### Scrub Input & UI Panels
-![UI Panels](https://placehold.co/800x400/222222/FFFFFF/png?text=Screenshot+of+Library+Panel+and+Scrub+Inputs)
-
----
-
 ## ⌨️ Keyboard Shortcuts
 
 PerspX is designed for productivity. Here are the default keyboard shortcuts:
@@ -102,9 +87,3 @@ To run PerspX locally, you will need **Node.js**.
 *   **3D & Rendering**: [Three.js](https://threejs.org/)
 *   **Desktop Shell**: [Tauri 2](https://v2.tauri.app/)
 *   **Mobile Shell**: [Capacitor 8](https://capacitorjs.com/)
-
----
-
-## 📄 License
-
-*(Add your open-source license information here, e.g., MIT License)*
